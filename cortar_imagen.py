@@ -1,6 +1,6 @@
 # Importamos OpenCV
 import cv2
-
+import sys
 
 # funcion auxiliar: no hace nada
 def nothing(x):
@@ -36,6 +36,8 @@ def Redibujar_Imagen(x,y):
     # Actualizacion de la gráfica
     # print(xi,yi,xf,yf)   
     copia_imagen = imagen.copy()
+    #color del rectángulo
+    BGR_marcador=(255,0,200)
     cv2.rectangle(copia_imagen,(xi,yi),(xf,yf),BGR_marcador,cv2.LINE_4 )
     cv2.imshow(titulo_imagen, copia_imagen)
     # recorte = imagen[yi:yf, xi:xf]
@@ -62,10 +64,13 @@ def marcar_recorte(evento,x,y,flags,param):
     # evento click izquierdo --> crear recorte
     if evento == cv2.EVENT_LBUTTONDOWN:
         recorte = imagen[yi:yf, xi:xf]
-        # print(xi, yi, xf, yf )
         cv2.imshow('Recorte', recorte)
-        print(f'Dimensiones del recorte: base {recorte.shape[1]}, altura {recorte.shape[0]}')
-        # print(xi,yi,xf,yf)        
+        # print(f'Dimensiones del recorte: base {recorte.shape[1]}, altura {recorte.shape[0]}')
+        # print(xi,yi,xf,yf) 
+        return recorte       
+
+
+# sys.argv
 
 
 archivo_imagen = '../Imagenes/at nite.webp'
@@ -77,7 +82,7 @@ archivo_recorte = '../Imagenes/recorte.jpg'
 # Título de ventana: nombre del archivo imagen
 titulo_imagen = f'Original: {archivo_imagen}'
 #color del rectángulo
-BGR_marcador=(255,0,200)
+# BGR_marcador=(255,0,200)
 
 # Variables Globales: posición del mouse
 x_mouse = y_mouse = 0
@@ -88,8 +93,8 @@ copia_imagen = imagen.copy()        #se hace una copia descartable de la imagen
 cv2.imshow(titulo_imagen, copia_imagen)
 
 #medidas del recorte (por defecto)
-ancho_defecto = 512
-alto_defecto  = 512
+ancho_defecto = 256
+alto_defecto  = 256
 
 ancho_recorte = ancho_defecto
 alto_recorte = alto_defecto
