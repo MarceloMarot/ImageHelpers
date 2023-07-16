@@ -1,33 +1,22 @@
 # Importamos OpenCV
 import cv2
 
-import numpy as np
 
-ruta_imagen = '../Imagenes/at nite.webp'
-ruta_imagen = '../Imagenes/2P.png'
-
-# ruta de destino (el directorio debe ser preexistente)
-archivo_recorte = '../Imagenes/recorte.jpg'
-
-
-
-def redibujar_X(a):
-    global x_mouse, y_mouse
-    Redibujar_Imagen(x_mouse,y_mouse)
-
-
-def redibujar_Y(b):
-    global x_mouse, y_mouse
-    Redibujar_Imagen(x_mouse,y_mouse)
+# funcion auxiliar: no hace nada
+def nothing(x):
+    pass
 
 
 def Redibujar_Imagen(x,y):
-    global imagen, copia_imagen,recorte
+    global imagen, copia_imagen,recorte,ancho_recorte,alto_recorte
     # global titulo_imagen
     (alto_imagen, ancho_imagen) = imagen.shape[:2]
-    (xmax, ymax) = ancho_imagen, alto_imagen
-    ancho_recorte = cv2.getTrackbarPos('Ancho'  ,titulo_imagen)
-    alto_recorte  = cv2.getTrackbarPos('Altura' ,titulo_imagen) 
+    xmax, ymax = ancho_imagen, alto_imagen
+
+    #Se previenen errores por recortes mayores a la imagen de origen
+    if ancho_recorte > ancho_imagen : ancho_recorte = ancho_imagen
+    if alto_recorte  > alto_imagen  : alto_recorte  = alto_imagen  
+    
     # El puntero del mouse quedará centrado dentro del rectángulo
     xi = x - ancho_recorte // 2
     yi = y - alto_recorte // 2
@@ -39,11 +28,11 @@ def Redibujar_Imagen(x,y):
     xf = xi + ancho_recorte
     yf = yi + alto_recorte
     if xf >= xmax :
-        xf = xmax - 1
-        xi = xf - ancho_recorte
+        xf = xmax
+        xi = xmax - ancho_recorte
     if yf >= ymax :
-        yf = ymax - 1
-        yi = yf - alto_recorte
+        yf = ymax 
+        yi = ymax - alto_recorte
     # Actualizacion de la gráfica
     # print(xi,yi,xf,yf)   
     copia_imagen = imagen.copy()
@@ -53,11 +42,6 @@ def Redibujar_Imagen(x,y):
     # cv2.imshow('Recorte', recorte)
     #retorno de cooordenadas para recortar
     return xi, yi, xf, yf
-
-
-# funcion auxiliar: no hace nada
-def nothing(x):
-    pass
 
 
 # funcion para ubicar el recorte de imagen deseado
@@ -78,34 +62,43 @@ def marcar_recorte(evento,x,y,flags,param):
     # evento click izquierdo --> crear recorte
     if evento == cv2.EVENT_LBUTTONDOWN:
         recorte = imagen[yi:yf, xi:xf]
+        # print(xi, yi, xf, yf )
         cv2.imshow('Recorte', recorte)
+        print(f'Dimensiones del recorte: base {recorte.shape[1]}, altura {recorte.shape[0]}')
         # print(xi,yi,xf,yf)        
 
 
+archivo_imagen = '../Imagenes/at nite.webp'
+archivo_imagen = '../Imagenes/2P.jpg'
 
-titulo_imagen = f'Original: {ruta_imagen}'
+# ruta de destino (el directorio debe ser preexistente)
+archivo_recorte = '../Imagenes/recorte.jpg'
+
+# Título de ventana: nombre del archivo imagen
+titulo_imagen = f'Original: {archivo_imagen}'
 #color del rectángulo
 BGR_marcador=(255,0,200)
 
+# Variables Globales: posición del mouse
 x_mouse = y_mouse = 0
 
 # Leemos la imagen de entrada, la mostramos e imprimimos sus dimensiones.
-imagen = cv2.imread(ruta_imagen)
+imagen = cv2.imread(archivo_imagen)
 copia_imagen = imagen.copy()        #se hace una copia descartable de la imagen
 cv2.imshow(titulo_imagen, copia_imagen)
 
 #medidas del recorte (por defecto)
-ancho_defecto = 256
-alto_defecto  = 256
+ancho_defecto = 512
+alto_defecto  = 512
+
+ancho_recorte = ancho_defecto
+alto_recorte = alto_defecto
 
 # se leen las dimensiones de imagen
 (alto_imagen, ancho_imagen) = imagen.shape[:2]
+if alto_imagen < alto_defecto or ancho_imagen < ancho_defecto:
+    print("Cuidado: imagen original muy pequeña") 
 print(f'Dimensiones de la imagen original: base {ancho_imagen}, altura {alto_imagen}')
-
-# se crean las barras deslizantes
-# también se ordena la rutina de actualizacion de imagen cada vez que se deslizan la barran
-cv2.createTrackbar('Altura',titulo_imagen,alto_defecto ,alto_imagen ,redibujar_Y)
-cv2.createTrackbar('Ancho' ,titulo_imagen,ancho_defecto,ancho_imagen,redibujar_X)
 
 #Manejador del mouse sobre la imagen --> llama a la imagen de dibujar circulos
 cv2.setMouseCallback(titulo_imagen,marcar_recorte)
