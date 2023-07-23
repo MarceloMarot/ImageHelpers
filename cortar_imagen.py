@@ -7,19 +7,16 @@ def nothing(x):
     pass
 
 
-def Redibujar_Imagen(x,y):
-    global imagen, copia_imagen,recorte,ancho_recorte,alto_recorte
-    # global titulo_imagen
-    (alto_imagen, ancho_imagen) = imagen.shape[:2]
+def Marcar_Rectangulo(x_mouse, y_mouse ,ancho_recorte, alto_recorte):
+    # global ancho_recorte,alto_recorte
+    (alto_imagen, ancho_imagen) = imagen.shape[:2]           # FIX
     xmax, ymax = ancho_imagen, alto_imagen
-
     #Se previenen errores por recortes mayores a la imagen de origen
     if ancho_recorte > ancho_imagen : ancho_recorte = ancho_imagen
     if alto_recorte  > alto_imagen  : alto_recorte  = alto_imagen  
-    
     # El puntero del mouse quedará centrado dentro del rectángulo
-    xi = x - ancho_recorte // 2
-    yi = y - alto_recorte // 2
+    xi = x_mouse - ancho_recorte // 2
+    yi = y_mouse - alto_recorte // 2
     # Se confina al rectángulo adentro de la imagen
     if xi < 0: 
         xi = 0
@@ -33,45 +30,61 @@ def Redibujar_Imagen(x,y):
     if yf >= ymax :
         yf = ymax 
         yi = ymax - alto_recorte
-    # Actualizacion de la gráfica
-    # print(xi,yi,xf,yf)   
-    copia_imagen = imagen.copy()
-    #color del rectángulo
-    BGR_marcador=(255,0,200)
-    cv2.rectangle(copia_imagen,(xi,yi),(xf,yf),BGR_marcador,cv2.LINE_4 )
-    cv2.imshow(titulo_imagen, copia_imagen)
-    # recorte = imagen[yi:yf, xi:xf]
-    # cv2.imshow('Recorte', recorte)
-    #retorno de cooordenadas para recortar
-    return xi, yi, xf, yf
+    #retorno de cooordenadas para recortar, en una lista
+    return [xi, yi, xf, yf]
 
 
 # funcion para ubicar el recorte de imagen deseado
-def marcar_recorte(evento,x,y,flags,param):
+def Marcar_Recorte(evento,x_mouse,y_mouse,flags,param):
     #en esta funcion se usan solo los primeros tres parametros:
-    # - evento del mose
+    # - evento del mouse
     # - posicion x del mouse
     # - posicion y del mouse
-    global x_mouse, y_mouse
-    x_mouse = x
-    y_mouse = y
     global imagen, recorte
-    # Cuando el puntero del mouse se mueve dentro de la imagen debe dibujarse el rectángulo de seleccion
-    xi, yi, xf, yf = Redibujar_Imagen(x,y) 
+    global coordenadas_recorte, coordenadas_seleccion
+    # Colores rectangulo
+    BGR_seleccion = (200,0,150)              #magenta
+    BGR_recorte   = (100,150,0)              #verde oscuro
+    # evento click izquierdo --> actualizar seleccion
     if evento == cv2.EVENT_MOUSEMOVE:
         # actualizacion de graficas y retorno de coordenadas para recortar
-        xi, yi, xf, yf = Redibujar_Imagen(x,y)  
+        coordenadas_seleccion = Marcar_Rectangulo(x_mouse, y_mouse, ancho_recorte, alto_recorte) 
+        xi = coordenadas_seleccion[0]  
+        xf = coordenadas_seleccion[2]  
+        yi = coordenadas_seleccion[1] 
+        yf = coordenadas_seleccion[3]  
+        # Actualizacion de la gráfica  
+        copia_imagen = imagen.copy()
+        #color del rectángulo
+        color_rectangulo = BGR_seleccion
+        if coordenadas_seleccion == coordenadas_recorte :
+            color_rectangulo = BGR_recorte
+        cv2.rectangle(copia_imagen,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
+        cv2.imshow(titulo_imagen, copia_imagen)
     # evento click izquierdo --> crear recorte
     if evento == cv2.EVENT_LBUTTONDOWN:
+        # actualizacion de graficas y retorno de coordenadas para recortar
+        coordenadas_recorte = Marcar_Rectangulo(x_mouse, y_mouse, ancho_recorte, alto_recorte)  
+        xi = coordenadas_recorte[0]  
+        xf = coordenadas_recorte[2]  
+        yi = coordenadas_recorte[1] 
+        yf = coordenadas_recorte[3] 
+        # Actualizacion de la gráfica
+        copia_imagen = imagen.copy()
+        #color del rectángulo
+        color_rectangulo = BGR_recorte
+        cv2.rectangle(copia_imagen,(xi,yi),(xf,yf),color_rectangulo,cv2.LINE_4 )
         recorte = imagen[yi:yf, xi:xf]
         cv2.imshow('Recorte', recorte)
-        # print(f'Dimensiones del recorte: base {recorte.shape[1]}, altura {recorte.shape[0]}')
-        # print(xi,yi,xf,yf) 
-        return recorte       
+        cv2.imshow(titulo_imagen, copia_imagen)
+        
+
 
 
 # sys.argv
 
+
+## APERTURA IMAGEN
 
 archivo_imagen = '../Imagenes/at nite.webp'
 archivo_imagen = '../Imagenes/2P.jpg'
@@ -81,11 +94,6 @@ archivo_recorte = '../Imagenes/recorte.jpg'
 
 # Título de ventana: nombre del archivo imagen
 titulo_imagen = f'Original: {archivo_imagen}'
-#color del rectángulo
-# BGR_marcador=(255,0,200)
-
-# Variables Globales: posición del mouse
-x_mouse = y_mouse = 0
 
 # Leemos la imagen de entrada, la mostramos e imprimimos sus dimensiones.
 imagen = cv2.imread(archivo_imagen)
@@ -93,20 +101,33 @@ copia_imagen = imagen.copy()        #se hace una copia descartable de la imagen
 cv2.imshow(titulo_imagen, copia_imagen)
 
 #medidas del recorte (por defecto)
-ancho_defecto = 256
-alto_defecto  = 256
+ancho_recorte = 256
+alto_recorte = 256
 
-ancho_recorte = ancho_defecto
-alto_recorte = alto_defecto
 
+coordenadas_recorte   = [0,0,0,0]
+coordenadas_seleccion = [0,0,0,0]
+
+
+## PROCESAMIENTO
 # se leen las dimensiones de imagen
 (alto_imagen, ancho_imagen) = imagen.shape[:2]
-if alto_imagen < alto_defecto or ancho_imagen < ancho_defecto:
+if alto_imagen < alto_recorte or ancho_imagen < ancho_recorte:
     print("Cuidado: imagen original muy pequeña") 
 print(f'Dimensiones de la imagen original: base {ancho_imagen}, altura {alto_imagen}')
 
-#Manejador del mouse sobre la imagen --> llama a la imagen de dibujar circulos
-cv2.setMouseCallback(titulo_imagen,marcar_recorte)
+
+# INTERFAZ USUARIO
+
+#Recorte por defecto: arriba a la izquierda
+x_mouse=y_mouse=0
+param=flags=[]
+evento=cv2.EVENT_LBUTTONDOWN
+Marcar_Recorte(evento,x_mouse,y_mouse,flags,param)
+
+#Manejador de eventos del mouse sobre la imagen: movimiento cursor y click izquierdo
+cv2.setMouseCallback(titulo_imagen,Marcar_Recorte)
+
 
 # espera en reposo a que se pulse una tecla del teclado
 k = cv2.waitKey(0)
