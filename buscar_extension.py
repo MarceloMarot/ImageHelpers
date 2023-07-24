@@ -7,42 +7,21 @@ import sys
 
 from rich import print
 
-# # ruta        = '.'
-# ruta        = 'D:\Proyectos_Programacion'           #ruta absoluta
-# # ruta        = 'Backend'          #ruta relativa
-# # ruta        = '.'          #ruta relativa
-# extension   = '*.py'
+# Formatos de texto reconocidos por OpenCV (casi todos)
+extensiones_imagen=["*.bmp", "*.dib", "*.jpeg", "*.jpg", "*.jpe", "*.jp2", "*.png", "*.webp", "*.pbm", "*.pgm", "*.ppm", "*.pxm", "*.pxm", "*.pnm", "*.pfm", "*.sr", "*.ras", "*.tiff", "*.tif", "*.exr", "*.hdr", "*.pic"]
 
-# mostrar_diccionarios = False
-
-# print("Ruta de búsqueda: ", ruta)  
-
-archivo    = []
-direccion_absoluta = []
-
-# from rich import print
-# from rich.text import Text
-# from rich.tree import Tree
-# from rich.filesize import decimal
-# from rich.markup import escape
-
-# arbol=Tree(
-#     f"[bold orange]:open_file_folder: [link file://{ruta}]{ruta}",
-#     guide_style="bold bright_blue"
-# )
-
+# Busqueda de archivos , (incluye subdirectorios)
 def buscar_extension(ruta: pathlib.Path, extension: str):
     #se buscan todos los elementos con la terminacion indicada
-    # direcciones = []
+    lista_rutas_archivo = []
     for direccion in pathlib.Path(ruta).rglob(extension):
-        # print(direccion)
-        # archivo_actual = str(direccion.name   )
         direccion_actual = str(direccion.absolute())
+        lista_rutas_archivo.append ( direccion_actual )
+    return lista_rutas_archivo
 
-        direccion_absoluta.append ( direccion_actual )
-    return direccion_absoluta
 
-
+# Lista TODOS los archivos y subcarpetas del directorio
+# CUIDADO con el tipo de salida
 def listar_directorios(ruta: pathlib.Path()):
     direcciones = sorted(
         pathlib.Path(ruta).iterdir(),
@@ -51,9 +30,10 @@ def listar_directorios(ruta: pathlib.Path()):
     return direcciones
     
 
-def elegir_ruta(direccion_absoluta):
+# Interfaz usuario: elegir un archivo de la lista por indice
+def elegir_ruta(lista_rutas_archivo):
     i=0
-    for direccion in direccion_absoluta:
+    for direccion in lista_rutas_archivo:
         archivo = pathlib.Path(direccion).name
         print(f"[bold bright_blue] [{i}]:[/bold bright_blue] [yellow]{archivo}[/yellow] [green] --> {direccion}[/green]")
         i += 1
@@ -62,15 +42,15 @@ def elegir_ruta(direccion_absoluta):
         try:
             print(f"[bold green]Elegir opción por su índice:[/bold green]")
             eleccion = int(input())
-            direccion_elegida = direccion_absoluta[eleccion]
+            direccion_elegida = lista_rutas_archivo[eleccion]
         except ValueError:
             print("[bold red]ValueError: el índice debe ser un número.")
         except IndexError:
             print("[bold red]IndexError: indice fuera de rango.")
         else:    
-            total = len(direccion_absoluta) - 1
+            total = len(lista_rutas_archivo) - 1
             if eleccion <= total :
-                direccion_elegida = direccion_absoluta[eleccion]
+                direccion_elegida = lista_rutas_archivo[eleccion]
                 archivo_elegido = pathlib.Path(direccion_elegida).name
                 # print(archivo_elegido, direccion_elegida)
             indice_elegido = True
@@ -83,21 +63,58 @@ def elegir_ruta(direccion_absoluta):
 if __name__ == "__main__" :
     try:
         ruta = os.path.abspath(sys.argv[1])
+
+        # print(extensiones_imagen)
+        # print(len(sys.argv))
+
         extension = sys.argv[2].strip() 
     except IndexError():
         print("Error: faltan argumentos  ") 
         print("     Ejemplo uso: python buscar_extension.py <drectorio> *.<extension>  ") 
+
     except TypeError():
         print("Error: Tipo de datos de entrada erróneo")
+
     else:
 
-        print(f"[bold yellow]Directorio: {ruta} ; extension: {extension}")
-        direccion_absoluta = buscar_extension(ruta, extension)
+        print(f"[bold green]Directorio: [bold yellow]{ruta} [bold green]; extension: [bold yellow]{extension}")
+        # Lista de archivos cn la extension pedida
+        lista_rutas_archivo = buscar_extension(ruta, extension)
 
 
-        direccion_elegida = elegir_ruta(direccion_absoluta)
+
+        # TODAS las extensionesde imagen
+        # lista_rutas_archivo = []
+        for extension in extensiones_imagen:
+            # print(extension)
+            # lista_rutas_archivo = buscar_extension(ruta, extension)
+            lista_rutas_archivo = lista_rutas_archivo + buscar_extension(ruta, extension) #Concatenacion de listas
+
+        # print(type(lista_rutas_archivo), lista_rutas_archivo)
+
+        # print(listar_directorios(ruta))
+
+        # print("[bold green]Nº archivos encontrados: ", len(lista_rutas_archivo))
+        numero_imagenes = len(lista_rutas_archivo)
+        
 
 
-        archivo_elegido = pathlib.Path(direccion_elegida).name
-        print(archivo_elegido, direccion_elegida)
+
+        # numero_imagenes = 0
+        
+        print(f"[bold green]Nº archivos encontrados: [/bold green][bold yellow] {numero_imagenes}") 
+        if numero_imagenes > 0 :
+
+            direccion_elegida = elegir_ruta(lista_rutas_archivo)
+
+
+            archivo_elegido = pathlib.Path(direccion_elegida).name
+            print(archivo_elegido, direccion_elegida)
+
+        else:
+            print("[bold red]No hay imagenes disponibles en el directorio")
+            print("[bold red]Cancelado")
+
+
+
     
