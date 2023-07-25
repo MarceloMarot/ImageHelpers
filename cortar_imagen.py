@@ -10,33 +10,30 @@ class Dimensiones2D:
 	    self.ancho = ancho
 
 
-# variables globales 
+# # variables globales 
 dimensiones_imagen  = Dimensiones2D(0, 0)    #inicializacion por defecto
-dimensiones_recorte = Dimensiones2D(512, 512)    #inicializacion por defecto , apto Stable Diffusion
+dimensiones_recorte = Dimensiones2D(0, 0)    #inicializacion por defecto 
 coordenadas_recorte = [0,0,0,0]
 coordenadas_seleccion = [0,0,0,0]
 
 
 # funcion para abrir la ventana de edición
 # la ventana se cierra presionando alguna de las teclas indicadas
-def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_consola):
+# por defecto se elije un tamaño de recorte de 512 x 512, que es el exigido por Stable Diffusion
+def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_consola=False , ancho_recorte=512, alto_recorte=512 ):
     # valores retorno
     exito = False
     tecla = "-"  # Caracter no implementado
-
     # Leemos la imagen de entrada, la mostramos e imprimimos sus dimensiones.
     global imagen, recorte
     imagen = cv2.imread(archivo_imagen_original)     
-
-    global coordenadas_recorte, coordenadas_seleccion
-
-    # se leen las dimensiones de imagen
+    # se leen las dimensiones de imagen y de recorte
+    global dimensiones_imagen, dimensiones_recorte
     dimensiones_imagen.ancho = imagen.shape[1]
     dimensiones_imagen.alto = imagen.shape[0]
-
+    dimensiones_recorte.ancho = ancho_recorte
+    dimensiones_recorte.alto  = alto_recorte
     # se verifica que el recorte se pueda hacer
-    ancho_recorte   = dimensiones_recorte.ancho
-    alto_recorte    = dimensiones_recorte.alto
     ancho_imagen    = dimensiones_imagen.ancho
     alto_imagen     = dimensiones_imagen.alto
     if texto_consola == True: 
@@ -80,14 +77,14 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
         return tecla, exito
 
 
+# Funcion creada para calcular el rectángulo de seleccion 
 def Marcar_Rectangulo(x_mouse, y_mouse ):
-
+    # lectura de dimensiones desde variables globales
+    global dimensiones_imagen, dimensiones_recorte
     x_recorte = dimensiones_recorte.ancho
     y_recorte = dimensiones_recorte.alto
-
     x_max = dimensiones_imagen.ancho
     y_max = dimensiones_imagen.alto
-
     #Se previenen errores por recortes mayores a la imagen de origen
     if x_recorte > x_max : x_recorte = x_max
     if y_recorte > y_max : y_recorte  = y_max  
@@ -111,7 +108,7 @@ def Marcar_Rectangulo(x_mouse, y_mouse ):
     return [xi, yi, xf, yf]
 
 
-# funcion para ubicar el recorte de imagen deseado
+# funcion para ubicar y mostrar el recorte de imagen deseado
 def Marcar_Recorte(evento,x_mouse,y_mouse,flags,param):
     #en esta funcion se usan solo los primeros tres parametros:
     # - evento del mouse
@@ -181,14 +178,11 @@ if __name__ == "__main__" :
         archivo_recorte = str(sys.argv[2])
         print("Nombre de recorte:", archivo_recorte)
 
-    # Ventana de recorte fija
-    dimensiones_recorte.ancho = 256 
-    dimensiones_recorte.alto  = 256 
-
     ## PROCESAMIENTO
-    Interfaz_Edicion(archivo_imagen , archivo_recorte, True)
-    # Interfaz_Edicion(archivo_imagen , archivo_recorte, False)
+    Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 256, 256)      
+    # Interfaz_Edicion(archivo_imagen , archivo_recorte, True)              # Tamaño predefinido
+    # Interfaz_Edicion(archivo_imagen , archivo_recorte)             # Tamaño predefinido, sin mensajes extra
 
-    # # Limpiamos y cerramos
+    # # Cierre de ventanas
     cv2.destroyAllWindows()
 

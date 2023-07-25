@@ -7,10 +7,8 @@ import sys
 
 from rich import print
 
-# Formatos de texto reconocidos por OpenCV (casi todos)
-extensiones_imagen=["*.bmp", "*.dib", "*.jpeg", "*.jpg", "*.jpe", "*.jp2", "*.png", "*.webp", "*.pbm", "*.pgm", "*.ppm", "*.pxm", "*.pxm", "*.pnm", "*.pfm", "*.sr", "*.ras", "*.tiff", "*.tif", "*.exr", "*.hdr", "*.pic"]
 
-# Busqueda de archivos , (incluye subdirectorios)
+# Busqueda de archivos por extensión en una carpeta (incluye subdirectorios)
 def buscar_extension(ruta: pathlib.Path, extension: str):
     #se buscan todos los elementos con la terminacion indicada
     lista_rutas_archivo = []
@@ -18,6 +16,19 @@ def buscar_extension(ruta: pathlib.Path, extension: str):
         direccion_actual = str(direccion.absolute())
         lista_rutas_archivo.append ( direccion_actual )
     return lista_rutas_archivo
+
+
+# Busqueda de imágenes en una carpeta (incluye subdirectorios)
+def buscar_imagenes(ruta: pathlib.Path):
+    lista_rutas_imagen = []
+    # Formatos de texto reconocidos por OpenCV (casi todos)
+    # NO se incluyen GIF y SVG
+    extensiones_OpenCV = ["*.bmp", "*.dib", "*.jpeg", "*.jpg", "*.jpe", "*.jp2", "*.png", "*.webp", "*.pbm", "*.pgm", "*.ppm", "*.pxm", "*.pxm", "*.pnm", "*.pfm", "*.sr", "*.ras", "*.tiff", "*.tif", "*.exr", "*.hdr", "*.pic"]
+    # se busca cada extensión, una por una
+    for extension in extensiones_OpenCV:
+        lista_rutas_imagen = lista_rutas_imagen + buscar_extension(ruta, extension) #Concatenacion de listas
+    # numero_imagenes = len(lista_rutas)
+    return lista_rutas_imagen
 
 
 # Lista TODOS los archivos y subcarpetas del directorio
@@ -67,7 +78,7 @@ if __name__ == "__main__" :
         # print(extensiones_imagen)
         # print(len(sys.argv))
 
-        extension = sys.argv[2].strip() 
+        # extension = sys.argv[2].strip() 
     except IndexError():
         print("Error: faltan argumentos  ") 
         print("     Ejemplo uso: python buscar_extension.py <drectorio> *.<extension>  ") 
@@ -77,44 +88,28 @@ if __name__ == "__main__" :
 
     else:
 
-        print(f"[bold green]Directorio: [bold yellow]{ruta} [bold green]; extension: [bold yellow]{extension}")
-        # Lista de archivos cn la extension pedida
-        lista_rutas_archivo = buscar_extension(ruta, extension)
-
-
-
-        # TODAS las extensionesde imagen
-        # lista_rutas_archivo = []
-        for extension in extensiones_imagen:
-            # print(extension)
-            # lista_rutas_archivo = buscar_extension(ruta, extension)
-            lista_rutas_archivo = lista_rutas_archivo + buscar_extension(ruta, extension) #Concatenacion de listas
-
-        # print(type(lista_rutas_archivo), lista_rutas_archivo)
-
-        # print(listar_directorios(ruta))
-
-        # print("[bold green]Nº archivos encontrados: ", len(lista_rutas_archivo))
-        numero_imagenes = len(lista_rutas_archivo)
-        
-
-
-
-        # numero_imagenes = 0
-        
+        print(f"[bold green]Directorio: [bold yellow]{ruta} [bold green]")
+        # Lista de archivos de imagen editables con OpenCV
+        rutas_imagen = buscar_imagenes(ruta)
+    
+        numero_imagenes = len(rutas_imagen)
         print(f"[bold green]Nº archivos encontrados: [/bold green][bold yellow] {numero_imagenes}") 
         if numero_imagenes > 0 :
-
-            direccion_elegida = elegir_ruta(lista_rutas_archivo)
-
-
+            direccion_elegida = elegir_ruta(rutas_imagen)
             archivo_elegido = pathlib.Path(direccion_elegida).name
             print(archivo_elegido, direccion_elegida)
-
         else:
             print("[bold red]No hay imagenes disponibles en el directorio")
             print("[bold red]Cancelado")
 
 
+    def button_clicked(e):
+        b.data += 1
+        t.value = f"Button clicked {b.data} time(s)"
+        page.update()
 
+    b = ft.ElevatedButton("Button with 'click' event", on_click=button_clicked, data=0)
+    t = ft.Text()
+
+    page.add(b, t)
     
