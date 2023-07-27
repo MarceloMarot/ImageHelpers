@@ -77,7 +77,7 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
         return tecla, exito
 
 
-# Funcion creada para calcular el rectángulo de seleccion 
+# Funcion creada para calcular el rectángulo de seleccion de modo de evitar desbordes
 def Marcar_Rectangulo(x_mouse, y_mouse ):
     # lectura de dimensiones desde variables globales
     global dimensiones_imagen, dimensiones_recorte
