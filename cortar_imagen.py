@@ -3,6 +3,10 @@ import cv2
 import sys
 
 
+def nothing(x):
+    pass
+
+
 # Clase para guardar las dimensiones de la imagen
 class Dimensiones2D:
     def __init__(self, ancho, alto):
@@ -41,9 +45,25 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
         print(f'Dimensiones de la imagen recortada : base {ancho_recorte}, altura {alto_recorte}')
     if alto_imagen < alto_recorte or ancho_imagen < ancho_recorte:
         if texto_consola == True: print("WARNING: imagen original muy pequeña") 
-        exito = False
-        tecla = "-"  # Caracter no implementado
-        return tecla , exito
+        #correccion proporcional de los tamaños
+        if alto_imagen < alto_recorte:
+            proporcion = alto_recorte / alto_imagen
+            ancho_imagen *= proporcion
+            ancho_imagen = int(ancho_imagen)
+            alto_imagen = alto_recorte
+        if ancho_imagen < ancho_recorte:
+            proporcion = ancho_recorte / ancho_imagen
+            alto_imagen *= proporcion
+            alto_imagen = int( alto_imagen)
+            ancho_imagen = ancho_recorte
+        imagen = Redimensionar_Imagen(imagen, ancho_imagen, alto_imagen)
+        if texto_consola == True: print("Proporción de reescalado: ", proporcion) 
+        print(f'Dimensiones de la imagen ampliada  : base {ancho_imagen}, altura {alto_imagen}')
+        #Vieja rutina: fin del programa
+        # if texto_consola == True: print("Operación interrumpida") 
+        # exito = False
+        # tecla = "-"  # Caracter no implementado
+        # return tecla , exito
     #Recorte por defecto: arriba a la izquierda
     x_mouse=y_mouse=0
     param=flags=[]
@@ -51,6 +71,11 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
     Marcar_Recorte(evento, x_mouse, y_mouse, flags, param)
     #Manejador de eventos del mouse sobre la imagen: movimiento cursor y click izquierdo
     cv2.setMouseCallback('Original',Marcar_Recorte)
+
+    # Barra de reescalado
+    # cv2.namedWindow('image')
+    # cv2.createTrackbar('Escala','image',100,300,nothing)
+
     # Conjunto de teclas permitidas
     teclas_programadas = {"a" , "s", "d" ," " }  # Teclas 'A', 'S', 'D', 'SPACE' 
     tecla = "-"  # Caracter no implementado
@@ -153,6 +178,29 @@ def Marcar_Recorte(evento,x_mouse,y_mouse,flags,param):
         cv2.imshow('Original', copia_imagen)                
         
 
+
+def Redimensionar_Imagen(imagen,anchura: int, altura: int):
+
+    # Prevencion de errores por entrada de numeros flotantes
+    anchura= int(anchura )
+    altura = int(altura  )
+
+    # Actualizacion de la variable global (evita errores)
+    global dimensiones_imagen    
+    dimensiones_imagen.ancho = anchura
+    dimensiones_imagen.alto  = altura
+
+    # Se usa la interpolacion más lenta pero de mejor calidad
+    dimensiones = (anchura, altura)
+    imagen_ampliada = cv2.resize(imagen,dimensiones , interpolation = cv2.INTER_LANCZOS4) 
+    return imagen_ampliada
+
+
+
+
+
+
+
 # Rutina de prueba: Apertura de imagenes
 # Uso:
 # python cortar_imagen.py <ruta_imagen_original> <ruta_imagen_salida>
@@ -163,7 +211,8 @@ if __name__ == "__main__" :
     if len(sys.argv) == 1 :
         #imagenes por defecto 
         archivo_imagen = '../Imagenes/at nite.webp'
-        archivo_imagen = '../Imagenes/2P.jpg'
+        archivo_imagen = '../Imagenes/saber in lake.webp'
+        # archivo_imagen = '../Imagenes/2P.jpg'
         print("Apertura de archivo de ejemplo:", archivo_imagen)
     else :
         archivo_imagen = str(sys.argv[1])
@@ -178,8 +227,10 @@ if __name__ == "__main__" :
         archivo_recorte = str(sys.argv[2])
         print("Nombre de recorte:", archivo_recorte)
 
+
     ## PROCESAMIENTO
-    Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 256, 256)      
+    # Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 256, 256)    # Recorte pequeño
+    Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 800,800)       # Recorte demasiado grande
     # Interfaz_Edicion(archivo_imagen , archivo_recorte, True)              # Tamaño predefinido
     # Interfaz_Edicion(archivo_imagen , archivo_recorte)             # Tamaño predefinido, sin mensajes extra
 
