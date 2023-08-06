@@ -1,48 +1,48 @@
 # Importamos OpenCV
 import cv2
 import sys
-
-
-def nada(x):
-    pass
-
-
-def Actualizar_Proporcion(x):
-    global imagen_original,imagen_escalada
-
-    porcentaje = cv2.getTrackbarPos('Escala'  , 'Original')
-    proporcion = porcentaje / 100
-    # print("Escala: ",proporcion," ; Porcentaje : ",porcentaje )
-
-    anchura = dimensiones_imagen_original.ancho * proporcion
-    altura  = dimensiones_imagen_original.alto  * proporcion
-
-    imagen_escalada = Redimensionar_Imagen(imagen_original ,anchura, altura)
-
-    # Marcar_Recorte()
-
-    return
-
-
-
-# escala = [1, 2]
-
-
-# Clase para guardar las dimensiones de la imagen
-class Dimensiones2D:
-    def __init__(self, ancho, alto):
-	    self.alto  = alto		
-	    self.ancho = ancho
+import numpy as np
 
 
 # # variables globales 
-dimensiones_imagen_original  = Dimensiones2D(0, 0)    #inicializacion por defecto
-dimensiones_imagen_escalada  = Dimensiones2D(0, 0)    #inicializacion por defecto
-dimensiones_recorte = Dimensiones2D(0, 0)    #inicializacion por defecto 
 coordenadas_recorte = [0,0,0,0]
 coordenadas_seleccion = [0,0,0,0]
 escala_minima = 100     #inicializacion por defecto 
 escala_maxima = 200     #inicializacion por defecto 
+xmouse = ymouse =0
+
+
+# Manejador para controlar el tamaño de la imagen
+def Actualizar_Proporcion(x):
+    global imagen_original,imagen_escalada
+    global xmouse, ymouse 
+    porcentaje = cv2.getTrackbarPos('Escala'  , 'Original')
+    proporcion = porcentaje / 100
+    # print("Escala: ",proporcion," ; Porcentaje : ",porcentaje )
+    imagen_escalada = Redimensionar_Imagen(imagen_original, proporcion)
+    # Actualizacion gráfica
+    evento = cv2.EVENT_MOUSEMOVE
+    Marcar_Recorte(evento, xmouse, ymouse, [],[] )
+    return
+
+
+# Funcion para redimencionar la imagen  de entrada sin alterar las proporciones
+def Redimensionar_Imagen(imagen, escala):
+    # la escala es relativa a las dimensiones de la imagen
+    # escala > 1 : ampliacion
+    # escala < 1 : reduccion 
+    anchura = imagen.shape[1] * escala
+    altura  = imagen.shape[0] * escala
+
+    # Prevencion de errores por entrada de numeros flotantes
+    anchura= int(anchura )
+    altura = int(altura  )
+
+    # Se usa la interpolacion más lenta pero de mejor calidad
+    dimensiones = (anchura, altura)
+    imagen_ampliada = cv2.resize(imagen,dimensiones , interpolation = cv2.INTER_LANCZOS4) 
+    return imagen_ampliada
+
 
 # funcion para abrir la ventana de edición
 # la ventana se cierra presionando alguna de las teclas indicadas
@@ -56,19 +56,16 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
     global imagen_original,imagen_escalada, recorte
     imagen_original = cv2.imread(archivo_imagen_original)    
     # se leen las dimensiones de imagen y de recorte
-    global dimensiones_imagen_original, dimensiones_imagen_escalada, dimensiones_recorte
-    dimensiones_imagen_original.ancho = imagen_original.shape[1]
-    dimensiones_imagen_original.alto = imagen_original.shape[0]
 
     # asignacion por defecto: NO ampliar ni reducir imagen de entrada
     imagen_escalada = imagen_original
-    dimensiones_imagen_escalada.ancho = imagen_escalada.shape[1]
-    dimensiones_imagen_escalada.alto = imagen_escalada.shape[0]
-    dimensiones_recorte.ancho = ancho_recorte
-    dimensiones_recorte.alto  = alto_recorte
+
+    recorte= np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
+    print(f"ALTO: {recorte.shape[0]} , ANCHO: {recorte.shape[1]}")
+
     # se verifica que el recorte se pueda hacer
-    ancho_imagen    = dimensiones_imagen_escalada.ancho
-    alto_imagen     = dimensiones_imagen_escalada.alto
+    ancho_imagen    = imagen_escalada.shape[1]
+    alto_imagen     = imagen_escalada.shape[0]
     if texto_consola == True: 
         print(f'Dimensiones de la imagen original  : base {ancho_imagen}, altura {alto_imagen}')
         print(f'Dimensiones de la imagen recortada : base {ancho_recorte}, altura {alto_recorte}')
@@ -93,8 +90,8 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
             alto_imagen = int( alto_imagen)
             ancho_imagen = ancho_recorte
         escala_minima = int( proporcion * 100) #porcentaje minimo de escalado
-        escala_maxima = int(proporcion * 200) #porcentaje maximo de escalado
-        imagen_escalada = Redimensionar_Imagen(imagen_original, ancho_imagen, alto_imagen)
+        escala_maxima = int( proporcion * 200) #porcentaje maximo de escalado
+        imagen_escalada = Redimensionar_Imagen(imagen_original, proporcion)
         if texto_consola == True: print("Proporción de reescalado: ", proporcion) 
         print(f'Dimensiones de la imagen ampliada  : base {ancho_imagen}, altura {alto_imagen}')
         #Vieja rutina: fin del programa
@@ -104,9 +101,11 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
         # return tecla , exito
     #Recorte por defecto: arriba a la izquierda
     x_mouse=y_mouse=0
+
     param=flags=[]
     evento=cv2.EVENT_LBUTTONDOWN
     Marcar_Recorte(evento, x_mouse, y_mouse, flags, param)
+
     #Manejador de eventos del mouse sobre la imagen: movimiento cursor y click izquierdo
     cv2.setMouseCallback('Original', Marcar_Recorte)
 
@@ -115,8 +114,6 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
     else: escala_defecto = 100
     cv2.createTrackbar('Escala', 'Original', escala_defecto , escala_maxima , Actualizar_Proporcion)
     cv2.setTrackbarMin('Escala', 'Original', escala_minima	) 
-    # cv2.setTrackbarMax('Escala', 'Original', escala_minima * 4) # tope superior (redundante)
-    # print("Escala: ", escala, type(escala))
     # Conjunto de teclas permitidas
     teclas_programadas = {"a" , "s", "d" ," " }  # Teclas 'A', 'S', 'D', 'SPACE' 
     tecla = "-"  # Caracter no implementado
@@ -144,13 +141,13 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
 
 
 # Funcion creada para calcular el rectángulo de seleccion de modo de evitar desbordes
-def Calcular_Rectangulo(x_mouse, y_mouse ):
-    # lectura de dimensiones desde variables globales
-    global dimensiones_imagen_escalada, dimensiones_recorte
-    x_recorte = dimensiones_recorte.ancho
-    y_recorte = dimensiones_recorte.alto
-    x_max = dimensiones_imagen_escalada.ancho
-    y_max = dimensiones_imagen_escalada.alto
+def Calcular_Rectangulo(pos_mouse,dim_recorte, imagen, color_rectangulo ):
+
+    x_mouse, y_mouse = pos_mouse
+    # lectura de dimensiones
+    [x_recorte, y_recorte] = dim_recorte
+    x_max = imagen.shape[1]
+    y_max = imagen.shape[0]
     #Se previenen errores por recortes mayores a la imagen de origen
     if x_recorte > x_max : x_recorte = x_max
     if y_recorte > y_max : y_recorte  = y_max  
@@ -170,8 +167,18 @@ def Calcular_Rectangulo(x_mouse, y_mouse ):
     if yf >= y_max :
         yf = y_max 
         yi = y_max - y_recorte
+    # creacion del recorte de imagen
+    recorte_imagen = imagen[yi:yf, xi:xf]
+    # marcado del rectangulo sobre una copia de la imagen para no dañar la original
+    copia = imagen.copy()
+    cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
+    cv2.imshow('Original',copia) 
     #retorno de cooordenadas para recortar, en una lista
-    return [xi, yi, xf, yf]
+    return [recorte_imagen ,[xi, yi, xf, yf]]
+
+
+
+
 
 
 # funcion para ubicar y mostrar el recorte de imagen deseado
@@ -180,67 +187,35 @@ def Marcar_Recorte(evento,x_mouse,y_mouse,flags,param):
     # - evento del mouse
     # - posicion x del mouse
     # - posicion y del mouse
-    global imagen_ampliada, recorte
+    mouse = [x_mouse, y_mouse]
+    global imagen_escalada, recorte
     global coordenadas_recorte, coordenadas_seleccion
+    # global dimensiones_recorte
+    global xmouse, ymouse
+    xmouse = x_mouse
+    ymouse = y_mouse
+
+    dim_recorte = [recorte.shape[1], recorte.shape[0]]
+
     # Colores rectangulo
     BGR_seleccion = (200,0,150)              #magenta
     BGR_recorte   = (100,150,0)              #verde oscuro
     # evento click izquierdo --> actualizar seleccion
     if evento == cv2.EVENT_MOUSEMOVE:
-        # actualizacion de graficas y retorno de coordenadas de seleccion
-        coordenadas_seleccion = Calcular_Rectangulo(x_mouse, y_mouse) 
-        xi = coordenadas_seleccion[0]  
-        xf = coordenadas_seleccion[2]  
-        yi = coordenadas_seleccion[1] 
-        yf = coordenadas_seleccion[3]  
-        # Actualizacion de la gráfica  
-        copia_imagen = imagen_escalada.copy()
-        #color del rectángulo
-        color_rectangulo = BGR_seleccion
-        if coordenadas_seleccion == coordenadas_recorte :
-            color_rectangulo = BGR_recorte
-        cv2.rectangle(copia_imagen,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
-        cv2.imshow('Original', copia_imagen)                
+        # Actualizacion de graficas y retorno de coordenadas de seleccion
+        # Si la posicion de la seleccion es la misma del recorte no se cambai de color
+        if coordenadas_recorte == coordenadas_seleccion: 
+            retorno = Calcular_Rectangulo(mouse, dim_recorte, imagen_escalada, BGR_recorte ) 
+        else:
+            retorno = Calcular_Rectangulo(mouse, dim_recorte, imagen_escalada, BGR_seleccion )
+        # Sólo se registran las coordenadas del recorte 
+        coordenadas_seleccion = retorno[1]
     # evento click izquierdo --> crear recorte
     if evento == cv2.EVENT_LBUTTONDOWN:
-        # actualizacion de graficas y retorno de coordenadas ya recortadas
-        coordenadas_recorte = Calcular_Rectangulo(x_mouse, y_mouse) 
-        xi = coordenadas_recorte[0]  
-        xf = coordenadas_recorte[2]  
-        yi = coordenadas_recorte[1] 
-        yf = coordenadas_recorte[3] 
-        # Actualizacion de la gráfica
-        copia_imagen = imagen_escalada.copy()
-        #color del rectángulo
-        color_rectangulo = BGR_recorte
-        cv2.rectangle(copia_imagen,(xi,yi),(xf,yf),color_rectangulo,cv2.LINE_4 )
-        # actualizacion del recorte
-        recorte = imagen_escalada[yi:yf, xi:xf]
-        # cv2.imshow('Recorte', recorte)            # imagen adicional
-        cv2.imshow('Original', copia_imagen)                
+        # Actualizacion de graficas y retorno del recorte y sus coordenadas
+        [recorte , coordenadas_recorte]= Calcular_Rectangulo(mouse, dim_recorte, imagen_escalada, BGR_recorte )   
+        # print(f"flags: {flags} {type(flags)} ||| param: {param} {type(param)}")     
         
-
-
-def Redimensionar_Imagen(imagen,anchura: int, altura: int):
-
-    # Prevencion de errores por entrada de numeros flotantes
-    anchura= int(anchura )
-    altura = int(altura  )
-
-    # Actualizacion de la variable global (evita errores)
-    global dimensiones_imagen_escalada    
-    dimensiones_imagen_escalada.ancho = anchura
-    dimensiones_imagen_escalada.alto  = altura
-
-    # Se usa la interpolacion más lenta pero de mejor calidad
-    dimensiones = (anchura, altura)
-    imagen_ampliada = cv2.resize(imagen,dimensiones , interpolation = cv2.INTER_LANCZOS4) 
-    return imagen_ampliada
-
-
-
-
-
 
 
 # Rutina de prueba: Apertura de imagenes
@@ -252,9 +227,10 @@ if __name__ == "__main__" :
     ## APERTURA IMAGEN
     if len(sys.argv) == 1 :
         #imagenes por defecto 
-        archivo_imagen = '../Imagenes/at nite.webp'
-        # archivo_imagen = '../Imagenes/saber in lake.webp'
-        archivo_imagen = '../Imagenes/2P.jpg'
+        # archivo_imagen = '../Imagenes/at nite.webp'
+        archivo_imagen = '../Imagenes/saber in lake.webp'
+        # archivo_imagen = '../Imagenes/2P.jpg'
+        # archivo_imagen = '../Imagenes/2P en bosque.webp'
         print("Apertura de archivo de ejemplo:", archivo_imagen)
     else :
         archivo_imagen = str(sys.argv[1])
@@ -269,10 +245,9 @@ if __name__ == "__main__" :
         archivo_recorte = str(sys.argv[2])
         print("Nombre de recorte:", archivo_recorte)
 
-
     ## PROCESAMIENTO
-    Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 256, 256)    # Recorte pequeño
-    # Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 800,800)       # Recorte demasiado grande
+    # Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 400, 256)    # Recorte pequeño
+    Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 800,800)       # Recorte demasiado grande
     # Interfaz_Edicion(archivo_imagen , archivo_recorte, True)              # Tamaño predefinido
     # Interfaz_Edicion(archivo_imagen , archivo_recorte)             # Tamaño predefinido, sin mensajes extra
 
