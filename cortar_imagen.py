@@ -34,6 +34,19 @@ def Redimensionar_Imagen(imagen, escala):
     anchura = imagen.shape[1] * escala
     altura  = imagen.shape[0] * escala
 
+    #     # FIX IT !!!
+    # #correccion proporcional de los tamaños
+    # if alto_imagen < alto_recorte:
+    #     proporcion = alto_recorte / alto_imagen
+    #     ancho_imagen *= proporcion
+    #     ancho_imagen = int(ancho_imagen)
+    #     alto_imagen = alto_recorte
+    # if ancho_imagen < ancho_recorte:
+    #     proporcion = ancho_recorte / ancho_imagen
+    #     alto_imagen *= proporcion
+    #     alto_imagen = int( alto_imagen)
+    #     ancho_imagen = ancho_recorte
+
     # Prevencion de errores por entrada de numeros flotantes
     anchura= int(anchura )
     altura = int(altura  )
@@ -59,9 +72,9 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
 
     # asignacion por defecto: NO ampliar ni reducir imagen de entrada
     imagen_escalada = imagen_original
-
+    #creacion recorte vacio
     recorte= np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
-    print(f"ALTO: {recorte.shape[0]} , ANCHO: {recorte.shape[1]}")
+    # print(f"ALTO: {recorte.shape[0]} , ANCHO: {recorte.shape[1]}")
 
     # se verifica que el recorte se pueda hacer
     ancho_imagen    = imagen_escalada.shape[1]
@@ -73,23 +86,14 @@ def  Interfaz_Edicion(archivo_imagen_original, archivo_imagen_recorte, texto_con
     #se calcula la esala minima que puede tener la imagen de modo de permitir el recorte
     if alto_imagen / alto_recorte > ancho_imagen / ancho_recorte : proporcion =  ancho_recorte / ancho_imagen 
     else : proporcion =  alto_recorte / alto_imagen 
-    escala_minima = int( proporcion * 100) #porcentaje minimo de escalado (normalmente es menor al 100%)
+    escala_minima = int( proporcion * 100 ) #porcentaje minimo de escalado (normalmente es menor al 100%)
+    escala_minima += 1  # excedente del 1% para prevencion de imagenes demasiado chicas
     # Si la imagen es demasiado chica se amplía, sustituyendo a la original
     # if alto_imagen < alto_recorte or ancho_imagen < ancho_recorte:
     if proporcion > 1:
         if texto_consola == True: print("WARNING: imagen original muy pequeña") 
-        #correccion proporcional de los tamaños
-        if alto_imagen < alto_recorte:
-            proporcion = alto_recorte / alto_imagen
-            ancho_imagen *= proporcion
-            ancho_imagen = int(ancho_imagen)
-            alto_imagen = alto_recorte
-        if ancho_imagen < ancho_recorte:
-            proporcion = ancho_recorte / ancho_imagen
-            alto_imagen *= proporcion
-            alto_imagen = int( alto_imagen)
-            ancho_imagen = ancho_recorte
-        escala_minima = int( proporcion * 100) #porcentaje minimo de escalado
+        # escala_minima = int( proporcion * 100) #porcentaje minimo de escalado
+        # escala_minima += 1  # excedente del 1% para prevencion de imagenes demasiado chicas
         escala_maxima = int( proporcion * 200) #porcentaje maximo de escalado
         imagen_escalada = Redimensionar_Imagen(imagen_original, proporcion)
         if texto_consola == True: print("Proporción de reescalado: ", proporcion) 
@@ -177,10 +181,6 @@ def Calcular_Rectangulo(pos_mouse,dim_recorte, imagen, color_rectangulo ):
     return [recorte_imagen ,[xi, yi, xf, yf]]
 
 
-
-
-
-
 # funcion para ubicar y mostrar el recorte de imagen deseado
 def Marcar_Recorte(evento,x_mouse,y_mouse,flags,param):
     #en esta funcion se usan solo los primeros tres parametros:
@@ -230,7 +230,7 @@ if __name__ == "__main__" :
         # archivo_imagen = '../Imagenes/at nite.webp'
         archivo_imagen = '../Imagenes/saber in lake.webp'
         # archivo_imagen = '../Imagenes/2P.jpg'
-        # archivo_imagen = '../Imagenes/2P en bosque.webp'
+        archivo_imagen = '../Imagenes/2P en bosque.webp'
         print("Apertura de archivo de ejemplo:", archivo_imagen)
     else :
         archivo_imagen = str(sys.argv[1])
@@ -246,8 +246,8 @@ if __name__ == "__main__" :
         print("Nombre de recorte:", archivo_recorte)
 
     ## PROCESAMIENTO
-    # Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 400, 256)    # Recorte pequeño
-    Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 800,800)       # Recorte demasiado grande
+    Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 512,512)    # Recorte pequeño
+    # Interfaz_Edicion(archivo_imagen , archivo_recorte, True, 800,800)       # Recorte demasiado grande
     # Interfaz_Edicion(archivo_imagen , archivo_recorte, True)              # Tamaño predefinido
     # Interfaz_Edicion(archivo_imagen , archivo_recorte)             # Tamaño predefinido, sin mensajes extra
 
