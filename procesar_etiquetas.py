@@ -1,45 +1,76 @@
 from rich import print 
+import sys
+import pathlib 
 
 
-
-
+# Clase auxiliar para manejar y clasigficar etiquetas
 class Etiquetas:
     def __init__(self, etiquetas: list, grupo: list):	
         self.etiquetas = etiquetas	
         self.grupo     = grupo
-	# def <metodo1>(self):
-	# 	#código 1
-	# def <metodo2>(self):
-	# 	#código 2
-
-
-
-
 
 #FUNCIONES
 
-# Conversion de lista a texto
-def renglones2texto(lista_renglones: list):
+# Conversion de lista de etiquetas a texto
+# una etiqueta por indice de la lista
+# Separacion por comas
+def etiquetas2texto(lista_renglones: list):
     texto = ""
     for renglon in  lista_renglones:
         texto += str(renglon) + ", "
     return texto
 
 
+# Guardado en archivo (modo SOBREESCRITURA)
+def GuardadoTexto(ruta: str, texto:str):
+    path = pathlib.Path(ruta)
+    try:
+        with open(path,"w") as archivo:
+            archivo.writelines(texto)
+            # print("Guardado exitoso")
+        return True
+    except:
+        return False        
+
+# Guardado en archivo (modo AÑADIDO)
+# def AgregadoTexto(ruta: str, texto:str):
+#     path = pathlib.Path(ruta)
+#     try:
+#         with open(path,"a+") as archivo:
+#             archivo.writelines(texto)
+#             # print("Guardado exitoso")
+#         return True
+#     except:
+#         return False    
+
+#lectura de un archivo de texto 
+#devuelve una lista de los renglones leidos
+def LecturaLista(entrada: str): 
+    path = pathlib.Path(entrada)
+    try:
+        with open(path,"r") as archivo:
+            # se lee TODO como LISTA de renglones
+            return archivo.readlines()
+    except FileNotFound: 
+        return []   # lista vacía si hay error
+
+
 
 # Funcion que separa etiquetas en base a comas y puntos aparte
-# Descarta etiquetas negativas
-def FiltradoEtiquetas(linea_archivos: list):
+# Descarta etiquetas repetidas
+# Asigna numero de grupo segun ubicación de etiqueta 
+def FiltradoEtiquetas(lista_entrada: list):
     # listas auxiliares para contener los datos
+    lineas=[]
     lista_etiquetas = []
     grupo_etiquetas = []
     # conjunto auxiliar: se filtrarán las etiquetas repetidas 
     set_etiquetas=set([])
-    for i in range(0,len(lineas_archivo)):
+    for i in range(0,len(lista_entrada)):
         # Eliminacion de renglones vacios
-        if len(lineas_archivo[i].strip()) > 0:
-            lineas.append(lineas_archivo[i])
-            etiquetas_renglon = lineas_archivo[i].split(',')
+        if len(lista_entrada[i].strip()) > 0:
+            lineas.append(lista_entrada[i])
+            etiquetas_renglon = lista_entrada[i].split(',')
             # quita de espacios vacios y guardado en lista
             for j in range(0, len(etiquetas_renglon)):
                 etiqueta = etiquetas_renglon[j] 
@@ -51,95 +82,36 @@ def FiltradoEtiquetas(linea_archivos: list):
                         lista_etiquetas.append(etiqueta)
                         grupo_etiquetas.append(i) 
                         set_etiquetas.add(etiqueta)
-                        # set_etiquetas.add(etiqueta)
 
     # Retorno de una clase con las etiquetas y el numero de renglón (grupo)
     return Etiquetas(lista_etiquetas, grupo_etiquetas)
 
 
-# Lectura de la lista de etiquetas desde archivo
-# def Leer_Etiquetas(archivo: str):
-#     with open(archivo,"r") as archivo:
-#         # se lee TODO como LISTA de renglones
-#         lineas_archivo = archivo.readlines()
-#     return FiltradoEtiquetas(lineas_archivo)
+if __name__ == "__main__":
+
+    lineas_archivo = LecturaLista("demo_etiquetas.txt")
+    # lineas_archivo = Lectura_Renglones("demo_.txt")
+    tags = FiltradoEtiquetas( lineas_archivo )
+
+    set_etiquetas = set(tags.etiquetas)
+
+    print(f'[bold green]Etiquetas y Nº grupos:')
+    for i in range(0,len(tags.etiquetas) ):
+        print(f'[bold yellow] {tags.grupo[i]} , {tags.etiquetas[i] }')
+
+    print(f'[bold red]Longitud total: {len(tags.etiquetas)}')
 
 
+    # Conversion de las etiquetas a texto , separadas por comas
+    tags_filtrados = etiquetas2texto(tags.etiquetas)
+    # Guardado en archivo (modo ESCRITURA)
+    if GuardadoTexto("etiquetas_salida.txt", tags_filtrados):
+        print("[green]Guardado exitoso")
+    else:
+        print("[bold red]ERROR: [green]guardado fallido")
 
-
-
-#lista vacía
-lineas=[]
-
-with open("etiquetas.txt","r") as archivo:
-    # se lee TODO como LISTA de renglones
-    lineas_archivo = archivo.readlines()
-
-
-
-
-
-# Procesamiento linea a linea
-# lista_etiquetas = []
-# set_etiquetas = {}
-
-# print(type(lista_etiquetas), type(set_etiquetas))
-
-# lista_etiquetas = FiltradoEtiquetas( lineas_archivo )
-
-
-tags = FiltradoEtiquetas( lineas_archivo )
-
-set_etiquetas = set(tags.etiquetas)
-
-print(f'[bold yellow] {tags.grupo} , {tags.etiquetas}')
-print(f'[bold red]{len(tags.etiquetas)}')
-# print(f'[bold green]{set_etiquetas}')
-# print(f'[bold magenta]{len(set_etiquetas)}')
-
-
-# lista_etiquetas = list(set_etiquetas)
-# print(tags.etiquetas)
-# tag ='feather-trimmed sleeves'
-# tag ='blue eyes'
-# index_tag = lista_etiquetas.index(tag)
-# print(f"Ubicacion {tag}: {index_tag}")
-
-
-
-
-
-tags_filtrados = renglones2texto(tags.etiquetas)
-
-
-with open("etiquetas_salida.txt","w") as archivo:
-    # se lee TODO como LISTA de renglones
-    # lineas_archivo = archivo.readlines()
-    archivo.writelines(tags_filtrados)
-    print("Guardado exitoso")
-
-
-
-with open("etiquetas_salida.txt","a") as archivo:
-    archivo.write("Simona la Cacarisa") #ELIMINAR
-    print("Añadido exitoso")
-
-
-
-
-
-# nums = {6, 4, 5, 9, 8}
-# item = 17
-
-# isPresent = item in nums
-# print(isPresent)            # True
- 
-
-# print(f"[bold red] Juego con SETs:")
-
-# print(set_etiquetas)
-
-# etiqueta='white blindfold'
-
-# print(etiqueta in set_etiquetas)
-
+    # # Añadido de una etiqueta arbitraria 
+    # if AgregadoTexto("etiqusalida.txt", "\nSimona la cacarisa"):
+    #     print("[green]Añadido exitoso")
+    # else:
+    #     print("[bold red]ERROR: [green]Añadido fallido")
