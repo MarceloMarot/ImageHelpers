@@ -3,64 +3,101 @@ import flet as ft
 
 # from functools import partial       # usado para los handlers
 
+from procesar_etiquetas import FiltradoEtiquetas, LecturaLista, Etiquetas, etiquetas2texto, GuardadoTexto
+
+from buscar_extension import buscar_imagenes
+
+
 lista_imagenes = []     # se carga de direcciones en 'main'
 
 indice_imagen=0
 
 
+etiquetas_dataset = []
 
-def pagina_etiquetado(page: ft.Page ):
-# def main(page: ft.Page):
-    page.title = "Ventana Etiquetado Imágenes"
-    page.window_width=1200
-    page.window_height=900
-    page.window_maximizable=True
-    page.window_minimizable=True
-    page.window_maximized=False
+etiquetas_imagen = []
 
-    # page.bgcolor=ft.colors.LIME_ACCENT_100
-    # page.bgcolor=ft.color.INDIGO_100
-    ancho_boton = 200
 
-    ## COLUMNA EDICION
+archivo_dataset = ""
+archivo_salida  = ""
+
+
+
+def Columna_Etiquetas(pagina: ft.Page ):
 
     def guardar_opciones(e):
-        valores=""
-        for i in range(0,len(lista_checkboxes)):
-            if  lista_checkboxes[i].value:
-                valores += " " + lista_checkboxes[i].label   
-                # reinicio de switches
-                # lista_checkboxes[i].value = False
-        texto.value = (
-            f"{valores}"
-        )
-        page.update()
+        # valores=""
+        # for i in range(0,len(lista_checkboxes)):
+        #     if  lista_checkboxes[i].value:
+        #         valores += " " + lista_checkboxes[i].label   
+        #         # reinicio de switches
+        #         # lista_checkboxes[i].value = False
+        global etiquetas_imagen
+        # reasignacion de etiquetas para la imagen
+
+
+        etiquetas_checkboxes=[]
+        for checkbox  in lista_checkboxes:
+            etiqueta = checkbox.label
+            valor    = checkbox.value
+            if valor:
+                etiquetas_checkboxes.append(etiqueta)
+
+        if set(etiquetas_imagen) != set(etiquetas_checkboxes):
+            texto.value = "Cambios guardados"
+            # archivo creado / reescrito
+            etiquetas_imagen = etiquetas_checkboxes
+            labels = etiquetas2texto(etiquetas_imagen)
+            GuardadoTexto(archivo_salida, labels )
+        else:
+            texto.value = "Sin cambios"
+
+        pagina.update()
+
 
     def checkboxes_ninguno(e):
-        for i in range(0,len(lista_checkboxes)):
-            # resetear de switches
-            lista_checkboxes[i].value = False
-        page.update()
+        for checkbox  in lista_checkboxes:
+            checkbox.value = False
+        pagina.update()
+
 
     def checkboxes_todos(e):
-        for i in range(0,len(lista_checkboxes)):
-            # setear de switches
-            lista_checkboxes[i].value = True
-        page.update()
-        
-    lista_checkboxes=[]
-    numero_checkboxes = 15
-    for i  in range(0,numero_checkboxes):
-        ccc = ft.Switch(label=f"{i}", value=False)
-        lista_checkboxes.append(ccc) 
+        for checkbox  in lista_checkboxes:
+            checkbox.value = True
+        pagina.update()
+
+
+    def restablecer_opciones(e):
+        for checkbox  in lista_checkboxes:
+            etiqueta = checkbox.label
+            if  etiqueta in etiquetas_imagen :
+                checkbox.value = True
+            else:
+                checkbox.value = False
+        # texto.value = etiquetas2texto(etiquetas_imagen)
+        texto.value = "Valores reestablecidos"
+        pagina.update()
+
+
+    # global lista_checkboxes
+    numero_checkboxes = len(etiquetas_dataset)
+    lista_checkboxes = []
+    # for i  in range(0,numero_checkboxes):
+    for etiqueta  in etiquetas_dataset:
+        selector = ft.Switch(label=f"{etiqueta}",value=False)
+        if  etiqueta in etiquetas_imagen:
+            selector.value=True  
+        # else: 
+        #     selector.value=False
+        lista_checkboxes.append(selector) 
 
     # cuadro de texto de salida
     texto = ft.Text(size=30 ,width=400, height=100, bgcolor=ft.colors.AMBER_200, )
     # botones de comando
-    boton_guardado = ft.ElevatedButton(text="GUARDAR", on_click=guardar_opciones, bgcolor="red",color="white", width=ancho_boton)
+    boton_guardado = ft.ElevatedButton(text="Guardar", on_click=guardar_opciones, bgcolor="red",color="white", width=150)
     boton_todos = ft.ElevatedButton(text="Todos", on_click=checkboxes_todos   ,width=150)
     boton_ninguno = ft.ElevatedButton(text="Ninguno", on_click=checkboxes_ninguno ,width=150)
-
+    boton_restablecer = ft.ElevatedButton(text="Restablecer", on_click=restablecer_opciones, bgcolor="blue",color="white", width=150)
 
     fila_botones_checkboxes = ft.Row(
         wrap=False,
@@ -68,14 +105,27 @@ def pagina_etiquetado(page: ft.Page ):
         spacing=50,       # espaciado horizontal entre contenedores
         run_spacing=50,     # espaciado vertical entre filas
         controls = [ boton_todos, boton_ninguno],
-        # width=page.window_width,
+        # width=pagina.window_width,
         # width=float("inf"), # anchura de columna    
         width=400, # anchura de columna   
         # height=600,         # altura de columna
         scroll=ft.ScrollMode.ALWAYS,
     )
 
-    # page.add(t,  fila_botones)
+
+    fila_boton_restablecer = ft.Row(
+        wrap=False,
+        # spacing=10,       # espaciado horizontal entre contenedores
+        spacing=50,       # espaciado horizontal entre contenedores
+        run_spacing=50,     # espaciado vertical entre filas
+        controls = [boton_restablecer, boton_guardado],
+        # width=pagina.window_width,
+        # width=float("inf"), # anchura de columna    
+        width=400, # anchura de columna   
+        # height=600,         # altura de columna
+        scroll=ft.ScrollMode.ALWAYS,
+    )
+
     # Columna de checkboxes
     columna_checkboxes = ft.Column(
         wrap=False,
@@ -84,7 +134,7 @@ def pagina_etiquetado(page: ft.Page ):
         run_spacing=50,     # espaciado vertical entre filas
         controls=lista_checkboxes,
         # controls=contenido,
-        # width=page.window_width,
+        # width=pagina.window_width,
         # width=float("inf"), # anchura de columna    
         # width=400, # anchura de columna   
         height=600,         # altura de columna
@@ -96,6 +146,7 @@ def pagina_etiquetado(page: ft.Page ):
     elementos_etiquetado.append(texto)
     elementos_etiquetado.append(columna_checkboxes)
     elementos_etiquetado.append(fila_botones_checkboxes)
+    elementos_etiquetado.append(fila_boton_restablecer)
     # elementos_etiquetado.append(boton_guardado)
 
     columna_etiquetado = ft.Column(
@@ -106,15 +157,19 @@ def pagina_etiquetado(page: ft.Page ):
         # controls=lista_checkboxes,
         controls = elementos_etiquetado, 
         # controls=contenido,
-        # width=page.window_width,
+        # width=pagina.window_width,
         # width=float("inf"), # anchura de columna    
         width=500, # anchura de columna   
         # height=900,         # altura de columna
         # scroll=ft.ScrollMode.ALWAYS,
     )
 
-    ## FIN COLUMNA EDICION
+    return columna_etiquetado
 
+
+
+
+def Columna_Imagen(pagina: ft.Page):
     ## COLUMNA IMAGEN
 
     # ruta_imagen = imagenes[0]
@@ -139,11 +194,8 @@ def pagina_etiquetado(page: ft.Page ):
         print(indice_imagen)
         # container_imagen.content=lista_imagenes[indice_imagen]
         # imagen_actual.src = lista_imagenes[indice_imagen]
-        page.update()
+        pagina.update()
         return indice_imagen
-
-
-
 
     # Inclusion de la imagen dentro de un contenedor
     # Esto habilita bordes, eventos con el mouse, etc 
@@ -174,7 +226,7 @@ def pagina_etiquetado(page: ft.Page ):
         imagen_actual.src = lista_imagenes[indice_imagen]
         texto_imagen.value=f"{indice_imagen} - {ruta_imagen}"
         # print("+1")
-        page.update()
+        pagina.update()
 
     def adelantar_fast(e):
         global indice_imagen, lista_imagenes, ruta_imagen
@@ -185,7 +237,7 @@ def pagina_etiquetado(page: ft.Page ):
         imagen_actual.src = lista_imagenes[indice_imagen]
         texto_imagen.value=f"{indice_imagen} - {ruta_imagen}"
         # print("+10")
-        page.update()
+        pagina.update()
 
     def retroceder(e):
         global indice_imagen, lista_imagenes, ruta_imagen
@@ -196,7 +248,7 @@ def pagina_etiquetado(page: ft.Page ):
         imagen_actual.src = lista_imagenes[indice_imagen]
         texto_imagen.value=f"{indice_imagen} - {ruta_imagen}"
         # print("-1")
-        page.update()
+        pagina.update()
 
 
     def retroceder_fast(e):
@@ -208,10 +260,10 @@ def pagina_etiquetado(page: ft.Page ):
         imagen_actual.src = lista_imagenes[indice_imagen]
         texto_imagen.value=f"{indice_imagen} - {ruta_imagen}"
         # print("-10")
-        page.update()
+        pagina.update()
 
 
-    # ancho_boton = 200
+    ancho_boton = 200
 
     boton_next      = ft.ElevatedButton(text="Siguiente",     on_click=adelantar ,width=ancho_boton)
     boton_prev      = ft.ElevatedButton(text="Anterior" ,     on_click=retroceder ,width=ancho_boton)
@@ -228,7 +280,7 @@ def pagina_etiquetado(page: ft.Page ):
         spacing=50,       # espaciado horizontal entre contenedores
         run_spacing=50,     # espaciado vertical entre filas
         controls = lista_botones_navegacion_1,
-        # width=page.window_width,
+        # width=pagina.window_width,
         # width=float("inf"), # anchura de columna    
         # width=400, # anchura de columna   
         # height=600,         # altura de columna
@@ -242,7 +294,7 @@ def pagina_etiquetado(page: ft.Page ):
         spacing=50,       # espaciado horizontal entre contenedores
         run_spacing=50,     # espaciado vertical entre filas
         controls = lista_botones_navegacion_2,
-        # width=page.window_width,
+        # width=pagina.window_width,
         # width=float("inf"), # anchura de columna    
         # width=400, # anchura de columna   
         # height=600,         # altura de columna
@@ -255,9 +307,9 @@ def pagina_etiquetado(page: ft.Page ):
     elementos_imagen.append(texto_imagen)
     elementos_imagen.append(fila_botones_navegacion_1)
     elementos_imagen.append(fila_botones_navegacion_2)
-    elementos_imagen.append(boton_guardado)
+    # elementos_imagen.append(boton_guardado)
 
-    columna_navegacion = ft.Column(
+    columna_imagen = ft.Column(
         wrap=False,
         # spacing=10,       # espaciado horizontal entre contenedores
         spacing=10,       # espaciado horizontal entre contenedores
@@ -265,7 +317,7 @@ def pagina_etiquetado(page: ft.Page ):
         # controls=lista_checkboxes,
         controls = elementos_imagen, 
         # controls=contenido,
-        # width=page.window_width,
+        # width=pagina.window_width,
         # width=float("inf"), # anchura de columna    
         # width=500, # anchura de columna   
         # height=900,         # altura de columna
@@ -274,8 +326,20 @@ def pagina_etiquetado(page: ft.Page ):
     )
 
     ## FIN COLUMNA IMAGEN
+    return columna_imagen
+
+
+
+
+
+
+
+def Contenedor_Todo( pagina: ft.Page  ):
+  
 
     ## Aglutinado columnas
+    columna_etiquetado = Columna_Etiquetas(pagina)
+    columna_navegacion = Columna_Imagen(pagina)
 
     lista_columnas =[columna_etiquetado, columna_navegacion]
 
@@ -285,7 +349,7 @@ def pagina_etiquetado(page: ft.Page ):
         spacing=50,       # espaciado horizontal entre contenedores
         run_spacing=50,     # espaciado vertical entre filas
         controls = lista_columnas,
-        # width=page.window_width,
+        # width=pagina.window_width,
         # width=float("inf"), # anchura de columna    
         # width=400, # anchura de columna   
         # height=600,         # altura de columna
@@ -293,12 +357,28 @@ def pagina_etiquetado(page: ft.Page ):
     )
 
     ## Fin aglutinado columnas
-
-    page.add(todas_columnas)
-
-
+    return todas_columnas
+    # pagina.add(todas_columnas)
 
 
+
+
+
+# ancho_boton = 200
+
+def pagina_etiquetado(page: ft.Page ):
+# def main(page: ft.Page):
+    page.title = "Ventana Etiquetado Imágenes"
+    page.window_width=1200
+    page.window_height=900
+    page.window_maximizable=True
+    page.window_minimizable=True
+    page.window_maximized=False
+
+    todalapagina = Contenedor_Todo(page)
+
+    page.add(todalapagina)
+    # page.add(todas_columnas)
 
     # Estilos 
     page.theme = ft.Theme(
@@ -322,9 +402,6 @@ def pagina_etiquetado(page: ft.Page ):
         )
     )
 
-
-
-
     # Elementos generales de la pagina
     page.title = "Lista CheckBoxes Variable"
     # page.window_width=1500
@@ -344,7 +421,10 @@ def pagina_etiquetado(page: ft.Page ):
 
 
 
-# Función MAIN
+
+
+
+# Función MAIN: demo
 if __name__ == "__main__" :
 
     numero_imagenes=50
@@ -353,7 +433,21 @@ if __name__ == "__main__" :
     for i in range(0, numero_imagenes):
         lista_imagenes.append( f"https://picsum.photos/200/200?{i}" )   # imagenes online
 
-    mensaje= ft.app(target=pagina_etiquetado)
 
-    print(mensaje)    
+    archivo_dataset = "demo_etiquetas.txt"
+
+    lineas_dataset = LecturaLista(archivo_dataset )
+    tags_dataset = FiltradoEtiquetas( lineas_dataset )
+
+    etiquetas_dataset = tags_dataset.etiquetas
+
+
+    archivo_salida="etiquetas_salida.txt"
+
+    lineas_imagen = LecturaLista(archivo_salida)
+    tags_imagen = FiltradoEtiquetas( lineas_imagen )
+
+    etiquetas_imagen = tags_imagen.etiquetas
+
+    mensaje = ft.app(target=pagina_etiquetado)
 

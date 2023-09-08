@@ -51,7 +51,7 @@ def LecturaLista(entrada: str):
         with open(path,"r") as archivo:
             # se lee TODO como LISTA de renglones
             return archivo.readlines()
-    except FileNotFound: 
+    except FileNotFoundError: 
         return []   # lista vacía si hay error
 
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     # lineas_archivo = Lectura_Renglones("demo_.txt")
     tags = FiltradoEtiquetas( lineas_archivo )
 
-    set_etiquetas = set(tags.etiquetas)
+    # set_etiquetas = set(tags.etiquetas)
 
     print(f'[bold green]Etiquetas y Nº grupos:')
     for i in range(0,len(tags.etiquetas) ):
