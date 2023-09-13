@@ -5,9 +5,14 @@ import pathlib
 
 # Clase auxiliar para manejar y clasigficar etiquetas
 class Etiquetas:
-    def __init__(self, etiquetas: list, grupo: list):	
-        self.etiquetas = etiquetas	
-        self.grupo     = grupo
+    def __init__(self, tags: list, grupo: list, ruta: str):	
+        self.tags   = tags	
+        self.grupo  = grupo
+        self.ruta   = ruta
+
+    def LeerEtiquetas(self):
+        renglones_listas = LecturaLista(self.ruta)
+        [self.tags, self.grupo]= FiltradoEtiquetas(renglones_listas)
 
 #FUNCIONES
 
@@ -32,16 +37,6 @@ def GuardadoTexto(ruta: str, texto:str):
     except:
         return False        
 
-# Guardado en archivo (modo AÑADIDO)
-# def AgregadoTexto(ruta: str, texto:str):
-#     path = pathlib.Path(ruta)
-#     try:
-#         with open(path,"a+") as archivo:
-#             archivo.writelines(texto)
-#             # print("Guardado exitoso")
-#         return True
-#     except:
-#         return False    
 
 #lectura de un archivo de texto 
 #devuelve una lista de los renglones leidos
@@ -84,31 +79,39 @@ def FiltradoEtiquetas(lista_entrada: list):
                         set_etiquetas.add(etiqueta)
 
     # Retorno de una clase con las etiquetas y el numero de renglón (grupo)
-    return Etiquetas(lista_etiquetas, grupo_etiquetas)
+    # return Etiquetas(lista_etiquetas, grupo_etiquetas)
+    return [lista_etiquetas, grupo_etiquetas]
 
 
 if __name__ == "__main__":
 
-    lineas_archivo = LecturaLista("demo_etiquetas.txt")
-    # lineas_archivo = Lectura_Renglones("demo_.txt")
-    tags = FiltradoEtiquetas( lineas_archivo )
 
-    # set_etiquetas = set(tags.etiquetas)
+    archivo = "demo_etiquetas.txt"
+
+    etiqueta = Etiquetas([],[],archivo) 
+    etiqueta.LeerEtiquetas()
+
+    tags  = etiqueta.tags
+    grupo = etiqueta.grupo 
 
     print(f'[bold green]Etiquetas y Nº grupos:')
-    for i in range(0,len(tags.etiquetas) ):
-        print(f'[bold yellow] {tags.grupo[i]} , {tags.etiquetas[i] }')
+    for i in range(0,len(tags) ):
+        print(f'[bold yellow] {grupo[i]} , {tags[i] }')
 
-    print(f'[bold red]Longitud total: {len(tags.etiquetas)}')
+    print(f'[bold red]Longitud total: {len(tags)}')
 
 
-    # Conversion de las etiquetas a texto , separadas por comas
-    tags_filtrados = etiquetas2texto(tags.etiquetas)
-    # Guardado en archivo (modo ESCRITURA)
-    if GuardadoTexto("etiquetas_salida.txt", tags_filtrados):
-        print("[green]Guardado exitoso")
-    else:
-        print("[bold red]ERROR: [green]guardado fallido")
+
+    # # Conversion de las etiquetas a texto , separadas por comas
+    # tags_filtrados = etiquetas2texto(tags.etiquetas)
+    # # Guardado en archivo (modo ESCRITURA)
+    # if GuardadoTexto("etiquetas_salida.txt", tags_filtrados):
+    #     print("[green]Guardado exitoso")
+    # else:
+    #     print("[bold red]ERROR: [green]guardado fallido")
+
+
+
 
     # # Añadido de una etiqueta arbitraria 
     # if AgregadoTexto("etiqusalida.txt", "\nSimona la cacarisa"):
