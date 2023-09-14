@@ -5,14 +5,26 @@ import pathlib
 
 # Clase auxiliar para manejar y clasigficar etiquetas
 class Etiquetas:
-    def __init__(self, tags: list, grupo: list, ruta: str):	
-        self.tags   = tags	
-        self.grupo  = grupo
-        self.ruta   = ruta
+    # def __init__(self, tags: list, grupo: list, ruta: str):	
+    def __init__(self, ruta: str, tags=[], grupo=[] ):	
+        self.tags   = tags	    # lista etiquetas
+        self.grupo  = grupo     # numeros de grupo de las etiquetas
+        self.ruta   = ruta      # ruta archivo
 
-    def LeerEtiquetas(self):
+    #lectura desde disco
+    def leer(self):
         renglones_listas = LecturaLista(self.ruta)
-        [self.tags, self.grupo]= FiltradoEtiquetas(renglones_listas)
+        # [self.tags, self.grupo]= FiltradoEtiquetas(renglones_listas)
+        diccionario = FiltradoEtiquetas(renglones_listas)
+        self.tags  = list( diccionario.keys()   )
+        self.grupo = list( diccionario.values() )
+
+    # escritura en disco
+    def guardar(self):
+        texto = etiquetas2texto(self.tags)
+        return GuardadoTexto(self.ruta, texto)
+
+
 
 #FUNCIONES
 
@@ -26,13 +38,15 @@ def etiquetas2texto(lista_renglones: list):
     return texto
 
 
+
+
+
 # Guardado en archivo (modo SOBREESCRITURA)
 def GuardadoTexto(ruta: str, texto:str):
     path = pathlib.Path(ruta)
     try:
         with open(path,"w") as archivo:
             archivo.writelines(texto)
-            # print("Guardado exitoso")
         return True
     except:
         return False        
@@ -57,10 +71,13 @@ def LecturaLista(entrada: str):
 def FiltradoEtiquetas(lista_entrada: list):
     # listas auxiliares para contener los datos
     lineas=[]
-    lista_etiquetas = []
-    grupo_etiquetas = []
+    # lista_etiquetas = []
+    # grupo_etiquetas = []
+    dicc_etiquetas = {}
     # conjunto auxiliar: se filtrarán las etiquetas repetidas 
     set_etiquetas=set([])
+    # auxiliar: numero de renglon
+    n = 0
     for i in range(0,len(lista_entrada)):
         # Eliminacion de renglones vacios
         if len(lista_entrada[i].strip()) > 0:
@@ -74,13 +91,16 @@ def FiltradoEtiquetas(lista_entrada: list):
                 if len(etiqueta)>0:
                     # sólo se añaden elementos no repetidos
                     if not (etiqueta in set_etiquetas):
-                        lista_etiquetas.append(etiqueta)
-                        grupo_etiquetas.append(i) 
+                        # lista_etiquetas.append(etiqueta)
+                        # grupo_etiquetas.append(n)
+                        # salida en pares clave -valor 
+                        dicc_etiquetas[etiqueta] = n
                         set_etiquetas.add(etiqueta)
-
+            # Numero de renglon
+            n += 1
     # Retorno de una clase con las etiquetas y el numero de renglón (grupo)
-    # return Etiquetas(lista_etiquetas, grupo_etiquetas)
-    return [lista_etiquetas, grupo_etiquetas]
+    # return [lista_etiquetas, grupo_etiquetas]
+    return dicc_etiquetas
 
 
 if __name__ == "__main__":
@@ -88,12 +108,17 @@ if __name__ == "__main__":
 
     archivo = "demo_etiquetas.txt"
 
-    etiqueta = Etiquetas([],[],archivo) 
-    etiqueta.LeerEtiquetas()
+    # lectura de etiquetas desde archivo
+    etiqueta = Etiquetas(archivo) 
+    etiqueta.leer()
 
     tags  = etiqueta.tags
     grupo = etiqueta.grupo 
+    # tags = etiqueta.keys()
+    # grupo = etiqueta.values()
 
+
+    # Muestra de resultados
     print(f'[bold green]Etiquetas y Nº grupos:')
     for i in range(0,len(tags) ):
         print(f'[bold yellow] {grupo[i]} , {tags[i] }')
@@ -101,20 +126,11 @@ if __name__ == "__main__":
     print(f'[bold red]Longitud total: {len(tags)}')
 
 
-
-    # # Conversion de las etiquetas a texto , separadas por comas
-    # tags_filtrados = etiquetas2texto(tags.etiquetas)
-    # # Guardado en archivo (modo ESCRITURA)
-    # if GuardadoTexto("etiquetas_salida.txt", tags_filtrados):
-    #     print("[green]Guardado exitoso")
-    # else:
-    #     print("[bold red]ERROR: [green]guardado fallido")
+    # Guardado en archivo aparte
+    etiqueta.ruta = "etiquetas_salida.txt"
+    if etiqueta.guardar():
+        print("[green]Guardado exitoso")
+    else:
+        print("[bold red]ERROR: [green]guardado fallido")
 
 
-
-
-    # # Añadido de una etiqueta arbitraria 
-    # if AgregadoTexto("etiqusalida.txt", "\nSimona la cacarisa"):
-    #     print("[green]Añadido exitoso")
-    # else:
-    #     print("[bold red]ERROR: [green]Añadido fallido")
