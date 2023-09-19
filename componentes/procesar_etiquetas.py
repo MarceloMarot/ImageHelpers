@@ -10,6 +10,8 @@ class Etiquetas:
         self.tags   = tags	    # lista etiquetas
         self.grupo  = grupo     # numeros de grupo de las etiquetas
         self.ruta   = ruta      # ruta archivo
+        # lectura automatica
+        self.leer()
 
     #lectura desde disco
     def leer(self):

@@ -27,6 +27,8 @@ class Contenedor(ft.UserControl):
         self.funcion_hover      = lambda: nada()
         self.funcion_click      = lambda: nada()
         self.funcion_longpress  = lambda: nada()
+        #identificador numerico
+        self.id = 0
         self.contenedor = ft.Container(
                 margin=10,
                 padding=10,
@@ -44,6 +46,10 @@ class Contenedor(ft.UserControl):
         return self.contenedor
     
     #METODOS
+    # 'setters'
+    def setID(self, id: int):
+        self.contenedor.id = id
+
     def setContenido(self, imagen: ft.Image ):
         self.contenedor.content  = imagen 
         self.update()
@@ -60,6 +66,22 @@ class Contenedor(ft.UserControl):
     def setRedondeo(self, radio: int):
         self.contenedor.border_radius = radio
         self.update()
+
+    # 'getters'
+    def getID(self):
+        return self.contenedor.id 
+
+    def getContenido(self):
+        return self.contenedor.content
+
+    def getDimensiones(self):
+        return [self.contenedor.width , self.contenedor.height]
+    
+    def getBGColor(self):
+        return self.contenedor.bgcolor
+
+    def getRedondeo(self):
+        return self.contenedor.border_radius
 
     # los eventos se configuran aquí
     # deben asignarse funciones lambda
@@ -99,8 +121,8 @@ def pagina(page: ft.Page):
     def estilo_defecto():   
         contenedor.setRedondeo(0)
         contenedor.setDimensiones(500,420)
-        contenedor.setBGColor(ft.colors.BLUE)            
-
+        contenedor.setBGColor(ft.colors.BLUE)
+             
     # se asignan las funciones SIN argumentos como LAMBDAS
     contenedor.setClick(lambda: funcion_click())
     contenedor.setHover(lambda: funcion_hover())
@@ -119,8 +141,12 @@ def pagina(page: ft.Page):
         border_radius=ft.border_radius.all(50),
     )
 
+    # imagen_actual = ft.Text(value='Yo soy Sam',size=40)
     contenedor.setContenido( imagen_actual )
+    contenedor.setID( 27 )
+    # print(contenedor.getID())
     page.update()
 
 
-ft.app(target = pagina)
+if __name__ == "__main__":
+    ft.app(target = pagina)
