@@ -103,6 +103,20 @@ def nada():
     pass
 
 
+# Lee una imagen y la carga en un objeto FLET 
+def crear_imagen(ruta: str, base=200, altura=200,borde=0):
+    imagen = ft.Image(
+        src = ruta,
+        width = base,
+        height = altura ,
+        fit=ft.ImageFit.CONTAIN,
+        repeat=ft.ImageRepeat.NO_REPEAT,
+        border_radius=ft.border_radius.all(borde),
+    )
+    return imagen
+
+
+
 # FUNCION MAIN
 
 def pagina(page: ft.Page):
@@ -131,19 +145,10 @@ def pagina(page: ft.Page):
     # Las propiedades de los elementos se pueden editar DESPUES de añadirlos a la pagina
     estilo_defecto()
 
-    # Contenido para el container: imagen remota
-    imagen_actual = ft.Image(
-        src = "https://picsum.photos/200/200?0",
-        width = 400,
-        height = 400 ,
-        fit=ft.ImageFit.CONTAIN,
-        repeat=ft.ImageRepeat.NO_REPEAT,
-        border_radius=ft.border_radius.all(50),
-    )
+    imagen_actual = crear_imagen("https://picsum.photos/200/200?0",400,400,100)
 
-    # imagen_actual = ft.Text(value='Yo soy Sam',size=40)
     contenedor.setContenido( imagen_actual )
-    contenedor.setID( 27 )
+    # contenedor.setID( 27 )
     # print(contenedor.getID())
     page.update()
 
