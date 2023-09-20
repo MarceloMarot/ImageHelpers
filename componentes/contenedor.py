@@ -29,6 +29,7 @@ class Contenedor(ft.UserControl):
         self.funcion_longpress  = lambda: nada()
         #identificador numerico
         self.id = 0
+        self.valor = 0
         self.contenedor = ft.Container(
                 margin=10,
                 padding=10,
@@ -67,6 +68,10 @@ class Contenedor(ft.UserControl):
         self.contenedor.border_radius = radio
         self.update()
 
+    def setValor(self, valor):
+        self.valor = valor
+        self.update()
+
     # 'getters'
     def getID(self):
         return self.contenedor.id 
@@ -82,6 +87,10 @@ class Contenedor(ft.UserControl):
 
     def getRedondeo(self):
         return self.contenedor.border_radius
+
+    def getValor(self):
+        return self.valor 
+
 
     # los eventos se configuran aquí
     # deben asignarse funciones lambda
@@ -116,12 +125,12 @@ def crear_imagen(ruta: str, base=200, altura=200,borde=0):
     return imagen
 
 
-
 # FUNCION MAIN
 
 def pagina(page: ft.Page):
 
     contenedor = Contenedor()
+
     page.add(contenedor)
 
     def funcion_click():
@@ -148,8 +157,10 @@ def pagina(page: ft.Page):
     imagen_actual = crear_imagen("https://picsum.photos/200/200?0",400,400,100)
 
     contenedor.setContenido( imagen_actual )
-    # contenedor.setID( 27 )
+    # contenedor.content=imagen_actual
+    contenedor.setID( 27 )
     # print(contenedor.getID())
+    # page.add(contenedor)
     page.update()
 
 

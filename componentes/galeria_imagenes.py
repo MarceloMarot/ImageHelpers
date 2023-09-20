@@ -4,108 +4,36 @@ import flet as ft
 
 from functools import partial
 
+from contenedor import Contenedor 
 
 
-# Contenedor con eventos integrados
-# pensado para contener imagenes
-class Contenedor(ft.UserControl):
+def galeria_contenedores(numero: int, cuadricula : bool):
 
-    # MANEJADORES DE EVENTOS 
-    # Se configuran mediante metodos dedicados
-    def longpress(self, e):
-        # self.funcion_longpress()
-        self.update()
+    contenedores = []
+    for i in range(numero):
+        contenedor = Contenedor()
+        contenedores.append(contenedor)
 
-    def hover(self,e):
-        # self.funcion_hover()
-        self.update()
-
-    def click(self, e):
-        # self.funcion_click()
-        self.valor=True if self.valor!=True else False
-        color1=ft.colors.INDIGO_400
-        color2=ft.colors.GREEN_200
-        print(self.getID())
-        self.setBGColor(color1) if self.valor else self.setBGColor(color2)
-        self.update()
-
-    # INICIALIZACION
-    def build(self):
-        self.id = 0
-        self.valor = False
-        self.contenedor = ft.Container(
-                margin=10,
-                padding=10,
-                width   = 200,
-                height  = 200,
-                alignment=ft.alignment.center,
-                bgcolor=ft.colors.WHITE,
-                # border_radius=0,           # redondeo
-                animate=ft.animation.Animation(200, "bounceOut"),
-                # EVENTOS:  
-                on_long_press = self.longpress,
-                on_hover = self.hover,
-                on_click = self.click, 
-            )
-        return self.contenedor
-    
-    #METODOS
-    # 'setters'
-    def setID(self, id: int):
-        self.contenedor.id = id
-
-    def setContenido(self, imagen: ft.Image ):
-        self.contenedor.content  = imagen 
-        self.update()
-
-    def setDimensiones(self, base: int, altura: int):
-        self.contenedor.height= altura
-        self.contenedor.width = base
-        self.update()
-
-    def setBGColor(self, color: ft.colors):
-        self.contenedor.bgcolor = color
-        self.update()
-        
-    def setRedondeo(self, radio: int):
-        self.contenedor.border_radius = radio
-        self.update()
-
-    # 'getters'
-    def getID(self):
-        return self.contenedor.id 
-
-    def getContenido(self):
-        return self.contenedor.content
-
-    def getDimensiones(self):
-        return [self.contenedor.width , self.contenedor.height]
-    
-    def getBGColor(self):
-        return self.contenedor.bgcolor
-
-    def getRedondeo(self):
-        return self.contenedor.border_radius
-
-
-
-# Funcion auxiliar: sirve para anular eventos
-# def nada():
-#     pass
-
-
-
-
-
-def Galeria(elementos: list, cuadricula : bool):
     fila_imagenes = ft.Row(
         expand=1, 
         wrap = cuadricula, # version galería (si es 'False' las imagenes van en linea)
         scroll=ft.ScrollMode.ALWAYS,
-        controls= elementos,
+        controls= contenedores,
         )    
     return fila_imagenes
 
+
+# Lee una imagen y la carga en un objeto FLET 
+def crear_imagen(ruta: str, base=200, altura=200,redondeo=0):
+    imagen = ft.Image(
+        src = ruta,
+        width = base,
+        height = altura ,
+        fit=ft.ImageFit.CONTAIN,
+        repeat=ft.ImageRepeat.NO_REPEAT,
+        border_radius=ft.border_radius.all(redondeo),
+    )
+    return imagen
 
 
 
@@ -118,44 +46,47 @@ def pagina_galeria(page: ft.Page):
     lista_contenedores = []
 
     # Maquetado
-    # Prueba preliminar: imagenes online 
-    for i in range(0, numero_imagenes):
-        # lista_imagenes.append( f"https://picsum.photos/200/200?{i}" )   # imagenes online
-        contenedor = Contenedor()
-        lista_contenedores.append(contenedor)
-
-        # imagen = ft.Image(
-        #     src = f"https://picsum.photos/200/200?{i}",
-        #     width = 400,
-        #     height = 400 ,
-        #     fit=ft.ImageFit.CONTAIN,
-        #     repeat=ft.ImageRepeat.NO_REPEAT,
-        #     border_radius=ft.border_radius.all(50),
-        # )
-        # lista_imagenes.append(imagen)
-
-
     # componente galeria
-    # imagenes_fila = Galeria_Imagenes(lista_imagenes )
-
-    imagenes_fila = Galeria(lista_contenedores, True)
+    imagenes_fila = galeria_contenedores(numero_imagenes, True)
     page.add(imagenes_fila)
 
+    #alias para los controles del elemento Row
+    contenedor_fila = imagenes_fila.controls  
+    
+    # Funcion general para manejar clickeos sobre los containers
+    def funcion_click(n):
+        cont = contenedor_fila[n]
+        # cambiar estilo
+        cont.setRedondeo(20)
+        cont.valor=True if cont.valor!=True else False
+        color1=ft.colors.INDIGO_400
+        color2=ft.colors.GREEN_200
+        cont.setBGColor(color1) if cont.valor else cont.setBGColor(color2)
+        # mostrar numero
+        print(cont.getID())
 
-    # Edicion propiedades
+
+    # Edicion propiedades (post añadido)
     for i in range(0, numero_imagenes):
-        lista_contenedores[i].setID(i)
-        lista_contenedores[i].setDimensiones(200,200)
-        lista_contenedores[i].setBGColor(ft.colors.AMBER)
-        imagen = ft.Image(
-            src = f"https://picsum.photos/200/200?{i}",
-            width = 400,
-            height = 400 ,
-            fit=ft.ImageFit.CONTAIN,
-            repeat=ft.ImageRepeat.NO_REPEAT,
-            border_radius=ft.border_radius.all(50),
-        )
-        lista_contenedores[i].setContenido(imagen)
+
+
+        c = contenedor_fila[i]    
+
+        c.setID(i)
+        c.setDimensiones(200,200)
+        c.setBGColor(ft.colors.AMBER)
+
+        # funcion de click con argumento ID precargado
+        func = partial(funcion_click, i)
+        c.setClick(func)
+
+        # Relleno con imagenes online
+        ruta = f"https://picsum.photos/200/200?{i}"
+        imagen = crear_imagen(ruta, 400, 400, 50)
+
+        c.setContenido(imagen)
+
+
 
 
     # Elementos generales de la pagina
