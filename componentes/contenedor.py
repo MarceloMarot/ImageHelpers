@@ -1,7 +1,8 @@
-
-# import cv2 as cv
-
 import flet as ft
+
+# DOS COMPONENTES UTILES:
+# - Contenedor() --> Clase
+# - crear_imagen() --> Funcion
 
 # Contenedor con eventos integrados
 # pensado para contener imagenes

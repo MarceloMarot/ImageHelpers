@@ -1,11 +1,9 @@
 # https://flet.dev/docs/controls/image
 
 import flet as ft
-
 from functools import partial
-
-from contenedor import Contenedor 
-
+from contenedor import Contenedor ,crear_imagen
+# from etiquetado import tema_pagina
 
 def galeria_contenedores(numero: int, cuadricula : bool):
 
@@ -23,25 +21,9 @@ def galeria_contenedores(numero: int, cuadricula : bool):
     return fila_imagenes
 
 
-# Lee una imagen y la carga en un objeto FLET 
-def crear_imagen(ruta: str, base=200, altura=200,redondeo=0):
-    imagen = ft.Image(
-        src = ruta,
-        width = base,
-        height = altura ,
-        fit=ft.ImageFit.CONTAIN,
-        repeat=ft.ImageRepeat.NO_REPEAT,
-        border_radius=ft.border_radius.all(redondeo),
-    )
-    return imagen
-
-
-
-
-
 def pagina_galeria(page: ft.Page):
 
-    numero_imagenes = 8
+    numero_imagenes = 80
     # lista_imagenes = [] 
     lista_contenedores = []
 
@@ -68,10 +50,8 @@ def pagina_galeria(page: ft.Page):
 
     # Edicion propiedades (post añadido)
     for i in range(0, numero_imagenes):
-
-
+        # asignacion elemento a elemento
         c = contenedor_fila[i]    
-
         c.setID(i)
         c.setDimensiones(200,200)
         c.setBGColor(ft.colors.AMBER)
@@ -79,11 +59,11 @@ def pagina_galeria(page: ft.Page):
         # funcion de click con argumento ID precargado
         func = partial(funcion_click, i)
         c.setClick(func)
+        # print(func.func, func.args , func.keywords)
 
         # Relleno con imagenes online
         ruta = f"https://picsum.photos/200/200?{i}"
         imagen = crear_imagen(ruta, 400, 400, 50)
-
         c.setContenido(imagen)
 
 
@@ -91,12 +71,12 @@ def pagina_galeria(page: ft.Page):
 
     # Elementos generales de la pagina
     page.title = "Galería Imágenes"
-    page.window_width=700
+    page.window_width=1200
     page.window_height=900
     page.theme_mode = ft.ThemeMode.LIGHT
     # page.theme_mode = ft.ThemeMode.DARK
     page.padding = 10
-
+    # tema_pagina(page)
     page.update()
 
 
