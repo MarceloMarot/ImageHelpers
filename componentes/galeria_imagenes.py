@@ -1,11 +1,16 @@
-# https://flet.dev/docs/controls/image
 
 import flet as ft
 from functools import partial
 from contenedor import Contenedor ,crear_imagen
-# from etiquetado import tema_pagina
 
-def galeria_contenedores(numero: int, cuadricula : bool):
+# Funciones para crear galerías de imagenes y definir eventos y propiedades
+# - crear_galeria()
+# - imagenes_galeria()
+# - estilo_galeria()
+# - eventos_galeria()
+
+
+def crear_galeria(numero: int, cuadricula : bool):
 
     contenedores = []
     for i in range(numero):
@@ -21,53 +26,101 @@ def galeria_contenedores(numero: int, cuadricula : bool):
     return fila_imagenes
 
 
-def pagina_galeria(page: ft.Page):
-
-    numero_imagenes = 80
-    # lista_imagenes = [] 
-    lista_contenedores = []
-
-    # Maquetado
-    # componente galeria
-    imagenes_fila = galeria_contenedores(numero_imagenes, True)
-    page.add(imagenes_fila)
-
+def estilo_galeria(galeria: ft.Row, base=200, altura=200, redondeo=10, color=ft.colors.WHITE):
     #alias para los controles del elemento Row
-    contenedor_fila = imagenes_fila.controls  
-    
-    # Funcion general para manejar clickeos sobre los containers
-    def funcion_click(n):
-        cont = contenedor_fila[n]
-        # cambiar estilo
-        cont.setRedondeo(20)
-        cont.valor=True if cont.valor!=True else False
-        color1=ft.colors.INDIGO_400
-        color2=ft.colors.GREEN_200
-        cont.setBGColor(color1) if cont.valor else cont.setBGColor(color2)
-        # mostrar numero
-        print(cont.getID())
-
-
+    contenedor_fila = galeria.controls  
+    numero_imagenes=len(contenedor_fila)
     # Edicion propiedades (post añadido)
     for i in range(0, numero_imagenes):
         # asignacion elemento a elemento
         c = contenedor_fila[i]    
-        c.setID(i)
-        c.setDimensiones(200,200)
-        c.setBGColor(ft.colors.AMBER)
+        c.setID(i)                # Redundante
+        c.setDimensiones(base, altura)
+        c.setBGColor(color)
 
+
+def imagenes_galeria(galeria: ft.Row, lista_rutas=[], base=200, altura=200, redondeo=10):
+    #alias para los controles del elemento Row
+    contenedor_fila = galeria.controls  
+    numero_imagenes=len(contenedor_fila)
+
+    numero_rutas= len(lista_rutas) 
+    if numero_rutas == 0 :
+        print("ejemplo: imagenes desde PicSum")
+        # Ejemplo:  relleno con imagenes online
+        for i in range(0, numero_imagenes):
+            ruta = f"https://picsum.photos/200/200?{i}"
+            imagen = crear_imagen(ruta, base, altura, redondeo)
+            contenedor_fila[i].setContenido(imagen)
+
+    else:
+        numero = numero_rutas if numero_rutas <= numero_imagenes else  numero_imagenes
+
+        for i in range(numero):
+        # for ruta in lista_rutas:
+            imagen = crear_imagen(lista_rutas[i], base, altura, redondeo)
+            contenedor_fila[i].setContenido(imagen)
+ 
+
+
+def eventos_galeria(galeria: ft.Row, funcclick=None, funchover=None ,funclongpress=None ):
+    #alias para los controles del elemento Row
+    contenedor_fila = galeria.controls  
+    numero_imagenes=len(contenedor_fila)
+
+    # Edicion propiedades (post añadido)
+    for i in range(0, numero_imagenes):
+        c = contenedor_fila[i]    
         # funcion de click con argumento ID precargado
-        func = partial(funcion_click, i)
-        c.setClick(func)
-        # print(func.func, func.args , func.keywords)
+        if funcclick != None:
+            fclick = partial(funcion_click, c)
+            c.setClick(fclick)      
+        if funchover != None:
+            fhover = partial(funchover, c)
+            c.setHover(fhover) 
+        if funclongpress != None:
+            flongp = partial(funclongpress, c)
+            c.setLongpress(flongp)  
 
-        # Relleno con imagenes online
-        ruta = f"https://picsum.photos/200/200?{i}"
-        imagen = crear_imagen(ruta, 400, 400, 50)
-        c.setContenido(imagen)
+
+# Rutinas Ejemplo: galería de imagenes online con interaccion con el mouse
+
+def funcion_click(cont):
+    # cambiar estilo
+    cont.setRedondeo(20)
+    cont.valor=True if cont.valor!=True else False
+    color1=ft.colors.INDIGO
+    color2=ft.colors.GREEN
+    cont.setBGColor(color1) if cont.valor else cont.setBGColor(color2)
+    # mostrar numero
+    print(cont.getID())
 
 
+def funcion_hover(cont):
+    # cambiar estilo
+    cont.setRedondeo(100)
+    # mostrar numero
+    # print(cont.getID())
 
+
+def funcion_longpress(cont):
+    # cambiar estilo
+    cont.setRedondeo(10)
+    cont.setBGColor(ft.colors.AMBER) 
+    # mostrar numero
+    print("Restaurado!")
+
+
+def pagina_galeria(page: ft.Page):
+    
+    numero_imagenes = 30
+    # Maquetado
+    # componente galeria
+    galeria = crear_galeria(numero_imagenes, True)
+    page.add(galeria)
+    estilo_galeria(galeria,color=ft.colors.AMBER,base=200, altura=200)
+    imagenes_galeria(galeria,base=200, altura=200)
+    eventos_galeria(galeria, funcion_click,funcion_hover, funcion_longpress)
 
     # Elementos generales de la pagina
     page.title = "Galería Imágenes"

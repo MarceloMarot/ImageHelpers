@@ -114,14 +114,14 @@ def nada():
 
 
 # Lee una imagen y la carga en un objeto FLET 
-def crear_imagen(ruta: str, base=200, altura=200,borde=0):
+def crear_imagen(ruta: str, base=200, altura=200,redondeo=0):
     imagen = ft.Image(
         src = ruta,
         width = base,
         height = altura ,
         fit=ft.ImageFit.CONTAIN,
         repeat=ft.ImageRepeat.NO_REPEAT,
-        border_radius=ft.border_radius.all(borde),
+        border_radius=ft.border_radius.all(redondeo),
     )
     return imagen
 

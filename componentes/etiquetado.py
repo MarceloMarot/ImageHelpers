@@ -3,7 +3,8 @@ import flet as ft
 
 from procesar_etiquetas import Etiquetas 
 
-def Columna_Etiquetas(pagina: ft.Page, etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas ):
+
+def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas ):
 
     def guardar_opciones(e):
         etiquetas_checkboxes=[]
@@ -19,21 +20,22 @@ def Columna_Etiquetas(pagina: ft.Page, etiquetas_dataset: Etiquetas, etiquetas_i
             etiquetas_imagen.guardar()
         else:
             texto.value = "Sin cambios"
-        pagina.update()
+        columna_etiquetado.update()
 
 
     def checkboxes_ninguno(e):
         for checkbox  in lista_checkboxes:
             checkbox.value = False
         texto.value = "Nada"
-        pagina.update()
+        columna_etiquetado.update()
 
 
     def checkboxes_todos(e):
         for checkbox  in lista_checkboxes:
             checkbox.value = True
         texto.value = "Todo"
-        pagina.update()
+        columna_etiquetado.update()
+
 
 
     def restablecer_opciones(e):
@@ -44,7 +46,7 @@ def Columna_Etiquetas(pagina: ft.Page, etiquetas_dataset: Etiquetas, etiquetas_i
             else:
                 checkbox.value = False
         texto.value = "Valores reestablecidos"
-        pagina.update()
+        columna_etiquetado.update()
 
 
     numero_checkboxes = len(etiquetas_dataset.tags)
@@ -109,7 +111,7 @@ def Columna_Etiquetas(pagina: ft.Page, etiquetas_dataset: Etiquetas, etiquetas_i
 
 
 # Tema aplicado globalmente
-def Tema_Pagina(pagina: ft.Page):
+def tema_pagina(pagina: ft.Page):
     pagina.theme = ft.Theme(
         scrollbar_theme=ft.ScrollbarTheme(
             track_color={
@@ -133,25 +135,26 @@ def Tema_Pagina(pagina: ft.Page):
 
 def pagina_etiquetado(page: ft.Page ):
 
+    # Procesado de archivos
     archivo_dataset = "demo_etiquetas.txt"
     archivo_salida = "etiquetas_salida.txt"
     etiquetas_dataset = Etiquetas(archivo_dataset)
     etiquetas_imagen = Etiquetas(archivo_salida)
 
 
+    ## Aglutinado columnas
+    columna_etiquetado = Columna_Etiquetas ( etiquetas_dataset, etiquetas_imagen )
+    page.add(columna_etiquetado)
+
+    # Estilos 
+    tema_pagina(page)
+    # Propiedades pagina 
     page.title = "Ventana Etiquetado Imágenes"
     page.window_width=450
     page.window_height=900
     page.window_maximizable=True
     page.window_minimizable=True
     page.window_maximized=False
-
-    ## Aglutinado columnas
-    columna_etiquetado = Columna_Etiquetas ( page, etiquetas_dataset, etiquetas_imagen )
-    page.add(columna_etiquetado)
-
-    # Estilos 
-    Tema_Pagina(page)
 
 
 # Llamado al programa y su frontend
