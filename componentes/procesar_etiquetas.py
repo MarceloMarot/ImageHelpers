@@ -69,25 +69,21 @@ def LecturaLista(entrada: str):
 
 # Funcion que separa etiquetas en base a comas y puntos aparte
 # Descarta etiquetas repetidas
-# Asigna numero de grupo segun ubicación de etiqueta 
+# Asigna numero de grupo alos tags en base al  primer renglon de aparicion
 def FiltradoEtiquetas(lista_entrada: list):
     # listas auxiliares para contener los datos
-    lineas=[]
-    # lista_etiquetas = []
-    # grupo_etiquetas = []
     dicc_etiquetas = {}
     # conjunto auxiliar: se filtrarán las etiquetas repetidas 
     set_etiquetas=set([])
-    # auxiliar: numero de renglon
+    # auxiliar: numero de grupo 
     n = 0
+
     for i in range(0,len(lista_entrada)):
         # Eliminacion de renglones vacios
         if len(lista_entrada[i].strip()) > 0:
-            lineas.append(lista_entrada[i])
             etiquetas_renglon = lista_entrada[i].split(',')
             # quita de espacios vacios y guardado en lista
-            for j in range(0, len(etiquetas_renglon)):
-                etiqueta = etiquetas_renglon[j] 
+            for etiqueta in etiquetas_renglon :
                 etiqueta = etiqueta.strip()
                 # Filtrado de etiquetas no nulas
                 if len(etiqueta)>0:
@@ -97,9 +93,12 @@ def FiltradoEtiquetas(lista_entrada: list):
                         # grupo_etiquetas.append(n)
                         # salida en pares clave -valor 
                         dicc_etiquetas[etiqueta] = n
-                        set_etiquetas.add(etiqueta)
-            # Numero de renglon
-            n += 1
+                        set_etiquetas.add(etiqueta) 
+                        nuevo_tag=True
+            # Nuevo renglon con tags añadidas --> nuevo grupo
+            if nuevo_tag :
+                n += 1
+                nuevo_tag = False
     # Retorno de una clase con las etiquetas y el numero de renglón (grupo)
     # return [lista_etiquetas, grupo_etiquetas]
     return dicc_etiquetas

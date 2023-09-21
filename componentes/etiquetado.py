@@ -22,21 +22,17 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
             texto.value = "Sin cambios"
         columna_etiquetado.update()
 
-
     def checkboxes_ninguno(e):
         for checkbox  in lista_checkboxes:
             checkbox.value = False
         texto.value = "Nada"
         columna_etiquetado.update()
 
-
     def checkboxes_todos(e):
         for checkbox  in lista_checkboxes:
             checkbox.value = True
         texto.value = "Todo"
         columna_etiquetado.update()
-
-
 
     def restablecer_opciones(e):
         for checkbox  in lista_checkboxes:
@@ -49,16 +45,63 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
         columna_etiquetado.update()
 
 
-    numero_checkboxes = len(etiquetas_dataset.tags)
-    lista_checkboxes = []
+    # numero_checkboxes = len(etiquetas_dataset.tags)
+    lista_checkboxes = []       # lista para lógica
+    j=0
     for etiqueta  in etiquetas_dataset.tags:
+        j += 1
         selector = ft.Switch(label=f"{etiqueta}",value=False)
         if  etiqueta in etiquetas_imagen.tags:
             selector.value=True  
         lista_checkboxes.append(selector) 
+    
+   
+    divisor = ft.Divider(height=9, thickness=3, color=ft.colors.INDIGO_100)
+
+    # version grafica con divisores
+    lista_checkboxes_grafica=[] # lista para grafica
+    lista_checkboxes_grafica=lista_checkboxes.copy()
+    grupo = etiquetas_dataset.grupo
+    conjunto_grupos = set( etiquetas_dataset.grupo )
+    lista_grupos = list(conjunto_grupos)
+
+
+
+
+
+    # msg_separador = f"Grupo {k}" 
+    # separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=ft.colors.INDIGO_100 )
+
+    # Se añaden separadores de grupo de ultimp a primero
+    for i in range(len(grupo)-1, 0 , -1):
+        if grupo[i-1] != grupo[i]:
+            k = lista_grupos.pop()   
+            msg_separador = f"Grupo {k}" 
+            separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=ft.colors.INDIGO_100 )
+            lista_checkboxes_grafica.insert(i, separador )
+
+
+    if len(lista_grupos)>0:
+        k = lista_grupos.pop()  
+        msg_separador = f"Grupo {k}" 
+        separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=ft.colors.INDIGO_100 )
+        lista_checkboxes_grafica.insert(0, separador )
+
+
+
+    ancho = 500
+    mensaje="Etiquetado" if len(lista_checkboxes) > 0 else "Sin Dataset"
 
     # cuadro de texto de salida
-    texto = ft.Text(size=30 ,width=400, height=100, bgcolor=ft.colors.AMBER_200, )
+    texto = ft.Text(size=20 ,width=300, height=30, bgcolor=ft.colors.AMBER_100, value=mensaje, expand = False )
+    fila_texto=ft.Row(
+        wrap=False,
+        spacing=50,       # espaciado horizontal entre contenedores
+        run_spacing=50,     # espaciado vertical entre filas
+        controls = [texto] ,
+        width=ancho, # anchura de columna   
+        alignment= ft.MainAxisAlignment.CENTER, 
+    )
     # botones de comando
     boton_guardado = ft.ElevatedButton(text="Guardar", on_click=guardar_opciones, bgcolor="red",color="white", width=150)
     boton_todos = ft.ElevatedButton(text="Todos", on_click=checkboxes_todos   ,width=150)
@@ -70,8 +113,8 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
         spacing=50,       # espaciado horizontal entre contenedores
         run_spacing=50,     # espaciado vertical entre filas
         controls = [ boton_todos, boton_ninguno],
-        width=400, # anchura de columna   
-        scroll=ft.ScrollMode.ALWAYS,
+        width=ancho, # anchura de columna   
+        alignment= ft.MainAxisAlignment.CENTER,
     )
 
     fila_boton_restablecer = ft.Row(
@@ -79,8 +122,8 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
         spacing=50,       # espaciado horizontal entre contenedores
         run_spacing=50,     # espaciado vertical entre filas
         controls = [boton_restablecer, boton_guardado],
-        width=400, # anchura de columna   
-        scroll=ft.ScrollMode.ALWAYS,
+        width=ancho, # anchura de columna   
+        alignment= ft.MainAxisAlignment.CENTER,
     )
 
     # Columna de checkboxes
@@ -88,23 +131,43 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
         wrap=False,
         spacing=10,       # espaciado horizontal entre contenedores
         run_spacing=50,     # espaciado vertical entre filas
-        controls=lista_checkboxes,
+        controls=lista_checkboxes_grafica,
         height=600,         # altura de columna
-        scroll=ft.ScrollMode.ALWAYS,
+        width=ancho,
+        scroll=ft.ScrollMode.AUTO,
     )
 
+    #contenedor de checkboxes (decorativo)
+    contenedor_checkboxes = ft.Container(
+                margin=10,
+                padding=10,
+                width   = ancho,
+                height  = 600,
+                content = columna_checkboxes,
+                alignment=ft.alignment.center,
+                # bgcolor=ft.colors.AMBER,
+                border_radius=20,           # redondeo
+                animate=ft.animation.Animation(200, "bounceOut"),
+            )
+    contenedor_checkboxes.border = ft.border.all(5, ft.colors.INDIGO_400)
+
+
+
     elementos_etiquetado=[]
-    elementos_etiquetado.append(texto)
-    elementos_etiquetado.append(columna_checkboxes)
+    # elementos_etiquetado.append(texto)
+    elementos_etiquetado.append(fila_texto)
+    # elementos_etiquetado.append(columna_checkboxes)
+    elementos_etiquetado.append(contenedor_checkboxes)
     elementos_etiquetado.append(fila_botones_checkboxes)
     elementos_etiquetado.append(fila_boton_restablecer)
+    # elementos_etiquetado.append(ft.Divider(height=9, thickness=3))
 
     columna_etiquetado = ft.Column(
         wrap=False,
         spacing=10,       # espaciado horizontal entre contenedores
         run_spacing=50,     # espaciado vertical entre filas
         controls = elementos_etiquetado, 
-        width=500, # anchura de columna   
+        width=ancho # anchura de columna   
     )
     return columna_etiquetado
 
@@ -151,10 +214,13 @@ def pagina_etiquetado(page: ft.Page ):
     # Propiedades pagina 
     page.title = "Ventana Etiquetado Imágenes"
     page.window_width=450
-    page.window_height=900
+    page.window_height = 1000
     page.window_maximizable=True
     page.window_minimizable=True
     page.window_maximized=False
+    
+    page.update()
+
 
 
 # Llamado al programa y su frontend
