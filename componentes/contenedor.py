@@ -73,6 +73,20 @@ class Contenedor(ft.UserControl):
         self.valor = valor
         self.update()
 
+    # los eventos se configuran aquí
+    # deben asignarse funciones lambda
+    def setHover(self, funcion):
+        self.funcion_hover = funcion
+        self.update()
+
+    def setClick(self, funcion):
+        self.funcion_click = funcion
+        self.update()    
+
+    def setLongpress(self, funcion):
+        self.funcion_longpress = funcion
+        self.update()
+
     # 'getters'
     def getID(self):
         return self.contenedor.id 
@@ -93,19 +107,7 @@ class Contenedor(ft.UserControl):
         return self.valor 
 
 
-    # los eventos se configuran aquí
-    # deben asignarse funciones lambda
-    def setHover(self, funcion):
-        self.funcion_hover = funcion
-        self.update()
 
-    def setClick(self, funcion):
-        self.funcion_click = funcion
-        self.update()    
-
-    def setLongpress(self, funcion):
-        self.funcion_longpress = funcion
-        self.update()
 
 
 # Funcion auxiliar: sirve para anular eventos

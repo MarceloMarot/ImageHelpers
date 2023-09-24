@@ -2,7 +2,7 @@ from copy import copy
 import flet as ft
 
 from procesar_etiquetas import Etiquetas 
-
+# from componentes.procesar_etiquetas import Etiquetas 
 
 def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas ):
 
@@ -13,11 +13,16 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
             valor    = checkbox.value
             if valor:
                 etiquetas_checkboxes.append(etiqueta)
-        if set(etiquetas_imagen.tags) != set(etiquetas_checkboxes):
+        # relectura de etiquetas para prevenir relecturas inutiles
+        etiquetas_imagen.leer()    
+        print("postlectura: ",etiquetas_imagen.ruta)
+        if set(etiquetas_imagen.tags) != set(etiquetas_checkboxes): 
+
             texto.value = "Cambios guardados"
             # archivo creado / reescrito
             etiquetas_imagen.tags = etiquetas_checkboxes
-            etiquetas_imagen.guardar()
+            if etiquetas_imagen.guardar()==False:
+                texto.value = " Error: guardado fallido"
         else:
             texto.value = "Sin cambios"
         columna_etiquetado.update()
@@ -55,8 +60,11 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
             selector.value=True  
         lista_checkboxes.append(selector) 
     
-   
-    divisor = ft.Divider(height=9, thickness=3, color=ft.colors.INDIGO_100)
+    
+    color_separador = ft.colors.INDIGO_200
+    color_borde = ft.colors.INDIGO_400
+
+    divisor = ft.Divider(height=9, thickness=3, color=color_separador)
 
     # version grafica con divisores
     lista_checkboxes_grafica=[] # lista para grafica
@@ -70,26 +78,29 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
 
 
     # msg_separador = f"Grupo {k}" 
-    # separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=ft.colors.INDIGO_100 )
+    # separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=color_separador )
 
     # Se añaden separadores de grupo de ultimp a primero
     for i in range(len(grupo)-1, 0 , -1):
         if grupo[i-1] != grupo[i]:
             k = lista_grupos.pop()   
             msg_separador = f"Grupo {k}" 
-            separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=ft.colors.INDIGO_100 )
+            separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=color_separador )
             lista_checkboxes_grafica.insert(i, separador )
 
 
     if len(lista_grupos)>0:
         k = lista_grupos.pop()  
         msg_separador = f"Grupo {k}" 
-        separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=ft.colors.INDIGO_100 )
+        separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=color_separador )
         lista_checkboxes_grafica.insert(0, separador )
 
 
+    # print("numero checkboxes: ", len(lista_checkboxes) , len(lista_checkboxes_grafica))
 
-    ancho = 500
+
+    ancho = 400
+    ancho_boton=130
     mensaje="Etiquetado" if len(lista_checkboxes) > 0 else "Sin Dataset"
 
     # cuadro de texto de salida
@@ -103,10 +114,10 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
         alignment= ft.MainAxisAlignment.CENTER, 
     )
     # botones de comando
-    boton_guardado = ft.ElevatedButton(text="Guardar", on_click=guardar_opciones, bgcolor="red",color="white", width=150)
-    boton_todos = ft.ElevatedButton(text="Todos", on_click=checkboxes_todos   ,width=150)
-    boton_ninguno = ft.ElevatedButton(text="Ninguno", on_click=checkboxes_ninguno ,width=150)
-    boton_restablecer = ft.ElevatedButton(text="Restablecer", on_click=restablecer_opciones, bgcolor="blue",color="white", width=150)
+    boton_guardado = ft.ElevatedButton(text="Guardar", on_click=guardar_opciones, bgcolor="red",color="white", width=ancho_boton)
+    boton_todos = ft.ElevatedButton(text="Todos", on_click=checkboxes_todos   ,width=ancho_boton)
+    boton_ninguno = ft.ElevatedButton(text="Ninguno", on_click=checkboxes_ninguno ,width=ancho_boton)
+    boton_restablecer = ft.ElevatedButton(text="Restablecer", on_click=restablecer_opciones, bgcolor="blue",color="white", width=ancho_boton)
 
     fila_botones_checkboxes = ft.Row(
         wrap=False,
@@ -139,17 +150,17 @@ def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas 
 
     #contenedor de checkboxes (decorativo)
     contenedor_checkboxes = ft.Container(
-                margin=10,
-                padding=10,
-                width   = ancho,
-                height  = 600,
-                content = columna_checkboxes,
-                alignment=ft.alignment.center,
-                # bgcolor=ft.colors.AMBER,
-                border_radius=20,           # redondeo
-                animate=ft.animation.Animation(200, "bounceOut"),
-            )
-    contenedor_checkboxes.border = ft.border.all(5, ft.colors.INDIGO_400)
+        margin=10,
+        padding=10,
+        width   = ancho,
+        height  = 600,
+        content = columna_checkboxes,
+        alignment=ft.alignment.center,
+        # bgcolor=ft.colors.AMBER,
+        border_radius=20,           # redondeo
+        animate=ft.animation.Animation(200, "bounceOut"),
+    )
+    contenedor_checkboxes.border = ft.border.all(5, color_borde)
 
 
 
@@ -199,8 +210,8 @@ def tema_pagina(pagina: ft.Page):
 def pagina_etiquetado(page: ft.Page ):
 
     # Procesado de archivos
-    archivo_dataset = "demo_etiquetas.txt"
-    archivo_salida = "etiquetas_salida.txt"
+    archivo_dataset = "../demo_etiquetas.txt"
+    archivo_salida = "../etiquetas_salida.png"      
     etiquetas_dataset = Etiquetas(archivo_dataset)
     etiquetas_imagen = Etiquetas(archivo_salida)
 

@@ -3,6 +3,9 @@ import flet as ft
 from functools import partial
 from contenedor import Contenedor ,crear_imagen
 
+
+from buscar import buscar_imagenes
+
 # Funciones para crear galerías de imagenes y definir eventos y propiedades
 # - crear_galeria()
 # - imagenes_galeria()
@@ -10,7 +13,7 @@ from contenedor import Contenedor ,crear_imagen
 # - eventos_galeria()
 
 
-def crear_galeria(numero: int, cuadricula : bool):
+def crear_galeria(numero: int, cuadricula = False ):
 
     contenedores = []
     for i in range(numero):
@@ -34,7 +37,7 @@ def estilo_galeria(galeria: ft.Row, base=200, altura=200, redondeo=10, color=ft.
     for i in range(0, numero_imagenes):
         # asignacion elemento a elemento
         c = contenedor_fila[i]    
-        c.setID(i)                # Redundante
+        c.setID(i)              
         c.setDimensiones(base, altura)
         c.setBGColor(color)
 
@@ -73,7 +76,7 @@ def eventos_galeria(galeria: ft.Row, funcclick=None, funchover=None ,funclongpre
         c = contenedor_fila[i]    
         # funcion de click con argumento ID precargado
         if funcclick != None:
-            fclick = partial(funcion_click, c)
+            fclick = partial(funcclick , c)
             c.setClick(fclick)      
         if funchover != None:
             fhover = partial(funchover, c)
@@ -114,12 +117,18 @@ def funcion_longpress(cont):
 def pagina_galeria(page: ft.Page):
     
     numero_imagenes = 30
+    lista_imagenes = []
+
+    ruta_imagenes="D:\Proyectos_Programacion\cartoons"
+    lista_imagenes = buscar_imagenes(ruta_imagenes)
+    numero_imagenes = len(lista_imagenes)
+    
     # Maquetado
     # componente galeria
     galeria = crear_galeria(numero_imagenes, True)
     page.add(galeria)
     estilo_galeria(galeria,color=ft.colors.AMBER,base=200, altura=200)
-    imagenes_galeria(galeria,base=200, altura=200)
+    imagenes_galeria(galeria,lista_rutas=lista_imagenes ,base=200, altura=200)
     eventos_galeria(galeria, funcion_click,funcion_hover, funcion_longpress)
 
     # Elementos generales de la pagina

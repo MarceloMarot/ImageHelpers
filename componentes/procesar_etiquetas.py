@@ -3,7 +3,9 @@ import sys
 import pathlib 
 
 
-# Clase auxiliar para manejar y clasigficar etiquetas
+# Clase auxiliar para manejar y clasificar etiquetas
+# 'ruta' es el nombre de cualquier archivo a describir
+# las etiquetas se guardan/leen de un archivo de igual nombre pero con extension '.txt'
 class Etiquetas:
     # def __init__(self, tags: list, grupo: list, ruta: str):	
     def __init__(self, ruta: str, tags=[], grupo=[] ):	
@@ -11,7 +13,13 @@ class Etiquetas:
         self.grupo  = grupo     # numeros de grupo de las etiquetas
         self.ruta   = ruta      # ruta archivo
         # lectura automatica
-        self.leer()
+        try:
+            # self.ruta = pathlib.Path(ruta).with_suffix('.txt')
+            self.leer()
+        except:
+            self.tags  = []
+            self.grupo = []
+
 
     #lectura desde disco
     def leer(self):
@@ -45,7 +53,8 @@ def etiquetas2texto(lista_renglones: list):
 
 # Guardado en archivo (modo SOBREESCRITURA)
 def GuardadoTexto(ruta: str, texto:str):
-    path = pathlib.Path(ruta)
+    print(ruta)
+    path = pathlib.Path(ruta).with_suffix('.txt')
     try:
         with open(path,"w") as archivo:
             archivo.writelines(texto)
@@ -57,7 +66,7 @@ def GuardadoTexto(ruta: str, texto:str):
 #lectura de un archivo de texto 
 #devuelve una lista de los renglones leidos
 def LecturaLista(entrada: str): 
-    path = pathlib.Path(entrada)
+    path = pathlib.Path(entrada).with_suffix('.txt')
     try:
         with open(path,"r") as archivo:
             # se lee TODO como LISTA de renglones
