@@ -4,184 +4,223 @@ import flet as ft
 from procesar_etiquetas import Etiquetas 
 # from componentes.procesar_etiquetas import Etiquetas 
 
-def Columna_Etiquetas(etiquetas_dataset: Etiquetas, etiquetas_imagen: Etiquetas ):
+class Columna_Etiquetas(ft.UserControl):
 
-    def guardar_opciones(e):
+    def build(self):
+        
+        self.checkboxes = []
+        self.checkboxes_grafica= []
+
+        self.etiquetas_dataset = Etiquetas("")
+        self.etiquetas_imagen  = Etiquetas("")
+
+        self.color_separador = ft.colors.INDIGO_200
+        self.color_borde = ft.colors.INDIGO_400
+
+        ancho = 400
+        ancho_boton=130
+
+        # cuadro de texto de salida
+        self.texto = ft.Text(size=20 ,width=300, height=30, bgcolor=ft.colors.AMBER_100, value="", expand = False )
+
+        fila_texto=ft.Row(
+            wrap=False,
+            spacing=50,       # espaciado horizontal entre contenedores
+            run_spacing=50,     # espaciado vertical entre filas
+            controls = [self.texto] ,
+            width=ancho, # anchura de columna   
+            alignment= ft.MainAxisAlignment.CENTER, 
+            )
+        # botones de comando
+        self.boton_guardado = ft.ElevatedButton(
+            text = "Guardar", 
+            on_click = self.guardar_opciones, 
+            bgcolor="red",color="white", width=ancho_boton,
+            )
+        self.boton_todos = ft.ElevatedButton(
+            text = "Todos", 
+            on_click = self.checkboxes_todos,
+            width=ancho_boton,
+            )
+        self.boton_ninguno = ft.ElevatedButton(
+            text = "Ninguno", 
+            on_click = self.checkboxes_ninguno,
+            width=ancho_boton,
+            )
+        self.boton_restablecer = ft.ElevatedButton(
+            text = "Restablecer", 
+            on_click = self.restablecer_opciones, 
+            bgcolor="blue",color="white", width=ancho_boton,
+            )
+
+        fila_botones_checkboxes = ft.Row(
+            wrap=False,
+            spacing=50,       # espaciado horizontal entre contenedores
+            run_spacing=50,     # espaciado vertical entre filas
+            controls = [ self.boton_todos, self.boton_ninguno],
+            width=ancho, # anchura de columna   
+            alignment= ft.MainAxisAlignment.CENTER,
+            )
+
+        fila_boton_restablecer = ft.Row(
+            wrap=False,
+            spacing=50,       # espaciado horizontal entre contenedores
+            run_spacing=50,     # espaciado vertical entre filas
+            controls = [self.boton_restablecer, self.boton_guardado],
+            width=ancho, # anchura de columna   
+            alignment= ft.MainAxisAlignment.CENTER,
+            )
+
+        # Columna de checkboxes
+        self.columna_checkboxes = ft.Column(
+            wrap=False,
+            spacing=10,       # espaciado horizontal entre contenedores
+            run_spacing=50,     # espaciado vertical entre filas
+            # controls=self.checkboxes_grafica,
+            controls=self.checkboxes,
+            height=600,         # altura de columna
+            width=ancho,
+            scroll=ft.ScrollMode.AUTO,
+            )
+
+        #contenedor de checkboxes (decorativo)
+        self.contenedor_checkboxes = ft.Container(
+            margin=10,
+            padding=10,
+            width   = ancho,
+            height  = 600,
+            content = self.columna_checkboxes,
+            alignment=ft.alignment.center,
+            # bgcolor=ft.colors.AMBER,
+            border_radius=20,           # redondeo
+            animate=ft.animation.Animation(200, "bounceOut"),
+            border = ft.border.all(5, self.color_borde)
+            )
+
+        elementos_etiquetado=[]
+        # elementos_etiquetado.append(texto)
+        elementos_etiquetado.append(fila_texto)
+        # elementos_etiquetado.append(self.columna_checkboxes)
+        # elementos_etiquetado.append(self.checkboxes_grafica)
+        elementos_etiquetado.append(self.contenedor_checkboxes)
+        elementos_etiquetado.append(fila_botones_checkboxes)
+        elementos_etiquetado.append(fila_boton_restablecer)
+        # elementos_etiquetado.append(ft.Divider(height=9, thickness=3))
+
+        columna_etiquetado = ft.Column(
+            wrap=False,
+            spacing=10,       # espaciado horizontal entre contenedores
+            run_spacing=50,     # espaciado vertical entre filas
+            controls = elementos_etiquetado, 
+            width=ancho # anchura de columna   
+        )
+        return columna_etiquetado
+
+
+    def guardar_opciones(self, e):
         etiquetas_checkboxes=[]
+        lista_checkboxes = self.checkboxes
         for checkbox  in lista_checkboxes:
             etiqueta = checkbox.label
             valor    = checkbox.value
             if valor:
                 etiquetas_checkboxes.append(etiqueta)
         # relectura de etiquetas para prevenir relecturas inutiles
-        etiquetas_imagen.leer()    
-        print("postlectura: ",etiquetas_imagen.ruta)
-        if set(etiquetas_imagen.tags) != set(etiquetas_checkboxes): 
-
-            texto.value = "Cambios guardados"
+        self.etiquetas_imagen.leer()    
+        # print("postlectura: ", self.etiquetas_imagen.ruta)
+        if set(self.etiquetas_imagen.tags) != set(etiquetas_checkboxes): 
+            self.texto.value = "Cambios guardados"
             # archivo creado / reescrito
-            etiquetas_imagen.tags = etiquetas_checkboxes
-            if etiquetas_imagen.guardar()==False:
-                texto.value = " Error: guardado fallido"
+            self.etiquetas_imagen.tags = etiquetas_checkboxes
+            if self.etiquetas_imagen.guardar()==False:
+                self.texto.value = " Error: guardado fallido"
         else:
-            texto.value = "Sin cambios"
-        columna_etiquetado.update()
+            self.texto.value = "Sin cambios"
+        self.update()
 
-    def checkboxes_ninguno(e):
-        for checkbox  in lista_checkboxes:
+    def checkboxes_ninguno(self, e):
+        # lista_checkboxes = self.checkboxes
+        for checkbox  in self.checkboxes:
             checkbox.value = False
-        texto.value = "Nada"
-        columna_etiquetado.update()
+        self.texto.value = "Nada"
+        self.update()
 
-    def checkboxes_todos(e):
-        for checkbox  in lista_checkboxes:
+    def checkboxes_todos(self, e):
+        for checkbox  in self.checkboxes:
             checkbox.value = True
-        texto.value = "Todo"
-        columna_etiquetado.update()
+            checkbox.update()
+        self.texto.value = "Todo"
+        self.update()
 
-    def restablecer_opciones(e):
-        for checkbox  in lista_checkboxes:
+    def restablecer_opciones(self, e):
+        # lista_checkboxes = self.checkboxes
+        for checkbox  in self.checkboxes:
             etiqueta = checkbox.label
-            if  etiqueta in etiquetas_imagen.tags :
+            if  etiqueta in self.etiquetas_imagen.tags :
                 checkbox.value = True
             else:
                 checkbox.value = False
-        texto.value = "Valores reestablecidos"
-        columna_etiquetado.update()
+        self.texto.value = "Valores reestablecidos"
+        self.update()
 
 
-    # numero_checkboxes = len(etiquetas_dataset.tags)
-    lista_checkboxes = []       # lista para lógica
-    j=0
-    for etiqueta  in etiquetas_dataset.tags:
-        j += 1
-        selector = ft.Switch(label=f"{etiqueta}",value=False)
-        if  etiqueta in etiquetas_imagen.tags:
-            selector.value=True  
-        lista_checkboxes.append(selector) 
-    
-    
-    color_separador = ft.colors.INDIGO_200
-    color_borde = ft.colors.INDIGO_400
+    def crearCheckboxes(self):
+        for etiqueta  in self.etiquetas_dataset.tags:
+            selector = ft.Switch(label=f"{etiqueta}",value=False)
+            if  etiqueta in self.etiquetas_imagen.tags:
+                selector.value=True  
+            self.checkboxes.append(selector) 
 
-    divisor = ft.Divider(height=9, thickness=3, color=color_separador)
+        
+        # version grafica con divisores (COSMETICA)
+        # self.checkboxes_grafica = [] # lista para grafica
+        # self.checkboxess_grafica = self.checkboxes.deepcopy()
+        # grupo = self.etiquetas_dataset.grupo
+        # conjunto_grupos = set( self.etiquetas_dataset.grupo )
+        # lista_grupos = list(conjunto_grupos)
 
-    # version grafica con divisores
-    lista_checkboxes_grafica=[] # lista para grafica
-    lista_checkboxes_grafica=lista_checkboxes.copy()
-    grupo = etiquetas_dataset.grupo
-    conjunto_grupos = set( etiquetas_dataset.grupo )
-    lista_grupos = list(conjunto_grupos)
+        # # Se añaden separadores de grupo de ultimp a primero
+        # for i in range(len(grupo)-1, 0 , -1):
+        #     if grupo[i-1] != grupo[i]:
+        #         k = lista_grupos.pop()   
+        #         msg_separador = f"Grupo {k}" 
+        #         separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=self.color_separador )
+        #         self.checkboxes_grafica.insert(i, separador )
 
+        # if len(lista_grupos)>0:
+        #     k = lista_grupos.pop()  
+        #     msg_separador = f"Grupo {k}" 
+        #     separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=self.color_separador )
+        #     self.checkboxes_grafica.insert(0, separador )
 
-
-
-
-    # msg_separador = f"Grupo {k}" 
-    # separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=color_separador )
-
-    # Se añaden separadores de grupo de ultimp a primero
-    for i in range(len(grupo)-1, 0 , -1):
-        if grupo[i-1] != grupo[i]:
-            k = lista_grupos.pop()   
-            msg_separador = f"Grupo {k}" 
-            separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=color_separador )
-            lista_checkboxes_grafica.insert(i, separador )
+        # self.checkboxes_grafica= lista_checkboxes_grafica
+        self.update()
 
 
-    if len(lista_grupos)>0:
-        k = lista_grupos.pop()  
-        msg_separador = f"Grupo {k}" 
-        separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=color_separador )
-        lista_checkboxes_grafica.insert(0, separador )
+    def setDataset(self, etiquetas_dataset):
+        self.etiquetas_dataset = etiquetas_dataset
+        self.crearCheckboxes()
+        mensaje="Etiquetado" if len(self.checkboxes) > 0 else "Sin Dataset"
+        self.texto.value = mensaje
+        self.update()
 
+    def setImagen(self, etiquetas_imagen):
+        self.etiquetas_imagen = etiquetas_imagen
+        ruta  = self.etiquetas_imagen.ruta
+        valor = self.texto.value 
+        self.texto.value =f"{valor}: {ruta}"
+        # self.texto.value = f"ruta: {ruta}"  
+        # print("SET - imagen: ",self.etiquetas_imagen.tags)    
+        # print("ACTUALIZAR AQUI -->setImagen")
+        self.actualizar()
 
-    # print("numero checkboxes: ", len(lista_checkboxes) , len(lista_checkboxes_grafica))
-
-
-    ancho = 400
-    ancho_boton=130
-    mensaje="Etiquetado" if len(lista_checkboxes) > 0 else "Sin Dataset"
-
-    # cuadro de texto de salida
-    texto = ft.Text(size=20 ,width=300, height=30, bgcolor=ft.colors.AMBER_100, value=mensaje, expand = False )
-    fila_texto=ft.Row(
-        wrap=False,
-        spacing=50,       # espaciado horizontal entre contenedores
-        run_spacing=50,     # espaciado vertical entre filas
-        controls = [texto] ,
-        width=ancho, # anchura de columna   
-        alignment= ft.MainAxisAlignment.CENTER, 
-    )
-    # botones de comando
-    boton_guardado = ft.ElevatedButton(text="Guardar", on_click=guardar_opciones, bgcolor="red",color="white", width=ancho_boton)
-    boton_todos = ft.ElevatedButton(text="Todos", on_click=checkboxes_todos   ,width=ancho_boton)
-    boton_ninguno = ft.ElevatedButton(text="Ninguno", on_click=checkboxes_ninguno ,width=ancho_boton)
-    boton_restablecer = ft.ElevatedButton(text="Restablecer", on_click=restablecer_opciones, bgcolor="blue",color="white", width=ancho_boton)
-
-    fila_botones_checkboxes = ft.Row(
-        wrap=False,
-        spacing=50,       # espaciado horizontal entre contenedores
-        run_spacing=50,     # espaciado vertical entre filas
-        controls = [ boton_todos, boton_ninguno],
-        width=ancho, # anchura de columna   
-        alignment= ft.MainAxisAlignment.CENTER,
-    )
-
-    fila_boton_restablecer = ft.Row(
-        wrap=False,
-        spacing=50,       # espaciado horizontal entre contenedores
-        run_spacing=50,     # espaciado vertical entre filas
-        controls = [boton_restablecer, boton_guardado],
-        width=ancho, # anchura de columna   
-        alignment= ft.MainAxisAlignment.CENTER,
-    )
-
-    # Columna de checkboxes
-    columna_checkboxes = ft.Column(
-        wrap=False,
-        spacing=10,       # espaciado horizontal entre contenedores
-        run_spacing=50,     # espaciado vertical entre filas
-        controls=lista_checkboxes_grafica,
-        height=600,         # altura de columna
-        width=ancho,
-        scroll=ft.ScrollMode.AUTO,
-    )
-
-    #contenedor de checkboxes (decorativo)
-    contenedor_checkboxes = ft.Container(
-        margin=10,
-        padding=10,
-        width   = ancho,
-        height  = 600,
-        content = columna_checkboxes,
-        alignment=ft.alignment.center,
-        # bgcolor=ft.colors.AMBER,
-        border_radius=20,           # redondeo
-        animate=ft.animation.Animation(200, "bounceOut"),
-    )
-    contenedor_checkboxes.border = ft.border.all(5, color_borde)
-
-
-
-    elementos_etiquetado=[]
-    # elementos_etiquetado.append(texto)
-    elementos_etiquetado.append(fila_texto)
-    # elementos_etiquetado.append(columna_checkboxes)
-    elementos_etiquetado.append(contenedor_checkboxes)
-    elementos_etiquetado.append(fila_botones_checkboxes)
-    elementos_etiquetado.append(fila_boton_restablecer)
-    # elementos_etiquetado.append(ft.Divider(height=9, thickness=3))
-
-    columna_etiquetado = ft.Column(
-        wrap=False,
-        spacing=10,       # espaciado horizontal entre contenedores
-        run_spacing=50,     # espaciado vertical entre filas
-        controls = elementos_etiquetado, 
-        width=ancho # anchura de columna   
-    )
-    return columna_etiquetado
-
+    def actualizar(self):
+        for checkbox in self.checkboxes:
+            tag = checkbox.label
+            if tag in self.etiquetas_imagen.tags:
+                checkbox.value = True
+            else:
+                checkbox.value = False
 
 
 # Tema aplicado globalmente
@@ -216,9 +255,26 @@ def pagina_etiquetado(page: ft.Page ):
     etiquetas_imagen = Etiquetas(archivo_salida)
 
 
-    ## Aglutinado columnas
-    columna_etiquetado = Columna_Etiquetas ( etiquetas_dataset, etiquetas_imagen )
-    page.add(columna_etiquetado)
+    # print("dataset: ",etiquetas_dataset.tags)
+    # print("imagen: ",etiquetas_imagen.tags)
+
+    ## Maquetado
+    columna_tageo = Columna_Etiquetas( )
+    page.add(columna_tageo)
+
+
+    columna_tageo.setDataset(etiquetas_dataset)
+    columna_tageo.setImagen(  etiquetas_imagen)
+
+
+    # columna_tageo.actualizar()
+    # columna_tageo.crearCheckboxes()
+
+
+    # page.add(columna_tageo.columna_checkboxes)
+    page.update()
+
+
 
     # Estilos 
     tema_pagina(page)
