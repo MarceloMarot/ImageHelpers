@@ -12,6 +12,8 @@ from procesar_etiquetas import Etiquetas
 from buscar import buscar_imagenes
 from galeria_imagenes import crear_galeria, estilo_galeria, imagenes_galeria, eventos_galeria
 
+from navegar_imagen import  MenuNavegacion
+
 
 
 from copy import copy, deepcopy
@@ -62,27 +64,35 @@ def main(pagina: ft.Page):
     for ruta in  rutas_imagenes:
         etiquetas_imagen.append(Etiquetas(ruta))
 
+
+
+
+
     # por defecto: menu etiquetado de primera imagen
     # etiquetas_seleccion = etiquetas_imagen[0]      
 
     # etiquetas_seleccion = Etiquetas("")
-    etiquetas_seleccion = deepcopy( etiquetas_imagen[0] )
-
+    # etiquetas_seleccion = deepcopy( etiquetas_imagen[0] )
+    etiquetas_seleccion = etiquetas_imagen[0]
     ## Aglutinado columnas
-    columna_etiquetado = Columna_Etiquetas( etiquetas_dataset = etiquetas_dataset,  etiquetas_imagen = etiquetas_seleccion)
+    # columna_etiquetado = Columna_Etiquetas( etiquetas_dataset = etiquetas_dataset,  etiquetas_imagen = etiquetas_seleccion)
 
 
+    columna_etiquetado = Columna_Etiquetas( )
+
+
+    menu_navegacion = MenuNavegacion()
 
 
     # componente galeria
     # cuadro_seleccion = crear_galeria(1, False)
-    cuadro_seleccion = Contenedor()   
+    # cuadro_seleccion = Contenedor()   
     # page.add(galeria)
 
 
     # pestaña de etiquetado y navegacion de imagenes
     etiquetado_navegacion=ft.Row(
-        controls = [columna_etiquetado, cuadro_seleccion]
+        controls = [columna_etiquetado, menu_navegacion ]
         ) 
 
     tab_etiquetado = ft.Tab(
@@ -113,14 +123,18 @@ def main(pagina: ft.Page):
         id = cont.getID()
         # actualizacion de imagen seleccionada 
         imagen_seleccion = crear_imagen(rutas_imagenes[id], base_seleccion, altura_seleccion)
-        cuadro_seleccion.setContenido(imagen_seleccion)
+        # cuadro_seleccion.setContenido(imagen_seleccion)
+        menu_navegacion.setIndice(id)
         # actualizacion etiquetas seleccionadas
-        etiquetas_seleccion = etiquetas_imagen[id]
+        # etiquetas_seleccion = etiquetas_imagen[id]
+        columna_etiquetado.setEtiquetas(etiquetas_imagen[id])
+        # columna_etiquetado.actualizar()
+        # etiquetas_seleccion = deepcopy( etiquetas_imagen[id] )
         etiquetas_seleccion.leer()
         # columna_etiquetado.update()
         print("orden:" , id)
-        print(etiquetas_seleccion.ruta)
-        print(etiquetas_seleccion.tags)
+        # print(etiquetas_seleccion.ruta)
+        # print(etiquetas_seleccion.tags)
 
         pagina.update()
 
@@ -145,12 +159,58 @@ def main(pagina: ft.Page):
 
     # imagen_seleccion = galeria.controls[0].getContenido
     imagen_seleccion = crear_imagen(rutas_imagenes[0],base_seleccion,altura_seleccion)
-    cuadro_seleccion.setContenido(imagen_seleccion)
+    # cuadro_seleccion.setContenido(imagen_seleccion)
 
-    cuadro_seleccion.setBGColor(color_defecto)
-    cuadro_seleccion.setDimensiones(base_seleccion, altura_seleccion)
-    cuadro_seleccion.setClick(click_imagen_seleccion)
+    # cuadro_seleccion.setBGColor(color_defecto)
+    # cuadro_seleccion.setDimensiones(base_seleccion, altura_seleccion)
+    # cuadro_seleccion.setClick(click_imagen_seleccion)
+
+
+    imagenes = []
+    for ruta in rutas_imagenes:
+        # imagenes.append(crear_imagen(ruta, 512, 512))
+        imagenes.append(crear_imagen(ruta, 1024,1024))   
         
+    menu_navegacion.setBGColor(ft.colors.AMBER)
+    menu_navegacion.setDimensiones(base_seleccion, altura_seleccion)
+    menu_navegacion.setImagenes(imagenes)
+
+
+    # Funcion que se ejecuta al cambiar de iamgen
+    def navegando():
+        # print("estoy navegando, indice: ", menu_navegacion.getIndice())
+        id = menu_navegacion.getIndice()
+        columna_etiquetado.setEtiquetas(etiquetas_imagen[id])
+        pagina.update()
+
+
+    menu_navegacion.setFuncionIndice( navegando)
+
+    # Funcion para el click sobre la imagen 
+    def click_seleccion(m:  MenuNavegacion()):
+        print(m.getIndice())
+        # color1 = ft.colors.GREEN_400
+        # color2 = ft.colors.INDIGO_400 
+        # color = m.getBGColor()
+        # m.setBGColor(color1) if color != color1 else m.setBGColor(color2) 
+        # print(color)        
+        #cambio de pestaña
+        pestanias.selected_index=0
+        pagina.update()
+
+
+    h = partial(click_seleccion, menu_navegacion)
+    menu_navegacion.setClickImagen(h )
+
+
+
+    # Etiquetado
+    # columna_etiquetado.setImagen(etiquetas_seleccion)
+    # columna_etiquetado.setDataset(etiquetas_dataset)
+    columna_etiquetado.setEtiquetas(etiquetas_seleccion,etiquetas_dataset)
+    columna_etiquetado.update()
+
+
 
     # Propiedades pagina 
     pagina.title = "Asistente Etiquetado"

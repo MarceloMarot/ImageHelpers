@@ -17,11 +17,11 @@ class Columna_Etiquetas(ft.UserControl):
         self.color_separador = ft.colors.INDIGO_200
         self.color_borde = ft.colors.INDIGO_400
 
-        ancho = 400
+        ancho = 450
         ancho_boton=130
 
         # cuadro de texto de salida
-        self.texto = ft.Text(size=20 ,width=300, height=30, bgcolor=ft.colors.AMBER_100, value="", expand = False )
+        self.texto = ft.Text(size=15,width=ancho, height=100, bgcolor=ft.colors.AMBER_100, value="", expand = False )
 
         fila_texto=ft.Row(
             wrap=False,
@@ -197,18 +197,19 @@ class Columna_Etiquetas(ft.UserControl):
         self.update()
 
 
-    def setDataset(self, etiquetas_dataset):
-        self.etiquetas_dataset = etiquetas_dataset
-        self.crearCheckboxes()
-        mensaje="Etiquetado" if len(self.checkboxes) > 0 else "Sin Dataset"
+    # def setDataset(self, etiquetas_dataset):
+    def setEtiquetas(self, etiquetas_imagen, etiquetas_dataset=None):
+        if type(etiquetas_dataset) == Etiquetas:
+            self.etiquetas_dataset = etiquetas_dataset
+            self.crearCheckboxes()
+            
+        mensaje="Etiquetado:\n" if len(self.checkboxes) > 0 else "Sin Dataset"
         self.texto.value = mensaje
-        self.update()
 
-    def setImagen(self, etiquetas_imagen):
         self.etiquetas_imagen = etiquetas_imagen
         ruta  = self.etiquetas_imagen.ruta
         valor = self.texto.value 
-        self.texto.value =f"{valor}: {ruta}"
+        self.texto.value =f"{mensaje}{ruta}"
         # self.texto.value = f"ruta: {ruta}"  
         # print("SET - imagen: ",self.etiquetas_imagen.tags)    
         # print("ACTUALIZAR AQUI -->setImagen")
@@ -221,6 +222,7 @@ class Columna_Etiquetas(ft.UserControl):
                 checkbox.value = True
             else:
                 checkbox.value = False
+        self.update()
 
 
 # Tema aplicado globalmente
@@ -263,8 +265,9 @@ def pagina_etiquetado(page: ft.Page ):
     page.add(columna_tageo)
 
 
-    columna_tageo.setDataset(etiquetas_dataset)
-    columna_tageo.setImagen(  etiquetas_imagen)
+    # columna_tageo.setDataset(etiquetas_dataset)
+    # columna_tageo.setImagen(  etiquetas_imagen)
+    columna_tageo.setEtiquetas(etiquetas_imagen, etiquetas_dataset)
 
 
     # columna_tageo.actualizar()

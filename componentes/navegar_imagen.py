@@ -111,6 +111,7 @@ class MenuNavegacion(ft.UserControl):
             self.indice = self.maximo -1
         else:
             self.indice = numero
+        self.actualizarImagen()
         self.update()
 
     def setDimensiones(self, base: int, altura: int):
@@ -147,7 +148,7 @@ class MenuNavegacion(ft.UserControl):
     def getBGColor(self):
         return self.contenedor.getBGColor()
 
-    def setRedondeo(self, radio: int):
+    def getRedondeo(self, radio: int):
         return self.contenedor.getRedondeo()
 
 
@@ -192,14 +193,13 @@ def pagina_etiquetado(page: ft.Page ):
         m.setBGColor(color1) if color != color1 else m.setBGColor(color2) 
         # print(color)
 
-
-
-    h=partial(click_seleccion, menu)
+    h = partial(click_seleccion, menu)
     menu.setClickImagen(h )
 
+
+    # Funcion que se ejecuta al cambiar de iamgen
     def navegando():
         print("estoy navegando, indice: ", menu.getIndice())
-
 
     menu.setFuncionIndice( navegando)
 
