@@ -53,19 +53,6 @@ def LeerPesoArchivo(nombre_archivo: str):
         return "err"
 
 
-class Data_Archivo:
-    def __init__(self, ruta, creacion, modificado, peso):
-        self.ruta = ruta
-        self.creacion = creacion
-        self.modificado = modificado
-        self.peso = peso
-    
-                
-
-
-
-
-
 
 # Función MAIN
 if __name__ == "__main__" :
@@ -105,22 +92,32 @@ if __name__ == "__main__" :
             creacion     = LeerCreacionArchivo(     ruta_archivo )
             modificado  = LeerModificacionArchivo( ruta_archivo )
             peso        = LeerPesoArchivo( ruta_archivo )
-            data = Data_Archivo(
+            data = [
                 ruta_archivo,
                 creacion,
                 modificado,
                 peso
-                )
-            
+                ]
             data_archivos.append(data)          
+        
 
         ## Filtrado por año modificacion
 
         def anio_modificacion( anio, data):
-            return data.modificado[0] == anio   
+            # print(f"año: {anio}; data[2][0]: {data[2][0]}")
+            return data[2][0] == anio   
 
         def anio_creacion( anio, data):
-            return data.creacion[0] == anio   
+            return data[1][0] == anio   
+
+
+
+        # funcion de mapeo : solo ruta archivo
+        def solo_path( data):
+            return data[0]
+
+        def solo_peso(data):
+            return data[3]
 
 
         anio_inicial = 2007     # caso personal
@@ -132,22 +129,22 @@ if __name__ == "__main__" :
         for anio in range(anio_inicial, anio_final + 1):
             # Se filtran los archivos por año de modificacion
             # los errores de lectura ('err') quedan afuera
-
             filtro_anio = partial(anio_modificacion, anio )
 
-            # filtro_anio = partial(anio_creacion, anio )
+            lista_rutas = list(filter(filtro_anio, data_archivos))
 
-            lista_archivos = list(filter(filtro_anio, data_archivos))
+            lista_pesos = list(  map(  solo_peso , lista_rutas))
+            lista_rutas = list(  map(  solo_path , lista_rutas))
+            
             # procesamiento de data
-            numero_archivos = len(lista_archivos)
+            numero_archivos = len(lista_rutas)
 
             peso_archivos = 0
 
-            for archivo in lista_archivos:
-                valor = archivo.peso
+            for peso in lista_pesos:
                 # filtrado de los valores errones (por las dudas)
-                if valor != 'err':
-                    peso_archivos += archivo.peso
+                if peso != 'err':
+                    peso_archivos += peso
  
 
             peso_archivos = int( peso_archivos/(1024*1024))   # peso en MB 
@@ -155,7 +152,7 @@ if __name__ == "__main__" :
                 anio,
                 numero_archivos,
                 peso_archivos,
-                lista_archivos      #lista de OBJETOS 
+                lista_rutas   
                 ])
 
         # Estadísticas globales
@@ -181,5 +178,5 @@ if __name__ == "__main__" :
         print(f'[bold red]Archivos erróneos: [bold green]{numero_imagenes - total_archivos} archivos')
 
 
-        # print(contenidos_anio[5][3].ruta)
+        # print(contenidos_anio[5][3])
 
