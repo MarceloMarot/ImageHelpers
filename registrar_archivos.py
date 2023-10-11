@@ -27,6 +27,24 @@ def LeerCreacionArchivo(nombre_archivo: str):
         return ["err" , "err" , "err"]
 
 
+
+def LeerModificacionArchivo(nombre_archivo: str):
+    path = pathlib.Path(nombre_archivo)
+    # Se evitan errores de lectura de archivos
+    # Ej: archivos manipulados desde otro sistema operativo
+    try:
+        current_timestamp = path.stat().st_mtime
+        m_time = datetime.fromtimestamp(current_timestamp)
+        year    = m_time.year
+        month   = m_time.month
+        day     = m_time.day
+        return [year, month, day]
+    except FileNotFoundError:
+        return ["err" , "err" , "err"]
+
+
+
+
 def LeerPesoArchivo(nombre_archivo: str):
     try:
         sizefile = os.path.getsize(nombre_archivo)
@@ -72,36 +90,41 @@ if __name__ == "__main__" :
         inicio  = time.time()
         anios=[]
         espacio_disco=0  # tamaño total de archivos
-        peso=0
+        peso_anio = 0 
+        peso_anios = [] 
+        peso_total = 0
         for i in range(0, len(rutas_imagen)):
             # print(LeerCreacionArchivo(rutas_imagen[i]))
             ruta = str(rutas_imagen[i])
             # ruta = r'{ruta}'
-            [anio, mes, dia] = LeerCreacionArchivo(ruta)
-            peso = LeerPesoArchivo(ruta)
-            if peso != "err":
-                espacio_disco += peso
+            #[anio, mes, dia] = LeerCreacionArchivo(ruta)
+            [anio, mes, dia] = LeerModificacionArchivo(ruta)
+            peso_archivo = LeerPesoArchivo(ruta)
+            if peso_archivo != "err":
+                peso_anio += peso_archivo
             # print(anio, mes)
             anios.append(anio)
+            peso_anios.append(peso_anio)
+            peso_anio = 0
         fin  = time.time()
 
         print(f'[bold magenta]Tiempo de lectura datos: {fin-inicio} segundos')
 
         # diccionario con archivos por año
-        lista_anios = {}
-        anio_inicial = 2007
+        archivos_anio = {}
+        anio_inicial = 2007     # caso personal
         ahora = datetime.fromtimestamp(inicio)
         anio_final = ahora.year    
 
         for i in range(anio_inicial, anio_final+1):
-            lista_anios[i] = len( re.findall(f'{i}' , str(anios)))
+            archivos_anio[i] = len( re.findall(f'{i}' , str(anios)))
 
-        lista_anios["err"] = len( re.findall('err' , str(anios)))
+        archivos_anio["err"] = len( re.findall('err' , str(anios)))
 
         print(f'[bold green] Resultados:')
         for i in range(anio_inicial, anio_final+1):
-            print(f'[bold yellow]Año {i}: [bold green]{lista_anios[i]} archivos')
+            print(f'[bold yellow]Año {i}: [bold green]{archivos_anio[i]} archivos')
 
-        print(f'[bold red]Erroneos: [bold green]{lista_anios["err"]} archivos')
+        print(f'[bold red]Erroneos: [bold green]{archivos_anio["err"]} archivos')
 
         print(f"[bold green]Peso total de archivos: {int(espacio_disco/(1024*1024))} MB")

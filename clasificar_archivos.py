@@ -9,48 +9,75 @@ import time
 from functools import partial, reduce
 import re
 
-from  buscar_extension import elegir_ruta, buscar_imagenes
+from  buscar_extension import  buscar_imagenes , listar_directorios, buscar_extension
+
+from rich.progress import Progress
 
 
-def LeerCreacionArchivo(nombre_archivo: str):
-    path = pathlib.Path(nombre_archivo)
-    # Se evitan errores de lectura de archivos
-    # Ej: archivos manipulados desde otro sistema operativo
-    try:
-        current_timestamp = path.stat().st_ctime
-        c_time = datetime.fromtimestamp(current_timestamp)
-        year    = c_time.year
-        month   = c_time.month
-        day     = c_time.day
-        return [year, month, day]
-    except FileNotFoundError:
-        return ["err" , "err" , "err"]
+error = "err"
+
+class Data_Archivo:
+    def __init__(self, ruta):
+        # self.ruta_absoluta = ruta
+        self.ruta_absoluta = pathlib.Path(ruta).absolute()
+        self.nombre = self.ruta_absoluta.name
+        self.extension = self.ruta_absoluta.suffix
+        self.directorio =self.ruta_absoluta.parent
+        self.peso = 0
+        self.creacion = []
+        self.modificacion = []
+    
+        self.CreacionArchivo()
+        self.ModificacionArchivo()
+        self.PesoArchivo()
+
+
+    def CreacionArchivo(self):
+        # path = pathlib.Path(nombre_archivo)
+        # Se evitan errores de lectura de archivos
+        # Ej: archivos manipulados desde otro sistema operativo
+        try:
+            # current_timestamp = path.stat().st_ctime
+            current_timestamp = self.ruta_absoluta.stat().st_ctime
+            c_time = datetime.fromtimestamp(current_timestamp)
+            year    = c_time.year
+            month   = c_time.month
+            day     = c_time.day
+            minute  = c_time.minute
+            second  = c_time.second
+            self.creacion = [year, month, day, minute, second]
+        except FileNotFoundError:
+            self.creacion = [error , error , error, error, error ]
+
+
+    def ModificacionArchivo(self):
+        # path = pathlib.Path(nombre_archivo)
+        # Se evitan errores de lectura de archivos
+        # Ej: archivos manipulados desde otro sistema operativo
+        try:
+            # current_timestamp = path.stat().st_mtime
+            current_timestamp = self.ruta_absoluta.stat().st_mtime
+            m_time = datetime.fromtimestamp(current_timestamp)
+            year    = m_time.year
+            month   = m_time.month
+            day     = m_time.day
+            minute  = m_time.minute
+            second  = m_time.second
+            self.modificacion = [year, month, day, minute, second]
+        except FileNotFoundError:
+            self.modificacion = [error , error , error, error, error ]
+
+    # def LeerPesoArchivo(nombre_archivo: str):
+    def PesoArchivo(self):
+        path = str(self.ruta_absoluta)
+        try:
+            sizefile = os.path.getsize(path)
+            self.peso = sizefile
+        except FileNotFoundError:
+            self.peso = error
 
 
 
-def LeerModificacionArchivo(nombre_archivo: str):
-    path = pathlib.Path(nombre_archivo)
-    # Se evitan errores de lectura de archivos
-    # Ej: archivos manipulados desde otro sistema operativo
-    try:
-        current_timestamp = path.stat().st_mtime
-        m_time = datetime.fromtimestamp(current_timestamp)
-        year    = m_time.year
-        month   = m_time.month
-        day     = m_time.day
-        return [year, month, day]
-    except FileNotFoundError:
-        return ["err" , "err" , "err"]
-
-
-
-
-def LeerPesoArchivo(nombre_archivo: str):
-    try:
-        sizefile = os.path.getsize(nombre_archivo)
-        return sizefile
-    except FileNotFoundError:
-        return "err"
 
 
 
@@ -70,11 +97,20 @@ if __name__ == "__main__" :
     else:
         print(f"[bold green]Directorio: [bold yellow]{ruta} [bold green]")
         
+
+        # BUSQUEDA ARCHIVOS (TODOS)
         inicio  = time.time()
-        # Lista de archivos de imagen editables con OpenCV
-        rutas_archivo = buscar_imagenes(ruta)
+        # # Lista de archivos de imagen editables con OpenCV
+        # rutas_archivo = buscar_imagenes(ruta)
+        # rutas_archivo = []
+        rutas_archivo = buscar_extension(ruta, "*.jpg") #fotos JPG
+        # rutas_archivo = buscar_extension(ruta, "*.mp4")    #videos MP4
+        # rutas_archivo = buscar_extension(ruta, "*.png")
+        # rutas_archivo = []
+        # for subdirectorio in  lista_subdirectorios :
+        #     rutas_archivo += buscar_imagenes(subdirectorio)   # concatenacion rutas
         fin  = time.time()
-    
+
         numero_imagenes = len(rutas_archivo)
         print(f"[bold green]Nº archivos encontrados: [/bold green][bold yellow] {numero_imagenes}") 
         print(f"[bold magenta]Tiempo de busqueda archivos: {fin - inicio}")
@@ -82,101 +118,124 @@ if __name__ == "__main__" :
             print("[bold red]No hay imagenes disponibles en el directorio")
             print("[bold red]Cancelado")
 
+        # --------------PROCESADO DATOS -----------
 
         # FILTRADO POR FECHAS (incompleto)
         inicio  = time.time()
 
-        data_archivos = []
+        # data_archivos = []
+        # lista de ESTRUCTURAS
+        archivos = []
+        espacio_disco = 0
+
+        extensiones_archivo = set([])
+        directorios_archivo = set([])
+
+        # extensiones_archivo = {}
+        # directorios_archivo = {}
+
 
         for ruta_archivo in rutas_archivo:
-            creacion     = LeerCreacionArchivo(     ruta_archivo )
-            modificado  = LeerModificacionArchivo( ruta_archivo )
-            peso        = LeerPesoArchivo( ruta_archivo )
-            data = [
-                ruta_archivo,
-                creacion,
-                modificado,
-                peso
-                ]
-            data_archivos.append(data)          
-        
-
-        ## Filtrado por año modificacion
-
-        def anio_modificacion( anio, data):
-            # print(f"año: {anio}; data[2][0]: {data[2][0]}")
-            return data[2][0] == anio   
-
-        def anio_creacion( anio, data):
-            return data[1][0] == anio   
+            archivo = Data_Archivo( ruta_archivo )
+            # print("")
+            # print("nombre: ",archivo.nombre)
+            # print("creado: ",archivo.creacion)
+            # print("modif : ", archivo.modificacion)
+            # print("ruta  : " , archivo.ruta_absoluta)
+            # print("")
 
 
-
-        # funcion de mapeo : solo ruta archivo
-        def solo_path( data):
-            return data[0]
-
-        def solo_peso(data):
-            return data[3]
+            espacio_disco += archivo.peso 
+            archivos.append( archivo )
 
 
-        anio_inicial = 2007     # caso personal
-        anio_final = datetime.fromtimestamp(inicio).year
+            # Estadisticas adicionales
 
-        # lista con archivos y datos clasificados por año
-        contenidos_anio = []
+            # todas las extensiones de archivo existentes
 
-        for anio in range(anio_inicial, anio_final + 1):
-            # Se filtran los archivos por año de modificacion
-            # los errores de lectura ('err') quedan afuera
-            filtro_anio = partial(anio_modificacion, anio )
+            # print(archivo.extension)
+            # print(archivo.directorio)
 
-            lista_rutas = list(filter(filtro_anio, data_archivos))
 
-            lista_pesos = list(  map(  solo_peso , lista_rutas))
-            lista_rutas = list(  map(  solo_path , lista_rutas))
-            
-            # procesamiento de data
-            numero_archivos = len(lista_rutas)
+            # extensiones_archivo |= {archivo.extension}        # conjunto
+            # directorios_archivo |= {archivo.directorio}
 
-            peso_archivos = 0
+            extensiones_archivo.add(archivo.extension)        # conjunto
+            directorios_archivo.add(archivo.directorio)
+            # if archivo.modificacion[0] <= 2010:
+            #     print(archivo.nombre)
 
-            for peso in lista_pesos:
-                # filtrado de los valores errones (por las dudas)
-                if peso != 'err':
-                    peso_archivos += peso
- 
 
-            peso_archivos = int( peso_archivos/(1024*1024))   # peso en MB 
-            contenidos_anio.append([
-                anio,
-                numero_archivos,
-                peso_archivos,
-                lista_rutas   
-                ])
 
-        # Estadísticas globales
-        total_archivos = 0
-        espacio_disco = 0 
 
-        for contenido in contenidos_anio:
-            total_archivos += contenido[1]
-            espacio_disco  += contenido[2]
+        # ----------------------------
+
+        total_archivos = len(archivos)
 
 
         fin  = time.time()
+        print(f"[bold green]Clasificacion archivos terminada[/bold green]")
         print(f'[bold magenta]Tiempo de lectura datos: {fin-inicio} segundos')
 
-        for contenido in contenidos_anio:
-            print(f'[bold yellow]Año {contenido[0]}: [bold green]{contenido[1]} archivos, [bold cyan]{contenido[2]} MB')
+        # for contenido in contenidos_anio:
+        #     print(f'[bold yellow]Año {contenido[0]}: [bold green]{contenido[1]} archivos, [bold cyan]{contenido[2]} MB')
 
-
-        # print(f'[bold red]Erroneos: [bold green]{archivos_anio["err"]} archivos')
+        espacio_disco = int(espacio_disco/(1024**2))    #conversion a MB
+        # print(f'[bold red]Erroneos: [bold green]{archivos_anio[error]} archivos')
         print(f"[bold green]Numero total de archivos: [bold yellow]{total_archivos}")
         print(f"[bold green]Peso total de archivos  : [bold yellow]{espacio_disco} MB")
 
-        print(f'[bold red]Archivos erróneos: [bold green]{numero_imagenes - total_archivos} archivos')
+        numero_erroneos = numero_imagenes - total_archivos
 
+        if numero_erroneos > 0:
+            print(f'[bold red]Archivos erróneos: [bold orange]{numero_erroneos} archivos')
+
+
+        numero_directorios = len(directorios_archivo)
+        print(f"[bold green]Numero total de carpetas: [bold yellow]{numero_directorios}")
+
+
+        numero_extensiones = len(extensiones_archivo)
+        print(f"[bold green]Numero total de extensiones: [bold yellow]{numero_extensiones}")
+
+
+        # lectura extensiones y carpetas
+
+        print("[bold yellow]extensiones archivo encontradas:")
+        # for e in extensiones_archivo:
+        #     print(e)
+
+        print(extensiones_archivo)
+        # print("[bold yellow] Directorios")
+        # for r in directorios_archivo:
+        #     print(str(r))
 
         # print(contenidos_anio[5][3])
 
+
+        ## Filtrado de fotos
+
+
+        patron_foto = r"^[0-9]+_[0-9]+\.[0-9A-Za-z]+$"
+
+        fotos = []
+        espacio_fotos = 0 
+
+        for archivo in archivos:
+            nombre = archivo.nombre
+            foto = re.findall(patron_foto, nombre)
+
+            if len(foto) > 0:
+                fotos.append(foto)
+                espacio_fotos += archivo.peso
+
+
+        espacio_fotos = int(espacio_fotos/(1024**2))
+        numero_fotos = len(fotos)
+        print(f"[bold green]Numero total de fotos: [bold yellow]{numero_fotos}")
+        print(f"[bold green]Peso total de fotos  : [bold yellow]{espacio_fotos} MB")
+
+
+
+        # for i in range(10000,10020):
+        #     print(fotos[i])
