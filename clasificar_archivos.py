@@ -1,8 +1,9 @@
-# from pathlib import Path
 import pathlib
 import os
 import sys
 from rich import print
+
+from rich.progress import Progress
 
 from datetime import datetime
 import time
@@ -11,10 +12,14 @@ import re
 
 from  buscar_extension import  buscar_imagenes , listar_directorios, buscar_extension
 
-from rich.progress import Progress
+# expresion regular para filtrar fotos y videos de camara sin renombrar
+patron_camara = r"^[0-9]+_[0-9]+\.[0-9A-Za-z]+$"
+
 
 
 error = "err"
+
+
 
 class Data_Archivo:
     def __init__(self, ruta):
@@ -79,13 +84,61 @@ class Data_Archivo:
 
 
 
+def clasificar_archivos(ruta, extension, patron_nombre=None):
+
+        rutas_archivo = buscar_extension(ruta,extension) 
+
+        data_archivos = []
+        espacio_disco = 0
+ 
+        for ruta_archivo in rutas_archivo:
+            archivo = Data_Archivo( ruta_archivo )
+            espacio_disco += archivo.peso 
+            #se filtran los nombres de archivo en caso de ser requerido
+            if patron_nombre == None:
+                data_archivos.append( archivo )
+            else:
+                nombre = archivo.nombre
+                coincidencia = re.findall(patron_nombre, nombre)
+                if len(coincidencia) > 0:
+                    data_archivos.append( archivo )
+
+        return data_archivos
+
 
 
 # Función MAIN
 if __name__ == "__main__" :
     try:
+        ruta_entrada = os.path.abspath(sys.argv[1])
+        # extension = os.path.abspath(sys.argv[2])
 
-        ruta = os.path.abspath(sys.argv[1])
+        extension = "*.JPG"
+
+        patron = "KOKY"
+
+        print(f"[bold green]Directorio: [bold yellow]{ruta_entrada} [bold green]")
+    
+        ## Filtrado de fotos
+        inicio  = time.time()
+        fotos = []
+        espacio_fotos = 0 
+        fotos = clasificar_archivos(ruta_entrada,extension,patron)
+
+
+        # Lectura despacio en disco (en MB)
+        for foto in fotos: 
+            espacio_fotos += foto.peso
+
+        espacio_fotos = int(espacio_fotos/(1024**2))
+        numero_fotos = len(fotos)
+
+        fin  = time.time()
+        print(f"[bold green]Filtrado archivos terminado[/bold green]")
+        print(f'[bold magenta]Tiempo de rutina: {fin-inicio} segundos')
+
+        print(f"[bold green]Numero total de fotos: [bold yellow]{numero_fotos}")
+        print(f"[bold green]Peso total de fotos  : [bold yellow]{espacio_fotos} MB")
 
     except IndexError():
         print("Error: faltan argumentos  ") 
@@ -94,148 +147,13 @@ if __name__ == "__main__" :
     except TypeError():
         print("Error: Tipo de datos de entrada erróneo")
 
+    except Exception as excepcion:
+        print(f"[bold red]Error: [bold blue]{excepcion}")
+
+
     else:
-        print(f"[bold green]Directorio: [bold yellow]{ruta} [bold green]")
-        
 
-        # BUSQUEDA ARCHIVOS (TODOS)
-        inicio  = time.time()
-        # # Lista de archivos de imagen editables con OpenCV
-        # rutas_archivo = buscar_imagenes(ruta)
-        # rutas_archivo = []
-        rutas_archivo = buscar_extension(ruta, "*.jpg") #fotos JPG
-        # rutas_archivo = buscar_extension(ruta, "*.mp4")    #videos MP4
-        # rutas_archivo = buscar_extension(ruta, "*.png")
-        # rutas_archivo = []
-        # for subdirectorio in  lista_subdirectorios :
-        #     rutas_archivo += buscar_imagenes(subdirectorio)   # concatenacion rutas
-        fin  = time.time()
+        print("finalizado")
 
-        numero_imagenes = len(rutas_archivo)
-        print(f"[bold green]Nº archivos encontrados: [/bold green][bold yellow] {numero_imagenes}") 
-        print(f"[bold magenta]Tiempo de busqueda archivos: {fin - inicio}")
-        if numero_imagenes == 0 :
-            print("[bold red]No hay imagenes disponibles en el directorio")
-            print("[bold red]Cancelado")
-
-        # --------------PROCESADO DATOS -----------
-
-        # FILTRADO POR FECHAS (incompleto)
-        inicio  = time.time()
-
-        # data_archivos = []
-        # lista de ESTRUCTURAS
-        archivos = []
-        espacio_disco = 0
-
-        extensiones_archivo = set([])
-        directorios_archivo = set([])
-
-        # extensiones_archivo = {}
-        # directorios_archivo = {}
-
-
-        for ruta_archivo in rutas_archivo:
-            archivo = Data_Archivo( ruta_archivo )
-            # print("")
-            # print("nombre: ",archivo.nombre)
-            # print("creado: ",archivo.creacion)
-            # print("modif : ", archivo.modificacion)
-            # print("ruta  : " , archivo.ruta_absoluta)
-            # print("")
-
-
-            espacio_disco += archivo.peso 
-            archivos.append( archivo )
-
-
-            # Estadisticas adicionales
-
-            # todas las extensiones de archivo existentes
-
-            # print(archivo.extension)
-            # print(archivo.directorio)
-
-
-            # extensiones_archivo |= {archivo.extension}        # conjunto
-            # directorios_archivo |= {archivo.directorio}
-
-            extensiones_archivo.add(archivo.extension)        # conjunto
-            directorios_archivo.add(archivo.directorio)
-            # if archivo.modificacion[0] <= 2010:
-            #     print(archivo.nombre)
-
-
-
-
-        # ----------------------------
-
-        total_archivos = len(archivos)
-
-
-        fin  = time.time()
-        print(f"[bold green]Clasificacion archivos terminada[/bold green]")
-        print(f'[bold magenta]Tiempo de lectura datos: {fin-inicio} segundos')
-
-        # for contenido in contenidos_anio:
-        #     print(f'[bold yellow]Año {contenido[0]}: [bold green]{contenido[1]} archivos, [bold cyan]{contenido[2]} MB')
-
-        espacio_disco = int(espacio_disco/(1024**2))    #conversion a MB
-        # print(f'[bold red]Erroneos: [bold green]{archivos_anio[error]} archivos')
-        print(f"[bold green]Numero total de archivos: [bold yellow]{total_archivos}")
-        print(f"[bold green]Peso total de archivos  : [bold yellow]{espacio_disco} MB")
-
-        numero_erroneos = numero_imagenes - total_archivos
-
-        if numero_erroneos > 0:
-            print(f'[bold red]Archivos erróneos: [bold orange]{numero_erroneos} archivos')
-
-
-        numero_directorios = len(directorios_archivo)
-        print(f"[bold green]Numero total de carpetas: [bold yellow]{numero_directorios}")
-
-
-        numero_extensiones = len(extensiones_archivo)
-        print(f"[bold green]Numero total de extensiones: [bold yellow]{numero_extensiones}")
-
-
-        # lectura extensiones y carpetas
-
-        print("[bold yellow]extensiones archivo encontradas:")
-        # for e in extensiones_archivo:
-        #     print(e)
-
-        print(extensiones_archivo)
-        # print("[bold yellow] Directorios")
-        # for r in directorios_archivo:
-        #     print(str(r))
-
-        # print(contenidos_anio[5][3])
-
-
-        ## Filtrado de fotos
-
-
-        patron_foto = r"^[0-9]+_[0-9]+\.[0-9A-Za-z]+$"
-
-        fotos = []
-        espacio_fotos = 0 
-
-        for archivo in archivos:
-            nombre = archivo.nombre
-            foto = re.findall(patron_foto, nombre)
-
-            if len(foto) > 0:
-                fotos.append(foto)
-                espacio_fotos += archivo.peso
-
-
-        espacio_fotos = int(espacio_fotos/(1024**2))
-        numero_fotos = len(fotos)
-        print(f"[bold green]Numero total de fotos: [bold yellow]{numero_fotos}")
-        print(f"[bold green]Peso total de fotos  : [bold yellow]{espacio_fotos} MB")
-
-
-
-        # for i in range(10000,10020):
-        #     print(fotos[i])
+        # for foto in fotos:
+        #     print(foto.nombre, foto.peso)
