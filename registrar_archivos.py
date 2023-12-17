@@ -63,11 +63,11 @@ if __name__ == "__main__" :
         # print(len(sys.argv))
 
         # extension = sys.argv[2].strip() 
-    except IndexError():
+    except IndexError:
         print("Error: faltan argumentos  ") 
         print("     Ejemplo uso: python buscar_extension.py <drectorio> *.<extension>  ") 
 
-    except TypeError():
+    except TypeError:
         print("Error: Tipo de datos de entrada erróneo")
 
     else:

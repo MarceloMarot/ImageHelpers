@@ -9,7 +9,7 @@ from rich import print
 
 
 # Busqueda de archivos por extensión en una carpeta (incluye subdirectorios)
-def buscar_extension(ruta: pathlib.Path, extension: str):
+def buscar_extension(ruta: str, extension: str):
     #se buscan todos los elementos con la terminacion indicada
     lista_rutas_archivo = []
     for direccion in pathlib.Path(ruta).rglob(extension):
@@ -19,7 +19,7 @@ def buscar_extension(ruta: pathlib.Path, extension: str):
 
 
 # Busqueda de imágenes en una carpeta (incluye subdirectorios)
-def buscar_imagenes(ruta: pathlib.Path):
+def buscar_imagenes(ruta: str):
     lista_rutas_imagen = []
     # Formatos de texto reconocidos por OpenCV (casi todos)
     # NO se incluyen GIF y SVG
@@ -33,7 +33,7 @@ def buscar_imagenes(ruta: pathlib.Path):
 
 # Lista TODOS los archivos y subcarpetas del directorio
 # CUIDADO con el tipo de salida
-def listar_directorios(ruta: pathlib.Path()):
+def listar_directorios(ruta: str):
     direcciones = sorted(
         pathlib.Path(ruta).iterdir(),
         key = lambda path: (path.is_dir(), path.name.lower())
@@ -62,7 +62,7 @@ def elegir_ruta(lista_rutas_archivo):
             total = len(lista_rutas_archivo) - 1
             if eleccion <= total :
                 direccion_elegida = lista_rutas_archivo[eleccion]
-                archivo_elegido = pathlib.Path(direccion_elegida).name
+                # archivo_elegido = pathlib.Path(direccion_elegida).name
                 # print(archivo_elegido, direccion_elegida)
             indice_elegido = True
             # print(f"[bold bright_blue]Ruta elegida:[/bold bright_blue] [yellow]{archivo_elegido}[/yellow] [green], ruta: {direccion_elegida}[/green]")
@@ -79,11 +79,11 @@ if __name__ == "__main__" :
         # print(len(sys.argv))
 
         # extension = sys.argv[2].strip() 
-    except IndexError():
+    except IndexError:
         print("Error: faltan argumentos  ") 
         print("     Ejemplo uso: python buscar_extension.py <drectorio> *.<extension>  ") 
 
-    except TypeError():
+    except TypeError:
         print("Error: Tipo de datos de entrada erróneo")
 
     else:

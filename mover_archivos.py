@@ -83,7 +83,7 @@ if __name__ == "__main__" :
         # anulacion de la busqueda con patrones regex
         patron = None
 
-        extension = "*.mp4"
+        extension = "*.JPEG"
         # extension = "*.png"
         # extension = "*.avi"
 

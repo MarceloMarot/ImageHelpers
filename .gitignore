@@ -3,7 +3,11 @@ __pycache__/
 botones.py
 calculadora.py
 
-/pruebas/
+pruebas/
 *.txt
+*.spec
+
+build/
+
 
 ensayo.py
