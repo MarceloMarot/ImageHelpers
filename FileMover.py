@@ -1,10 +1,17 @@
 from flet_core import container
 # from clasificar_archivos import clasificar_archivos
 
-from clasificar_archivos import Data_Archivo, clasificar_archivos, patron_camara
-from mover_archivos import Mover_Archivo
+from sistema_archivos.clasificar_archivos import Data_Archivo, clasificar_archivos, patron_camara
+from sistema_archivos.mover_archivos import Mover_Archivo
+from sistema_archivos.listar_extensiones import listar_extensiones
 
-from listar_extensiones import listar_extensiones
+
+# from sistema_archivos import clasificar_archivos 
+# from sistema_archivos  import mover_archivos 
+# from sistema_archivos import listar_extensiones 
+
+
+
 
 import flet as ft
 from flet import (

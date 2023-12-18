@@ -1,4 +1,6 @@
 
+## PATHLIB.PATH EXPLICADO
+
 from rich import print
 
 from pathlib import Path

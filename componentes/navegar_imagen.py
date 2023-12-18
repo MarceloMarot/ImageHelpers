@@ -3,12 +3,12 @@ import flet as ft
 from functools import partial       # usado para los handlers
 
 # from procesar_etiquetas import Etiquetas 
-from buscar import buscar_imagenes
+from . buscar import buscar_imagenes
 
-from contenedor import Contenedor, crear_imagen
+from . contenedor import Contenedor, crear_imagen
 
 
-from galeria_imagenes import crear_galeria, estilo_galeria, imagenes_galeria, eventos_galeria
+from . galeria_imagenes import crear_galeria, estilo_galeria, imagenes_galeria, eventos_galeria
 
 
 

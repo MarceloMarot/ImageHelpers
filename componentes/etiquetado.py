@@ -1,7 +1,7 @@
 from copy import copy
 import flet as ft
 
-from procesar_etiquetas import Etiquetas 
+from . procesar_etiquetas import Etiquetas 
 # from componentes.procesar_etiquetas import Etiquetas 
 
 class Columna_Etiquetas(ft.UserControl):

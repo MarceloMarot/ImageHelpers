@@ -6,20 +6,19 @@ from functools import partial
 # from componentes.etiquetado import Columna_Etiquetas
 # from componentes.procesar_etiquetas import Etiquetas 
 
-from contenedor import Contenedor ,crear_imagen
-from etiquetado import Columna_Etiquetas
-from procesar_etiquetas import Etiquetas 
-from buscar import buscar_imagenes
-from galeria_imagenes import crear_galeria, estilo_galeria, imagenes_galeria, eventos_galeria
-
-from navegar_imagen import  MenuNavegacion
+from componentes.contenedor import Contenedor ,crear_imagen
+from componentes.etiquetado import Columna_Etiquetas
+from componentes.procesar_etiquetas import Etiquetas 
+from componentes.galeria_imagenes import crear_galeria, estilo_galeria, imagenes_galeria, eventos_galeria
+from componentes.navegar_imagen import  MenuNavegacion
 
 
+from componentes.buscar import buscar_imagenes
 
 from copy import copy, deepcopy
 
 
-
+import pathlib
 
 
 
@@ -50,8 +49,9 @@ def main(pagina: ft.Page):
     # Procesado de archivos
 
     # Bsuqueda de las imagenes disponibles
-    ruta_imagenes   = "D:\Proyectos_Programacion\cartoons"
-    rutas_imagenes = []
+    # ruta_imagenes   = "D:\Proyectos_Programacion\cartoons"
+    ruta_imagenes   = pathlib.Path("/home/x/Codigos/cartoons")
+    # rutas_imagenes = []
     rutas_imagenes  = buscar_imagenes(ruta_imagenes)
     numero_imagenes = len(rutas_imagenes)
 

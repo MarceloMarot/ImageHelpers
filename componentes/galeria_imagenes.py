@@ -1,10 +1,14 @@
 
 import flet as ft
 from functools import partial
-from contenedor import Contenedor ,crear_imagen
+from . contenedor import Contenedor, crear_imagen
 
 
-from buscar import buscar_imagenes
+from . buscar import buscar_imagenes
+# from .. sistema_archivos  import buscar_extension
+# from .. sistema_archivos  import buscar_imagenes
+# from ..sistema_archivos.buscar_extension import buscar_imagenes
+# from buscar_extension import buscar_imagenes
 
 # Funciones para crear galerías de imagenes y definir eventos y propiedades
 # - crear_galeria()
@@ -119,7 +123,7 @@ def pagina_galeria(page: ft.Page):
     numero_imagenes = 30
     lista_imagenes = []
 
-    ruta_imagenes="D:\Proyectos_Programacion\cartoons"
+    ruta_imagenes="/home/x/imag"
     lista_imagenes = buscar_imagenes(ruta_imagenes)
     numero_imagenes = len(lista_imagenes)
     

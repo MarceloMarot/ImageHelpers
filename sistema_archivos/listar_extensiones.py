@@ -1,22 +1,19 @@
 from pathlib import Path
 
-
-from buscar_extension import buscar_extension
+# archivo "clasificar_archivos" aledaño (mismo subdirectorio)
+from . buscar_extension import buscar_extension
+# from sistema_archivos.buscar_extension import buscar_extension
 
 from rich import print
 
 
 
 
-
+# listar todas las extensiones de archivo de un directorio
 def listar_extensiones(ruta: str, distinguir_mayusculas = False ):
-
     lista_archivos =  buscar_extension(ruta, "*.*")
-
     set_extensiones = set()
-
     for archivo in lista_archivos:
-
         if distinguir_mayusculas: 
             extension = Path(archivo).suffix
         else:

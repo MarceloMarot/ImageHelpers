@@ -5,7 +5,9 @@ from rich import print
 import time
 
 
-from clasificar_archivos import Data_Archivo, clasificar_archivos, patron_camara
+# archivo "clasificar_archivos" aledaño (mismo subdirectorio)
+from . clasificar_archivos import Data_Archivo, clasificar_archivos, patron_camara
+
 
 
 def Mover_Archivo(data_origen: Data_Archivo, carpeta_destino: str, fechado = False, fechado_mes = False):

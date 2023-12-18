@@ -10,8 +10,9 @@ import time
 # from functools import partial, reduce
 import re
 
-# from  buscar_extension import  listar_directorios, buscar_extension
-from  buscar_extension import  buscar_extension
+# archivo "clasificar_archivos" aledaño (mismo subdirectorio)
+from  . buscar_extension import  buscar_extension
+# from  sistema_archivos.buscar_extension import  buscar_extension
 
 
 # expresion regular para filtrar fotos y videos de camara sin renombrar

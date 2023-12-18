@@ -38,6 +38,7 @@ class Contenedor(ft.UserControl):
                 height  = 200,
                 alignment=ft.alignment.center,
                 bgcolor=ft.colors.WHITE,
+                border = ft.border.all(10, ft.colors.PINK_600),
                 # border_radius=0,           # redondeo
                 animate=ft.animation.Animation(200, "bounceOut"),
                 # EVENTOS:  
@@ -102,6 +103,7 @@ class Contenedor(ft.UserControl):
 
     def getRedondeo(self):
         return self.contenedor.border_radius
+
 
     def getValor(self):
         return self.valor 
