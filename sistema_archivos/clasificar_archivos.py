@@ -11,7 +11,8 @@ import time
 import re
 
 # archivo "clasificar_archivos" aledaño (mismo subdirectorio)
-from  . buscar_extension import  buscar_extension
+from . buscar_extension import  buscar_extension
+# from  .  import  buscar_extension
 # from  sistema_archivos.buscar_extension import  buscar_extension
 
 

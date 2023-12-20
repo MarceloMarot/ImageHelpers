@@ -15,16 +15,20 @@ from sistema_archivos.listar_extensiones import listar_extensiones
 
 import flet as ft
 from flet import (
+    Column,
     ElevatedButton,
     FilePicker,
     FilePickerResultEvent,
+    MainAxisAlignment,
     Page,
     Row,
     Text,
+    TextAlign,
     alignment,
     border,
     icons,
-    TextField
+    TextField,
+    padding
 )
 from flet_core.utils import string
 
@@ -50,7 +54,19 @@ extensiones_predeterminadas = [
 
 
 
+
 def main(page: Page):
+
+    ############### DIMENSIONES DISEÑO ####################
+
+
+    # dimensiones de referencia para el diseño de la app
+    ancho_filas = 450
+    altura_reportes = 400
+    altura_columnas = altura_reportes + 250
+
+
+    ################# FUNCIONES ############################
 
     # Funcion de apertura de directorio
     def resultado_directorio_origen(e: FilePickerResultEvent):
@@ -64,14 +80,27 @@ def main(page: Page):
             return
 
 
+    def estadisticas_extension(e):
 
+        # Mensaje de notificacion inicial
+        texto= f'''
+        Búsqueda de archivos
 
-    def estadisticas_extension():
+        ( En progreso )
+
+        .......
+        '''
+        reporte_origen.value=texto
+        reporte_origen.update()
+
 
         inicio  = time.time()
         # global archivos_origen
 
-        archivos_origen , ilegibles = clasificar_archivos( ruta_directorio_origen.value, str(extensiones.value) ,patron)
+        ruta    = str(ruta_directorio_origen.value) 
+        ext     = "*" + str(extensiones.value) 
+
+        archivos_origen , ilegibles = clasificar_archivos( ruta,  ext ,patron)
         # archivos_origen , ilegibles = clasificar_archivos(ruta_entrada,extension,patron)
         espacio_archivos_origen  = 0
         # Lectura despacio en disco (en MB)
@@ -85,13 +114,23 @@ def main(page: Page):
         fin  = time.time()
 
         texto= f'''
-        \nDirectorio:           {ruta_directorio_origen.value} 
-        \nExtension :           {extensiones.value} 
-        \nFiltrado de archivos terminado
-        \nTiempo de rutina:         {(fin-inicio):.3} segundos
-        \nNumero de archivos:       {numero_archivos_origen }
-        \nPeso total de archivos:   {espacio_archivos_origen } MB
-        \nArchivos ilegibles:       {archivos_origen_ilegibles}
+        ¡Búsqueda de archivos terminada! 
+
+        Directorio:             {ruta_directorio_origen.value}  
+        Extension :             {extensiones.value}  
+        Patrón de nombre:       (ninguno)
+
+        Numero de archivos:             {numero_archivos_origen } 
+        Peso total de archivos:         {espacio_archivos_origen } MB 
+
+        Numero de archivos ilegibles:   {archivos_origen_ilegibles} 
+
+
+
+
+
+
+        Tiempo de búsqueda:         {(fin-inicio):.3} segundos 
         '''
 
         # muestra de resultados
@@ -106,10 +145,7 @@ def main(page: Page):
         # habilitacion del boton de busqueda de extensiones
         boton_busqueda_extensiones.disabled = False
         boton_busqueda_extensiones.update()
-
-        # else:
-        #     return
-
+        # page.update()
 
 
     def resultado_directorio_destino(e: FilePickerResultEvent):
@@ -123,19 +159,23 @@ def main(page: Page):
             return
 
 
-
     def mover_archivos(e):
-        # directory_path.value = e.path if e.path else "Cancelled!"
-        # if e.path:
-        # ruta_directorio_destino.value = e.path
-        # ruta_directorio_destino.update()
+
+        # Mensaje de notificacion inicial
+        texto= f'''
+        Movimiento de archivos
+
+        ( En progreso )
+
+        .......
+        '''
+        reporte_destino.value=texto
+        reporte_destino.update()
+
 
         inicio  = time.time()
 
-        # archivos_origen = clasificar_archivos(ruta_origen, extension)
-        # archivos_origen, _ = clasificar_archivos(ruta_origen, extension,patron)
                 
-        # archivos_origen
         fechar_anio = bool(checkbox_anio.value)
         fechar_mes  = bool(checkbox_mes.value)
 
@@ -145,10 +185,8 @@ def main(page: Page):
         ruta    = str(ruta_directorio_origen.value) 
         ext     = "*" + str(extensiones.value) 
 
-        # global archivos_origen
-        # archivos_origen , ilegibles = clasificar_archivos( "/home/x/imag", "webp" ,patron)
+        # se repite la búsqueda de archivos
         archivos_origen , ilegibles = clasificar_archivos(ruta , ext, patron)
-        # print(archivos_origen)
 
         total = len(archivos_origen)
    
@@ -160,25 +198,45 @@ def main(page: Page):
                 repetidos += 1
 
         fin   = time.time()
+
         texto = f'''
-        \nDirectorio origen :   {ruta_directorio_origen.value } 
-        \nDirectorio destino:   {ruta_directorio_destino.value} 
-        \nExtension :           {extensiones.value} 
-        \nOrdenado de archivos terminado
-        \nTiempo de rutina:         {(fin-inicio):.3} segundos
-        \nArchivos movidos   : {movidos} de {total}
-        \nArchivos repetidos : {repetidos} de {total}
+            ¡Ordenado de archivos terminado! 
+
+            Directorio origen :   {ruta_directorio_origen.value } 
+            Directorio destino:   {ruta_directorio_destino.value} 
+
+            Extension :           {extensiones.value} 
+
+            Archivos movidos   : {movidos} de {total} 
+            Archivos repetidos : {repetidos} de {total} 
+
+
+
+
+
+
+
+            Tiempo de rutina:     {(fin-inicio):.3} segundos 
         '''
         reporte_destino.value = texto
         reporte_destino.update()
-
-        # boton_carpeta_destino.disabled = True
-        # boton_carpeta_destino.update()
-
-        # else: 
-        #     return
+        # page.update()
 
     def buscar_extensiones_directorio(e):
+
+        # Mensaje de notificacion inicial
+        texto= f'''
+        Búsqueda de extensiones
+
+        ( En progreso )
+
+        .......
+        '''
+        reporte_origen.value=texto
+        reporte_origen.update()
+
+        inicio  = time.time()
+
         # se buscan todas las extensiones de archivo del directorio
         ruta = ruta_directorio_origen.value
         lista_extensiones = [] 
@@ -192,7 +250,31 @@ def main(page: Page):
             nuevo = ft.dropdown.Option(extension)
             extensiones.options.append(nuevo)
 
+        numero_extensiones = len(lista_extensiones)
+        fin = time.time()
+
+        texto= f'''
+            ¡Búsqueda  de extensiones terminada!  
+
+            Directorio:           {ruta_directorio_origen.value} 
+
+            Numero de extensiones encontradas:    {numero_extensiones } 
+
+
+
+
+
+
+            Tiempo de búsqueda:         {(fin-inicio):.3} segundos 
+        '''
+
+        # muestra de resultados
+        reporte_origen.value=texto
+        reporte_origen.update()
+
+        # actualizacion grafica
         extensiones.update()
+        # page.update()
 
 
     def agregar_opciones(lista_opciones: list ):
@@ -211,18 +293,30 @@ def main(page: Page):
             nuevo = ft.dropdown.Option(extension)
             extensiones.options.append(nuevo)
 
+        texto= f'''
+            Lista de extensiones restablecida 
+        '''
+
+        # muestra de resultados
+        reporte_origen.value=texto
+        reporte_origen.update()
+
         # extensiones.options = agregar_opciones(extensiones_predeterminadas),
         extensiones.update()
-
+        # page.update()
 
 
     def habilitar_controles():
-
 
         if ruta_directorio_origen.value != "":
             boton_busqueda_extensiones.disabled = False
         else: 
             boton_busqueda_extensiones.disabled = True
+
+        if (ruta_directorio_origen.value != "") and (extensiones.value != None ):
+            boton_busqueda_archivos.disabled = False
+        else: 
+            boton_busqueda_archivos.disabled = True
 
         if ((ruta_directorio_origen.value != "") and (ruta_directorio_destino.value != "")) and (extensiones.value != None ):
             boton_mover_archivos.disabled = False
@@ -230,17 +324,17 @@ def main(page: Page):
             boton_mover_archivos.disabled = True
 
         boton_busqueda_extensiones.update()
+        boton_busqueda_archivos.update()
         boton_mover_archivos.update()
-
+        page.update()
 
     def cambio_opcion(e):
         habilitar_controles()
         extensiones.update()
+        # page.update()
 
 
-
-
-
+    ####################### COMPONENTES  GRAFICOS ##############################3
 
     #patron REGEX para filtrar archivos
     patron = None
@@ -262,41 +356,28 @@ def main(page: Page):
 
     reporte_origen = Text(
         value="", 
-        height=300, 
-        width=600, 
-        # bgcolor=ft.colors.AMBER_100, 
+        height=altura_reportes, 
+        width=ancho_filas, 
         weight=ft.FontWeight.BOLD,
-        # weight=ft.FontWeight.W_200,
+        text_align=TextAlign.START,
         )
 
     reporte_destino = Text(
         value="", 
-        height=300, 
-        width=600, 
-        # bgcolor=ft.colors.AMBER_100, 
+        height=altura_reportes, 
+        width=ancho_filas, 
         weight=ft.FontWeight.BOLD,
-        # weight=ft.FontWeight.W_200,
+        text_align=TextAlign.START,
         )
-
-
-
-        
-
-
-
-
-
-
-
 
     # Lista desplegable ('dropdown')
 
     extensiones = ft.Dropdown(
-        width = 200,
+        height = 50,
+        width = 100,
         options = agregar_opciones(extensiones_predeterminadas),
         on_change = cambio_opcion
     )
-
 
     # Botones
 
@@ -327,24 +408,39 @@ def main(page: Page):
     )
 
     boton_busqueda_extensiones = ft.ElevatedButton(
+    # boton_busqueda_extensiones = ft.IconButton(
         text="Buscar Extensiones",
         icon=icons.SEARCH  ,
         ## manejador: leer sólo directorios
         on_click= buscar_extensiones_directorio,
         disabled=True, # deshabilitado (hasta definir directorio origen)     
         height = 50,
-        width  = 200,
+        width  = 150,
         bgcolor = ft.colors.AMBER_800,
         color = ft.colors.WHITE,
     )
 
+    boton_busqueda_archivos = ft.ElevatedButton(
+        text="Buscar Archivos",
+        icon=icons.SEARCH  ,
+        ## manejador: leer sólo directorios
+        on_click= estadisticas_extension,
+        disabled=True, # deshabilitado (hasta definir directorio origen)     
+        height = 50,
+        width  = 200,
+        bgcolor = ft.colors.GREEN_800,
+        color = ft.colors.WHITE,
+    )
+
+
     boton_restablecer_extensiones = ft.ElevatedButton(
+    # boton_restablecer_extensiones = ft.IconButton(
         text="Restablecer Extensiones",
         icon=icons.RESTORE ,
         on_click=restablecer_opciones,
         disabled=False,       
         height = 50,
-        width  = 200,
+        width  = 150,
         bgcolor = ft.colors.AMBER_800,
         color = ft.colors.WHITE,
     )
@@ -361,108 +457,159 @@ def main(page: Page):
     )
 
 
-
-    # campo_extension = TextField(
-    #     value="jpg",
-    #     width=100,
-    #     height=40, 
-    #     # text_align=ft.TextAlign.LEFT,
-    #     autofocus=True ,
-    #     border_color=ft.colors.GREY_400
-    #     )
-
-
+    # contenedores
 
     contenedor_apertura = ft.Container(
                 margin=10,
                 padding=10,
-                width   = 576,
-                height  = 500,
+                width   = ancho_filas,
+                height  = altura_columnas,
                 alignment=ft.alignment.center,
                 bgcolor=ft.colors.GREEN_100,
                 border_radius=ft.border_radius.all(10) ,          # redondeo
-                col={"md": 6}
+                border = ft.border.all(5, ft.colors.INDIGO_200),
+
             )
 
     contenedor_destino = ft.Container(
                 margin=10,
                 padding=10,
-                width   = 576,
-                height  = 500,
+                width   = ancho_filas,
+                height  = altura_columnas,
                 alignment=ft.alignment.center,
                 bgcolor=ft.colors.AMBER_100,
                 border_radius=ft.border_radius.all(10) ,          # redondeo
-                col={"md": 6}
+                border = ft.border.all(5, ft.colors.INDIGO_200),
+
             )
 
+
+    contenedor_reporte_origen = ft.Container(
+                content= reporte_origen,
+                # margin=10,
+                # padding=10,
+                width   = ancho_filas - 30,
+                height  = altura_reportes - 30,
+                alignment=ft.alignment.center,
+                # bgcolor=ft.colors.AMBER_100,
+                border_radius=ft.border_radius.all(10) ,          # redondeo
+                border = ft.border.all(5, ft.colors.INDIGO_200),
+            )
+
+    contenedor_reporte_destino = ft.Container(
+                content= reporte_destino,
+                # margin=10,
+                # padding=10,
+                width   = ancho_filas - 30,
+                height  = altura_reportes - 30,
+                alignment=ft.alignment.center,
+                # bgcolor=ft.colors.AMBER_100,
+                border_radius=ft.border_radius.all(10) ,          # redondeo
+                # border = ft.border.all(10, ft.colors.PURPLE_200),
+                border = ft.border.all(5, ft.colors.INDIGO_200),
+            )
+
+
+    # checkboxes 
 
     checkbox_anio = ft.Checkbox(label="Ordenar por año", value=True  )
     checkbox_mes  = ft.Checkbox(label="Ordenar por mes", value=False )
 
 
-    columna_apertura = ft.Column([
-        Row(
-            [   
-                boton_carpeta_origen,
-                ruta_directorio_origen,
-            ]
-        ),
-        Row(
-            [   
-                Text("Extensión"),
-                # campo_extension
-                extensiones,
-                # boton_restablecer_extensiones,
-                # boton_busqueda_extensiones
-            ]
-        ),
-        Row(
-            [   
-                boton_restablecer_extensiones,
-                boton_busqueda_extensiones
-            ]
-        ),
-        Row(
-            [
-                reporte_origen
-            ]
-        )
-    ])
+    # filas y columnas
 
-    contenedor_apertura.content=columna_apertura
-
-    columna_destino= ft.Column([
+    lista_filas_apertura = [
         Row(
-            [   
-                boton_carpeta_destino,
-                ruta_directorio_destino,
-            ],
-            # expand=True
-        ),
+            controls = [ boton_carpeta_origen, ruta_directorio_origen ],
+            expand = False,
+            width = ancho_filas, 
+            height = boton_carpeta_origen.height,
+            alignment= ft.MainAxisAlignment.CENTER
+            ),
         Row(
-            [   
-                checkbox_anio,
-                checkbox_mes
-            ]
-        ),
+            controls = [boton_busqueda_extensiones,  extensiones ,boton_restablecer_extensiones],
+            expand = False,
+            width = ancho_filas, 
+            height= extensiones.height,
+            alignment= ft.MainAxisAlignment.CENTER,  
+            ),
         Row(
-            [
-                reporte_destino
-            ]
-        )
-    ])
+            controls = [ boton_busqueda_archivos],
+            expand = False,
+            width = ancho_filas, 
+            height= boton_busqueda_archivos.height,
+            alignment= ft.MainAxisAlignment.CENTER, 
+            ),
+        Row(
+            [ contenedor_reporte_origen ],
+            expand = False,
+            width = ancho_filas, 
+            height = reporte_origen.height,
+            alignment= ft.MainAxisAlignment.CENTER, 
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+    ]
 
-    contenedor_destino.content = columna_destino
+    lista_filas_destino = [
+        Row( 
+            controls = [ boton_carpeta_destino, ruta_directorio_destino ],       
+            expand=True,
+            width = ancho_filas,
+            alignment= ft.MainAxisAlignment.CENTER, 
+            ),
+        Row(
+            controls = [ checkbox_anio, checkbox_mes ],
+            expand=True,
+            width = ancho_filas,
+            alignment= ft.MainAxisAlignment.CENTER, 
+            ),
 
-    fila_completa=ft.ResponsiveRow(
-        
-        controls= [contenedor_apertura, contenedor_destino],
-        run_spacing={"xs": 10},
+        Row(
+            controls = [ boton_mover_archivos ],
+            expand=True,
+            width = ancho_filas,
+            alignment= ft.MainAxisAlignment.CENTER, 
+            ),
+        Row(
+            [ contenedor_reporte_destino ],
+            expand = False,
+            width = ancho_filas, 
+            height = reporte_destino.height,
+            alignment= ft.MainAxisAlignment.CENTER, 
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+        ]
+
+
+    columna_apertura= ft.Column(
+        controls = lista_filas_apertura,
+
+        expand = True,
+        # expand = False, 
+        # run_spacing=1,     # espaciado vertical entre filas
+        # wrap=False,
+        spacing=30, 
+        height = altura_columnas,
+        width  = ancho_filas,
+        # scroll=ft.ScrollMode.AUTO,
     )
 
+    columna_destino = ft.Column(
+  
+        controls = lista_filas_destino,
+        expand = True,
+        # expand = False, 
+        # run_spacing=1,     # espaciado vertical entre filas
+        # wrap=False,
+        spacing=30,       
+        height = altura_columnas,
+        width  = ancho_filas,
+        # scroll=ft.ScrollMode.AUTO,
+    )
 
-
-
+    fila_final = ft.Row(
+        controls = [contenedor_apertura, contenedor_destino],
+        )
 
 
 
@@ -473,15 +620,74 @@ def main(page: Page):
         ])
 
 
-    page.add(
-        fila_completa
-    )
-    # page.add(boton_busqueda_extensiones)
-    # page.add(boton_restablecer_extensiones)
-    page.add(boton_mover_archivos)
-    # print(extensiones.value)
+    # agrupado y añadido  de los componentes a la página de la app
+    contenedor_apertura.content = columna_apertura
+    contenedor_destino.content = columna_destino
+
+    page.add(fila_final)
 
 
+    ##################### MENSAJES DE INICIO ###########################
+
+    texto= f'''
+                            Búsqueda de Archivos  
+
+        Instrucciones:
+
+        Seleccionar archivos:
+         - Elige una carpeta para explorar;
+         - Selecciona de la lista desplegable la extensión deseada;
+         - Pulsa en el botón "Buscar Archivos".
+
+        Buscar extensiones de archivo: 
+         - Elige una carpeta para explorar;
+         - Pulsa en el botón "Buscar Extensiones".
+
+        Reestablecer extensiones:
+         - Pulsa en el botón "Reestablecer Extensiones".
+    '''
+
+    # muestra de resultados
+    reporte_origen.value=texto
+    reporte_origen.update()
+
+
+    texto= f'''
+                        Movimiento y Ordenado de Archivos  
+
+        Instrucciones:
+
+         - Elige una carpeta de origen para explorar;
+         - Selecciona una extensión de la lista desplegable;
+         - (Opcional) elecciona un patrón de la lista desplegable;
+                        (NO DISPONIBLE AUN)
+        - Elige una carpeta de destino para guardar los archivos;
+        - (Opcional) marca / desmarca las opciones de ordenado por año y mes del archivo;
+        - Pulsa en el botón "Mover Archivos"
+    '''
+
+    # muestra de resultados
+    reporte_destino.value=texto
+    reporte_destino.update()
+
+
+    ################# DIMENSIONES DE VENTANA ###########################
+    ancho_pagina = 980
+    # tema_pagina(page)
+    # Propiedades pagina 
+    page.title = "Ventana Etiquetado Imágenes"
+    page.window_width       = ancho_pagina
+    page.window_max_width   = ancho_pagina
+    page.window_min_width   = ancho_pagina
+    page.window_height = altura_columnas + 50
+    page.window_maximizable=False
+    page.window_minimizable=False
+    page.window_maximized=False
+    page.scroll = ft.ScrollMode.AUTO
+    page.update()
+
+
+################## EJECUCION ###################
 
 ft.app(target=main)
 
