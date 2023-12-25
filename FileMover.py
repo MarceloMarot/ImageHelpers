@@ -57,10 +57,13 @@ extensiones_predeterminadas = [
 
 def main(page: Page):
 
+    ############## COFIGURACION  TRADUCCIONES ############# 
+
     # directorio con traducciones
     i18n.load_path.append('local/')
     # opciones de idioma
     i18n.set('locale', 'es')   # eleccion: español
+    # i18n.set('locale', 'en')   # eleccion: inglés
     i18n.set('fallback', 'en')  # alternativa: inglés 
 
     ############### DIMENSIONES DISEÑO ####################
@@ -89,14 +92,6 @@ def main(page: Page):
     def estadisticas_extension(e):
 
         # Mensaje de notificacion inicial
-        # texto= f'''
-        # Búsqueda de archivos
-
-        # ( En progreso )
-
-        # .......
-        # '''
-
         texto = i18n.t('filemover.search_progress_text')
         reporte_origen.value=texto
         reporte_origen.update()
@@ -121,28 +116,8 @@ def main(page: Page):
 
         fin  = time.time()
 
-        # texto= f'''
-        # ¡Búsqueda de archivos terminada! 
-
-        # Directorio:             {ruta_directorio_origen.value}  
-        # Extension :             {extensiones.value}  
-        # Patrón de nombre:       (ninguno)
-
-        # Numero de archivos:             {numero_archivos_origen } 
-        # Peso total de archivos:         {espacio_archivos_origen } MB 
-
-        # Numero de archivos ilegibles:   {archivos_origen_ilegibles} 
-
-
-
-
-
-
-        # Tiempo de búsqueda:         {(fin-inicio):.3} segundos 
-        # '''
-
         texto = i18n.t('filemover.search_finish_text',
-            origin_path = ruta_directorio_origen.value,
+            source_path = ruta_directorio_origen.value,
             extensions = extensiones.value,
             n_files = numero_archivos_origen,
             size = espacio_archivos_origen,
@@ -179,22 +154,12 @@ def main(page: Page):
     def mover_archivos(e):
 
         # Mensaje de notificacion inicial
-        # texto= f'''
-        # Movimiento de archivos
-
-        # ( En progreso )
-
-        # .......
-        # '''
-
         texto = i18n.t('filemover.move_progress_text')
         reporte_destino.value=texto
         reporte_destino.update()
 
-
         inicio  = time.time()
 
-                
         fechar_anio = bool(checkbox_anio.value)
         fechar_mes  = bool(checkbox_mes.value)
 
@@ -218,27 +183,9 @@ def main(page: Page):
 
         fin   = time.time()
 
-        # texto = f'''
-        #     ¡Ordenado de archivos terminado! 
 
-        #     Directorio origen :   {ruta_directorio_origen.value } 
-        #     Directorio destino:   {ruta_directorio_destino.value} 
-
-        #     Extension :           {extensiones.value} 
-
-        #     Archivos movidos   : {movidos} de {total} 
-        #     Archivos repetidos : {repetidos} de {total} 
-
-
-
-
-
-
-
-        #     Tiempo de rutina:     {(fin-inicio):.3} segundos 
-        # '''
         texto = i18n.t('filemover.move_finish_text',
-            origin_path = ruta_directorio_origen.value ,
+            source_path = ruta_directorio_origen.value ,
             target_path = ruta_directorio_destino.value,
             ext = extensiones.value,
             total = total,
@@ -253,13 +200,6 @@ def main(page: Page):
     def buscar_extensiones_directorio(e):
 
         # Mensaje de notificacion inicial
-        # texto= f'''
-        # Búsqueda de extensiones
-
-        # ( En progreso )
-
-        # .......
-        # '''
         texto = i18n.t('filemover.ext_search_text')
         reporte_origen.value=texto
         reporte_origen.update()
@@ -282,22 +222,7 @@ def main(page: Page):
         numero_extensiones = len(lista_extensiones)
         fin = time.time()
 
-        # texto= f'''
-        #     ¡Búsqueda  de extensiones terminada!  
-
-        #     Directorio:           {ruta_directorio_origen.value} 
-
-        #     Numero de extensiones encontradas:    {numero_extensiones } 
-
-
-
-
-
-
-        #     Tiempo de búsqueda:         {(fin-inicio):.3} segundos 
-        # '''
-
-
+        # mensaje resultados
         texto = i18n.t('filemover.ext_finish_text',
             path=ruta_directorio_origen.value,
             n_ext = numero_extensiones,
@@ -433,7 +358,7 @@ def main(page: Page):
 
     boton_carpeta_origen = ft.ElevatedButton(
         # text="Carpeta Origen",
-        text = i18n.t('filemover.origin_dir_button') ,
+        text = i18n.t('filemover.source_dir_button') ,
         icon=icons.FOLDER_OPEN,
         ## manejador: leer sólo directorios
         on_click=lambda _: dialogo_directorio_origen.get_directory_path(),
@@ -693,47 +618,22 @@ def main(page: Page):
 
     ##################### MENSAJES DE INICIO ###########################
 
-    # texto= f'''
-    #                         Búsqueda de Archivos  
-
-    #     Instrucciones:
-
-    #     Seleccionar archivos:
-    #      - Elige una carpeta para explorar;
-    #      - Selecciona de la lista desplegable la extensión deseada;
-    #      - Pulsa en el botón "Buscar Archivos".
-
-    #     Buscar extensiones de archivo: 
-    #      - Elige una carpeta para explorar;
-    #      - Pulsa en el botón "Buscar Extensiones".
-
-    #     Reestablecer extensiones:
-    #      - Pulsa en el botón "Reestablecer Extensiones".
-    # '''
-
-    texto = i18n.t('filemover.search_tutorial_text')
+    texto = i18n.t('filemover.search_tutorial_text',
+        search_dir = boton_carpeta_origen.text,
+        search_files = boton_busqueda_archivos.text,
+        search_ext = boton_busqueda_extensiones.text,
+        reset_ext = boton_restablecer_extensiones.text    
+    )
 
     # muestra de resultados
     reporte_origen.value=texto
     reporte_origen.update()
 
-
-    # texto= f'''
-    #                     Movimiento y Ordenado de Archivos  
-
-    #     Instrucciones:
-
-    #      - Elige una carpeta de origen para explorar;
-    #      - Selecciona una extensión de la lista desplegable;
-    #      - (Opcional) elecciona un patrón de la lista desplegable;
-    #                     (NO DISPONIBLE AUN)
-    #     - Elige una carpeta de destino para guardar los archivos;
-    #     - (Opcional) marca / desmarca las opciones de ordenado por año y mes del archivo;
-    #     - Pulsa en el botón "Mover Archivos"
-    # '''
-
-    texto = i18n.t('filemover.move_tutorial_text')
-
+    texto = i18n.t('filemover.move_tutorial_text',
+        search_dir = boton_carpeta_origen.text, 
+        target_dir = boton_carpeta_destino.text,
+        move_files = boton_mover_archivos.text    
+    )
 
     # muestra de resultados
     reporte_destino.value=texto
@@ -742,6 +642,7 @@ def main(page: Page):
 
     ################# DIMENSIONES DE VENTANA ###########################
     ancho_pagina = 980
+    texto_titulo.width = ancho_pagina
     # tema_pagina(page)
     # Propiedades pagina 
     page.title = i18n.t('filemover.window_name')

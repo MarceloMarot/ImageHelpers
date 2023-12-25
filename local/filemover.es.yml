@@ -1,8 +1,8 @@
 es:
   window_name:  "file mover"
-  title_text: Movedor de Archivos
+  title_text: "Movedor de Archivos"
   # botones
-  origin_dir_button: "Carpeta Origen"
+  source_dir_button: "Carpeta Origen"
   target_dir_button: "Carpeta Destino"
   ext_search_button: "Buscar Extensiones"
   file_search_button: "Buscar Archivos"
@@ -13,18 +13,18 @@ es:
   check_month: "Ordenar por mes"
   # cajas de texto
   search_progress_text: '
-    Búsqueda de archivos 
+    Búsqueda de archivos: 
     
 
     ( En progreso ) 
     
 
     .......        '
-  search_finish_text: '
+  search_finish_text: "
     ¡Búsqueda de archivos terminada! 
     
 
-    Directorio:             %{origin_path}  
+    Directorio:             %{source_path}  
 
     Extension :             %{extensions}  
     
@@ -46,10 +46,10 @@ es:
 
 
     Tiempo de búsqueda:         %{time} segundos 
-  '
+  "
 
   move_progress_text: '
-    Movimiento de archivos
+    Moviendo archivos
 
 
   ( En progreso )
@@ -62,7 +62,7 @@ es:
     ¡Ordenado de archivos terminado! 
 
     
-    Directorio origen :   %{origin_path} 
+    Directorio origen :   %{source_path} 
 
     Directorio destino:   %{target_path} 
 
@@ -80,7 +80,7 @@ es:
 
 
 
-    Tiempo de rutina:     %{time} segundos 
+    Tiempo transcurrido:     %{time} segundos 
   '
 
   ext_search_text:  '
@@ -111,7 +111,7 @@ es:
 
 
 
-    Tiempo de búsqueda:         %{time} segundos 
+    Tiempo transcurrido:         %{time} segundos 
     "
 
   search_tutorial_text: '                            Búsqueda de Archivos  
@@ -119,44 +119,53 @@ es:
     Instrucciones: 
     
 
-    Seleccionar archivos:
+    Para seleccionar archivos:
+
+      - Pulsa en el botón "%{search_dir}". 
 
       - Elige una carpeta para explorar;
 
       - Selecciona de la lista desplegable la extensión deseada;
 
-      - Pulsa en el botón "Buscar Archivos". 
+      - Pulsa en el botón "%{search_files}". 
       
 
     Buscar extensiones de archivo: 
 
+      - Pulsa el botón "%{search_dir}";
+
       - Elige una carpeta para explorar;
 
-      - Pulsa en el botón "Buscar Extensiones". 
+      - Pulsa en el botón "%{search_ext}". 
       
 
     Reestablecer extensiones:
 
-      - Pulsa en el botón "Reestablecer Extensiones".
+      - Pulsa en el botón "%{reset_ext}".
 
     '
 
-  move_tutorial_text:  '                    Movimiento y Ordenado de Archivos  
+  move_tutorial_text:  '                    Ordenado de Archivos  
 
 
     Instrucciones:
+    
 
-      - Elige una carpeta de origen para explorar;
+      - Pulsa en el botón "%{search_dir}".
+
+      - Elige una carpeta para explorar;
 
       - Selecciona una extensión de la lista desplegable;
 
       - (Opcional) elecciona un patrón de la lista desplegable (NO DISPONIBLE AUN)
 
+      - pulsa el botón "%{target_dir}";
+
       - Elige una carpeta de destino para guardar los archivos;
 
-      - (Opcional) marca / desmarca las opciones de ordenado por año y mes del archivo;
+      - (Opcional) marca / desmarca las opciones de ordenado por año y mes de los archivos;
       
-      - Pulsa en el botón "Mover Archivos"
+      - Pulsa en el botón "%{move_files}".
       '
 
 

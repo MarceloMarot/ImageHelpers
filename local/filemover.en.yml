@@ -1,0 +1,172 @@
+en:
+  window_name:  'file mover'
+  title_text: 'File Mover'
+  # botones
+  source_dir_button: 'Source Folder'
+  target_dir_button: 'Target Folder'
+  ext_search_button: 'Search Extensions'
+  file_search_button: 'Search Files'
+  ext_reset_button: 'Reset Extensions'
+  file_move_button: 'Move Files'
+  # checkboxes
+  check_year: 'Order by year'
+  check_month: 'Order by month'
+  # cajas de texto
+  search_progress_text: '
+    File search: 
+    
+
+    ( In progress ) 
+    
+
+    .......        '
+  search_finish_text: "
+    File search finished! 
+    
+
+    Path:             %{source_path}  
+
+    Extension :             %{extensions}  
+    
+    Name pattern:       (none)  
+    
+
+    Number of files:             %{n_files} 
+
+    Total file size:         %{size}  MB 
+    
+
+    Number of unreadable files:   %{n_no_readable} 
+    
+
+
+
+
+
+
+
+    Time search:         %{time} seconds
+  "
+
+  move_progress_text: '
+    Moving files
+
+
+  ( In progress )
+
+
+  .......
+  '
+
+  move_finish_text: '
+    Ordering files finished! 
+
+    
+    Source path :   %{source_path} 
+
+    Target path:   %{target_path} 
+
+    
+    Extension :           %{ext} 
+
+    Moved files   : %{moved} of %{total} 
+    
+    Repeated files : %{repeated} of %{total} 
+
+
+
+
+
+
+
+
+    Elapsed time:     %{time} seconds 
+  '
+
+  ext_search_text:  '
+    Searching extensions:
+
+
+    ( In progress )
+
+
+    .......
+  '
+
+  ext_finish_text: "
+    Extension seach finished! 
+
+
+
+    Folder:           %{path} 
+
+
+
+    Number of extensions founded:    %{n_ext} 
+
+
+
+
+
+
+
+
+    Elapsed time:         %{time} seconds
+    "
+
+  search_tutorial_text: "                            File Search  
+                        
+    Instructions: 
+    
+
+    Select files:
+
+      - Push the '%{search_dir}' button;
+
+      - Select a folder to explore;
+
+      - Select from drop-down list the chosen extension;
+
+      - Push the '%{search_files}' button. 
+      
+
+    Search file extensions:
+
+      - Push the '%{search_dir}' button;
+
+      - Select a folder to explore;
+
+      - Push the '%{search_ext}' button. 
+      
+
+    Reset extensions:
+
+      - Push the '%{reset_ext}' button.
+
+    "
+
+  move_tutorial_text:  "                   Sorting Files   
+
+
+    Instructions:
+    
+
+      - Push the '%{search_dir} ' button;
+
+      - Select a folder to explore;
+
+      - Select an extension from the drop-down list;
+
+      - (Opcional) select a pattern from drop-down list (NOT AVAILABLE YET)
+
+      - Push the '%{target_dir}' button;
+
+      - Choose a target folder to save the files;
+
+      - (Optional) Mark / unmark the sorting options by year and month of files;
+      
+      - Push the '%{move_files}' button.
+      "
+
+
+  ext_reset_text: "Extension's list restarted"
