@@ -1,0 +1,163 @@
+es:
+  window_name:  "file mover"
+  title_text: Movedor de Archivos
+  # botones
+  origin_dir_button: "Carpeta Origen"
+  target_dir_button: "Carpeta Destino"
+  ext_search_button: "Buscar Extensiones"
+  file_search_button: "Buscar Archivos"
+  ext_reset_button: "Restablecer Extensiones"
+  file_move_button: "Mover Archivos"
+  # checkboxes
+  check_year: "Ordenar por año"
+  check_month: "Ordenar por mes"
+  # cajas de texto
+  search_progress_text: '
+    Búsqueda de archivos 
+    
+
+    ( En progreso ) 
+    
+
+    .......        '
+  search_finish_text: '
+    ¡Búsqueda de archivos terminada! 
+    
+
+    Directorio:             %{origin_path}  
+
+    Extension :             %{extensions}  
+    
+    Patrón de nombre:       (ninguno)  
+    
+
+    Numero de archivos:             %{n_files} 
+
+    Peso total de archivos:         %{size}  MB 
+    
+
+    Numero de archivos ilegibles:   %{n_no_readable} 
+    
+
+
+
+
+
+
+
+    Tiempo de búsqueda:         %{time} segundos 
+  '
+
+  move_progress_text: '
+    Movimiento de archivos
+
+
+  ( En progreso )
+
+
+  .......
+  '
+
+  move_finish_text: '
+    ¡Ordenado de archivos terminado! 
+
+    
+    Directorio origen :   %{origin_path} 
+
+    Directorio destino:   %{target_path} 
+
+    
+    Extension :           %{ext} 
+
+    Archivos movidos   : %{moved} de %{total} 
+    
+    Archivos repetidos : %{repeated} de %{total} 
+
+
+
+
+
+
+
+
+    Tiempo de rutina:     %{time} segundos 
+  '
+
+  ext_search_text:  '
+    Búsqueda de extensiones
+
+
+    ( En progreso )
+
+
+    .......
+  '
+
+  ext_finish_text: "
+    ¡Búsqueda  de extensiones terminada! 
+
+
+
+    Directorio:           %{path} 
+
+
+
+    Numero de extensiones encontradas:    %{n_ext} 
+
+
+
+
+
+
+
+
+    Tiempo de búsqueda:         %{time} segundos 
+    "
+
+  search_tutorial_text: '                            Búsqueda de Archivos  
+                        
+    Instrucciones: 
+    
+
+    Seleccionar archivos:
+
+      - Elige una carpeta para explorar;
+
+      - Selecciona de la lista desplegable la extensión deseada;
+
+      - Pulsa en el botón "Buscar Archivos". 
+      
+
+    Buscar extensiones de archivo: 
+
+      - Elige una carpeta para explorar;
+
+      - Pulsa en el botón "Buscar Extensiones". 
+      
+
+    Reestablecer extensiones:
+
+      - Pulsa en el botón "Reestablecer Extensiones".
+
+    '
+
+  move_tutorial_text:  '                    Movimiento y Ordenado de Archivos  
+
+
+    Instrucciones:
+
+      - Elige una carpeta de origen para explorar;
+
+      - Selecciona una extensión de la lista desplegable;
+
+      - (Opcional) elecciona un patrón de la lista desplegable (NO DISPONIBLE AUN)
+
+      - Elige una carpeta de destino para guardar los archivos;
+
+      - (Opcional) marca / desmarca las opciones de ordenado por año y mes del archivo;
+      
+      - Pulsa en el botón "Mover Archivos"
+      '
+
+
+  ext_reset_text: "Lista de extensiones restablecida"
