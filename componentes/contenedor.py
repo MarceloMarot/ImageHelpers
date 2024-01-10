@@ -1,171 +1,147 @@
 import flet as ft
+from functools import partial
 
-# DOS COMPONENTES UTILES:
-# - Contenedor() --> Clase
-# - crear_imagen() --> Funcion
+from sys import getsizeof
 
-# Contenedor con eventos integrados
-# pensado para contener imagenes
-class Contenedor(ft.UserControl):
 
-    # MANEJADORES DE EVENTOS 
-    # Se configuran mediante metodos dedicados
-    def longpress(self, e):
-        self.funcion_longpress()
-        self.update()
 
-    def hover(self,e):
-        self.funcion_hover()
-        self.update()
+# Clase auxiliar para configurar contenedores
+class Estilo_Contenedor:
+    def __init__(self, border_radius=0, bgcolor=ft.colors.WHITE, 
+        border=ft.border.all(0, ft.colors.WHITE)):
+        self.border_radius = border_radius
+        self.bgcolor = bgcolor
+        self.border = border
 
-    def click(self, e):
-        self.funcion_click()
-        self.update()
 
+# Subclase del container de FLET, manejo simplificado
+class Contenedor(ft.Container):
     # INICIALIZACION
     def build(self):
-        # acciones para los eventos  - Anulados por defecto
-        self.funcion_hover      = lambda: nada()
-        self.funcion_click      = lambda: nada()
-        self.funcion_longpress  = lambda: nada()
-        #identificador numerico
         self.id = 0
-        self.valor = 0
-        self.contenedor = ft.Container(
-                margin=10,
-                padding=10,
-                width   = 200,
-                height  = 200,
-                alignment=ft.alignment.center,
-                bgcolor=ft.colors.WHITE,
-                border = ft.border.all(10, ft.colors.PINK_600),
-                # border_radius=0,           # redondeo
-                animate=ft.animation.Animation(200, "bounceOut"),
-                # EVENTOS:  
-                on_long_press = self.longpress,
-                on_hover = self.hover,
-                on_click = self.click, 
-            )
-        return self.contenedor
+        super().__init__()
     
-    #METODOS
-    # 'setters'
-    def setID(self, id: int):
-        self.contenedor.id = id
-
-    def setContenido(self, imagen: ft.Image ):
-        self.contenedor.content  = imagen 
+    # METODOS
+    def setup(self, base=256, altura=256 ):
+        # estilo predefinido
+        self.margin=10
+        self.padding=10
+        self.width   = base
+        self.height  = altura
+        self.alignment=ft.alignment.center
+        self.bgcolor=ft.colors.WHITE
+        self.border = ft.border.all(0, ft.colors.WHITE)
+        self.border_radius=0          
+        self.animate=ft.animation.Animation(1000, "bounceOut")
+        self.content=None
         self.update()
 
-    def setDimensiones(self, base: int, altura: int):
-        self.contenedor.height= altura
-        self.contenedor.width = base
+    def estilo(self, e: Estilo_Contenedor):
+        self.border_radius = e.border_radius
+        self.bgcolor = e.bgcolor
+        self.border = e.border
         self.update()
 
-    def setBGColor(self, color: ft.colors):
-        self.contenedor.bgcolor = color
+    # def eventos(self, click=None, hover=None, longpress=None ):
+    #     self.on_click = click  
+    #     self.on_hover = hover
+    #     self.on_long_press = longpress
+    #     self.update()
+
+    def click(self, funcion):
+        self.on_click = partial(funcion, self)  
+
+    def hover(self, funcion):
+        self.on_hover = partial(funcion, self)  
+
+    def longpress(self, funcion):
+        self.on_long_press = partial(funcion, self)  
+
+
+# Sub-subclase del container de FLET, con imagen interna
+class Contenedor_Imagen(Contenedor):
+    # INICIALIZACION
+    def build(self):
+        super().__init__()
+
+    # Lee una imagen y la carga en un objeto FLET 
+    # def crear_imagen(self, ruta: str, base=256, altura=256, redondeo=0):
+    def crear_imagen(self, ruta: str, redondeo=0):
+        imagen = ft.Image(
+            src = ruta,
+            # width = base,
+            # height = altura ,
+            width = self.width,
+            height = self.height ,
+            fit=ft.ImageFit.CONTAIN,
+            repeat=ft.ImageRepeat.NO_REPEAT,
+            border_radius=ft.border_radius.all(redondeo),
+        )
+        self.content=imagen
         self.update()
-        
-    def setRedondeo(self, radio: int):
-        self.contenedor.border_radius = radio
-        self.update()
 
-    def setValor(self, valor):
-        self.valor = valor
-        self.update()
-
-    # los eventos se configuran aquí
-    # deben asignarse funciones lambda
-    def setHover(self, funcion):
-        self.funcion_hover = funcion
-        self.update()
-
-    def setClick(self, funcion):
-        self.funcion_click = funcion
-        self.update()    
-
-    def setLongpress(self, funcion):
-        self.funcion_longpress = funcion
-        self.update()
-
-    # 'getters'
-    def getID(self):
-        return self.contenedor.id 
-
-    def getContenido(self):
-        return self.contenedor.content
-
-    def getDimensiones(self):
-        return [self.contenedor.width , self.contenedor.height]
-    
-    def getBGColor(self):
-        return self.contenedor.bgcolor
-
-    def getRedondeo(self):
-        return self.contenedor.border_radius
-
-
-    def getValor(self):
-        return self.valor 
-
-
-
-
-
-# Funcion auxiliar: sirve para anular eventos
-def nada():
-    pass
-
-
-# Lee una imagen y la carga en un objeto FLET 
-def crear_imagen(ruta: str, base=200, altura=200,redondeo=0):
-    imagen = ft.Image(
-        src = ruta,
-        width = base,
-        height = altura ,
-        fit=ft.ImageFit.CONTAIN,
-        repeat=ft.ImageRepeat.NO_REPEAT,
-        border_radius=ft.border_radius.all(redondeo),
-    )
-    return imagen
 
 
 # FUNCION MAIN
 
 def pagina(page: ft.Page):
 
-    contenedor = Contenedor()
+    # creacion del contenedor y agregado a la página
+    contenedor = Contenedor_Imagen()
 
-    page.add(contenedor)
+    fila = ft.Row([contenedor])
+    page.add(fila)
 
-    def funcion_click():
-        contenedor.setRedondeo(200)
-        contenedor.setBGColor(ft.colors.RED)
+    # estilos para el contenedor 
+    estilo_defecto = Estilo_Contenedor(
+        border_radius = 50, 
+        bgcolor = ft.colors.BLUE_400,
+        border=ft.border.all(20, ft.colors.INDIGO_100)
+        )
 
-    def funcion_hover():
-        contenedor.setRedondeo(20)
-        contenedor.setBGColor(ft.colors.AMBER)
+    estilo_click = Estilo_Contenedor(
+        border_radius = 5,
+        bgcolor = ft.colors.RED_900,
+        border = ft.border.all(20, ft.colors.PURPLE_900),
+        )   
+    
+    estilo_hover = Estilo_Contenedor(
+        border_radius = 50, 
+        bgcolor = ft.colors.AMBER_400,
+        border=ft.border.all(20, ft.colors.ORANGE_600),
+        )
 
-    def estilo_defecto():   
-        contenedor.setRedondeo(0)
-        contenedor.setDimensiones(500,420)
-        contenedor.setBGColor(ft.colors.BLUE)
-             
-    # se asignan las funciones SIN argumentos como LAMBDAS
-    contenedor.setClick(lambda: funcion_click())
-    contenedor.setHover(lambda: funcion_hover())
-    contenedor.setLongpress(lambda: estilo_defecto())
+    # Eventos que producirán un cambio de estilo del contenedor
+    def funcion_click(cont, e):
+        cont.estilo(estilo_click)
 
-    # Las propiedades de los elementos se pueden editar DESPUES de añadirlos a la pagina
-    estilo_defecto()
+    def funcion_hover(cont, e):
+        cont.estilo(estilo_hover)
 
-    imagen_actual = crear_imagen("https://picsum.photos/200/200?0",400,400,100)
+    def funcion_longpress(cont, e):        
+        cont.estilo(estilo_defecto)
 
-    contenedor.setContenido( imagen_actual )
-    # contenedor.content=imagen_actual
-    contenedor.setID( 27 )
-    # print(contenedor.getID())
-    # page.add(contenedor)
+    # La configuracion del contenedor se puede hacer:
+    # - durante inicializacion;
+    # - Despues del agregado a página
+    # Hacerlo en la definición de clase NO SIRVE
+    # cambio de tamaño
+    dimension = 512
+    contenedor.setup(dimension, dimension)
+
+    # estilos, eventos e imagen
+    contenedor.estilo(estilo_defecto)
+    # contenedor.eventos(funcion_click, funcion_hover, funcion_longpress)
+    contenedor.crear_imagen(
+        "https://picsum.photos/200/200?0",
+        100
+        )
+    contenedor.click(funcion_click)
+    contenedor.hover(funcion_hover)
+    contenedor.longpress(funcion_longpress)
+
+    page.theme_mode = ft.ThemeMode.LIGHT
+    # page.theme_mode = ft.ThemeMode.DARK
     page.update()
 
 
