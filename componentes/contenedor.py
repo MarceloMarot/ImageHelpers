@@ -1,8 +1,8 @@
+# Ejecutar demo como:
+# py -m componentes.contenedor
+
 import flet as ft
 from functools import partial
-
-from sys import getsizeof
-
 
 
 # Clase auxiliar para configurar contenedores
@@ -42,20 +42,18 @@ class Contenedor(ft.Container):
         self.border = e.border
         self.update()
 
-    # def eventos(self, click=None, hover=None, longpress=None ):
-    #     self.on_click = click  
-    #     self.on_hover = hover
-    #     self.on_long_press = longpress
-    #     self.update()
+    def click(self, funcion = None):
+        self.on_click = partial(funcion, self)  if funcion != None else nada
 
-    def click(self, funcion):
-        self.on_click = partial(funcion, self)  
+    def hover(self, funcion = None):
+        self.on_hover = partial(funcion, self)  if funcion != None else nada
 
-    def hover(self, funcion):
-        self.on_hover = partial(funcion, self)  
+    def longpress(self, funcion = None):
+        self.on_long_press = partial(funcion, self)  if funcion != None else nada
 
-    def longpress(self, funcion):
-        self.on_long_press = partial(funcion, self)  
+
+def nada( _ ):
+    pass
 
 
 # Sub-subclase del container de FLET, con imagen interna
@@ -111,7 +109,9 @@ def pagina(page: ft.Page):
         border=ft.border.all(20, ft.colors.ORANGE_600),
         )
 
-    # Eventos que producirán un cambio de estilo del contenedor
+    # Funciones para los eventos del mouse que producirán un cambio de estilo del contenedor afectado
+    # 'c' es el contenedor afectado el cual se recibe como parámetro 
+    # 'e' es un parámetro residual que envía el manejador de eventos
     def funcion_click(cont, e):
         cont.estilo(estilo_click)
 
@@ -131,13 +131,13 @@ def pagina(page: ft.Page):
 
     # estilos, eventos e imagen
     contenedor.estilo(estilo_defecto)
-    # contenedor.eventos(funcion_click, funcion_hover, funcion_longpress)
     contenedor.crear_imagen(
         "https://picsum.photos/200/200?0",
         100
         )
     contenedor.click(funcion_click)
     contenedor.hover(funcion_hover)
+    # contenedor.hover(None)
     contenedor.longpress(funcion_longpress)
 
     page.theme_mode = ft.ThemeMode.LIGHT

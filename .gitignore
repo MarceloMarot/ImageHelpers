@@ -8,6 +8,6 @@ pruebas/
 *.spec
 
 build/
-
+dist/
 
 ensayo.py

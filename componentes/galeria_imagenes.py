@@ -1,6 +1,7 @@
+# Ejecutar demo como:
+# py -m componentes.galeria_imagenes
 
 import flet as ft
-from functools import partial
 from . contenedor import  Contenedor_Imagen, Estilo_Contenedor
 
 
@@ -9,9 +10,7 @@ from . contenedor import  Contenedor_Imagen, Estilo_Contenedor
 # es subclase del objeto 'fila' (ft.Row) de FLET
 class Galeria(ft.Row):
     def build(self):
-        # self.recuadros = []
         self.numero = 0
-
         self.expand = True 
         self.wrap = False # version galería (si es 'False' las imagenes van en linea)
         
@@ -21,6 +20,7 @@ class Galeria(ft.Row):
         self.numero = numero
         for i in range(0, self.numero):
             c = Contenedor_Imagen()
+            c.id = i
             self.controls.append(c)
 
 
@@ -51,11 +51,14 @@ class Galeria(ft.Row):
                     )
 
 
-    def eventos(self, fclick, fhover, flongpress ):
+    def eventos(self, fclick = None, fhover = None, flongpress = None ):
         for contenedor in self.controls:
             contenedor.click(fclick)
             contenedor.hover(fhover)
             contenedor.longpress(flongpress)
+
+
+
 
 
 
@@ -85,25 +88,28 @@ def pagina_galeria(page: ft.Page):
         )
 
 
-    # Funciones para los eventos que producirán un cambio de estilo del contenedor
+    # Funciones para los eventos del mouse que producirán un cambio de estilo del contenedor afectado
+    # 'c' es el contenedor afectado el cual se recibe como parámetro 
+    # 'e' es un parámetro residual que envía el manejador de eventos
     def funcion_click(c, e):
         c.estilo(estilo_click)
+        print(f"ID: {c.id} clicked")
 
     def funcion_hover(c, e):
         c.estilo(estilo_hover)
 
     def funcion_longpress(c, e):        
         c.estilo(estilo_defecto)
-
+        print(f"ID: {c.id} long pressed")
 
     # Maquetado
     # componente galeria de contenedores con imágenes
     galeria = Galeria()
     galeria.crear(numero_imagenes)
-    # el componente
+    # el componente se añade a la página
     page.add(galeria)
 
-
+    # configuracion de contenedores: tamaño, colores, eventos, etc
     galeria.setup(300, 300)
     galeria.estilo(estilo_defecto)
     galeria.imagenes(lista_imagenes, redondeo=60)
@@ -112,6 +118,7 @@ def pagina_galeria(page: ft.Page):
         funcion_hover,
         funcion_longpress
         )
+
 
     # Elementos generales de la pagina
     page.title = "Galería Imágenes"
