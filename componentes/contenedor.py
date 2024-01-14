@@ -7,8 +7,15 @@ from functools import partial
 
 # Clase auxiliar para configurar contenedores
 class Estilo_Contenedor:
-    def __init__(self, border_radius=0, bgcolor=ft.colors.WHITE, 
+    def __init__(
+        self,
+        width=256,
+        height=256,
+        border_radius=0, 
+        bgcolor=ft.colors.WHITE, 
         border=ft.border.all(0, ft.colors.WHITE)):
+        self.width = width
+        self.height = height
         self.border_radius = border_radius
         self.bgcolor = bgcolor
         self.border = border
@@ -16,31 +23,34 @@ class Estilo_Contenedor:
 
 # Subclase del container de FLET, manejo simplificado
 class Contenedor(ft.Container):
-    # INICIALIZACION
-    def build(self):
-        self.id = 0
-        super().__init__()
+    # Inicializacion
+    def __init__(self):
+        # herencia de atributos y asignaciones valores predeterminados
+        super().__init__(
+            margin  = 10,
+            padding = 10,
+            width   = 256,
+            height  = 256,
+            alignment=ft.alignment.center,
+            bgcolor=ft.colors.WHITE,
+            border = ft.border.all(0, ft.colors.WHITE),
+            border_radius=0 ,         
+            animate=ft.animation.Animation(
+                1000, 
+                ft.AnimationCurve.BOUNCE_OUT # acomodamiento con "rebotes"
+                # ft.AnimationCurve.EASE    # acomodamiento gradual
+                ),
+            )
+        # nuevo parametro
+        # self.id = 0
     
-    # METODOS
-    def setup(self, base=256, altura=256 ):
-        # estilo predefinido
-        self.margin=10
-        self.padding=10
-        self.width   = base
-        self.height  = altura
-        self.alignment=ft.alignment.center
-        self.bgcolor=ft.colors.WHITE
-        self.border = ft.border.all(0, ft.colors.WHITE)
-        self.border_radius=0          
-        self.animate=ft.animation.Animation(1000, "bounceOut")
-        self.content=None
-        self.update()
-
+    # Metodos
     def estilo(self, e: Estilo_Contenedor):
+        self.width  = e.width
+        self.height = e.height
         self.border_radius = e.border_radius
         self.bgcolor = e.bgcolor
         self.border = e.border
-        self.update()
 
     def click(self, funcion = None):
         self.on_click = partial(funcion, self)  if funcion != None else nada
@@ -51,6 +61,12 @@ class Contenedor(ft.Container):
     def longpress(self, funcion = None):
         self.on_long_press = partial(funcion, self)  if funcion != None else nada
 
+    def eventos(self, click, hover, longpress):
+        self.click(click)
+        self.hover(hover)
+        self.longpress(longpress)
+
+
 
 def nada( _ ):
     pass
@@ -58,13 +74,15 @@ def nada( _ ):
 
 # Sub-subclase del container de FLET, con imagen interna
 class Contenedor_Imagen(Contenedor):
-    # INICIALIZACION
-    def build(self):
+    # Incializacion
+    def __init__(self):
+        # herencia de atributos y asignaciones valores predeterminados
         super().__init__()
 
-    # Lee una imagen y la carga en un objeto FLET 
-    # def crear_imagen(self, ruta: str, base=256, altura=256, redondeo=0):
-    def crear_imagen(self, ruta: str, redondeo=0):
+
+    # Metodo
+    def imagen(self, ruta: str, redondeo=0):
+        # Lee una imagen y la carga en un objeto FLET   
         imagen = ft.Image(
             src = ruta,
             # width = base,
@@ -76,69 +94,77 @@ class Contenedor_Imagen(Contenedor):
             border_radius=ft.border_radius.all(redondeo),
         )
         self.content=imagen
-        self.update()
 
 
 
-# FUNCION MAIN
+# Objetos de ejemplo
+# estilos para el contenedor 
+estilo_defecto = Estilo_Contenedor(
+    width   = 512,
+    height  = 512,
+    border_radius = 50, 
+    bgcolor = ft.colors.BLUE_400,
+    border=ft.border.all(20, ft.colors.INDIGO_100)
+    )
 
+estilo_click = Estilo_Contenedor(
+    width   = 768,
+    height  = 512,
+    border_radius = 5,
+    bgcolor = ft.colors.RED_900,
+    border = ft.border.all(20, ft.colors.PURPLE_900),
+    )   
+
+estilo_hover = Estilo_Contenedor(
+    width   = 512,
+    height  = 768,
+    border_radius = 50, 
+    bgcolor = ft.colors.AMBER_400,
+    border=ft.border.all(20, ft.colors.ORANGE_600),
+    )
+
+
+
+#  Funcion pagina ("main" para Flet)
 def pagina(page: ft.Page):
 
     # creacion del contenedor y agregado a la página
     contenedor = Contenedor_Imagen()
 
-    fila = ft.Row([contenedor])
-    page.add(fila)
 
-    # estilos para el contenedor 
-    estilo_defecto = Estilo_Contenedor(
-        border_radius = 50, 
-        bgcolor = ft.colors.BLUE_400,
-        border=ft.border.all(20, ft.colors.INDIGO_100)
-        )
 
-    estilo_click = Estilo_Contenedor(
-        border_radius = 5,
-        bgcolor = ft.colors.RED_900,
-        border = ft.border.all(20, ft.colors.PURPLE_900),
-        )   
-    
-    estilo_hover = Estilo_Contenedor(
-        border_radius = 50, 
-        bgcolor = ft.colors.AMBER_400,
-        border=ft.border.all(20, ft.colors.ORANGE_600),
-        )
-
-    # Funciones para los eventos del mouse que producirán un cambio de estilo del contenedor afectado
-    # 'c' es el contenedor afectado el cual se recibe como parámetro 
-    # 'e' es un parámetro residual que envía el manejador de eventos
-    def funcion_click(cont, e):
-        cont.estilo(estilo_click)
-
-    def funcion_hover(cont, e):
-        cont.estilo(estilo_hover)
-
-    def funcion_longpress(cont, e):        
-        cont.estilo(estilo_defecto)
-
-    # La configuracion del contenedor se puede hacer:
-    # - durante inicializacion;
-    # - Despues del agregado a página
-    # Hacerlo en la definición de clase NO SIRVE
-    # cambio de tamaño
-    dimension = 512
-    contenedor.setup(dimension, dimension)
 
     # estilos, eventos e imagen
     contenedor.estilo(estilo_defecto)
-    contenedor.crear_imagen(
+    contenedor.imagen(
         "https://picsum.photos/200/200?0",
         100
         )
-    contenedor.click(funcion_click)
-    contenedor.hover(funcion_hover)
-    # contenedor.hover(None)
-    contenedor.longpress(funcion_longpress)
+    
+    # Funciones para los eventos del mouse que producirán un cambio de estilo del contenedor afectado
+    # 'cont' es el contenedor afectado el cual se recibe como parámetro 
+    # 'e' es un parámetro residual que envía el manejador de eventos
+    def funcion_click(cont, e):
+        cont.estilo(estilo_click)
+        cont.update()
+
+    def funcion_hover(cont, e):
+        cont.estilo(estilo_hover)
+        cont.update()
+
+    def funcion_longpress(cont, e):        
+        cont.estilo(estilo_defecto)
+        cont.update()
+
+    contenedor.eventos(
+        funcion_click,
+        funcion_hover,
+        funcion_longpress
+        )
+
+
+    page.add(contenedor)
+
 
     page.theme_mode = ft.ThemeMode.LIGHT
     # page.theme_mode = ft.ThemeMode.DARK

@@ -102,7 +102,7 @@ class MenuNavegacion(ft.UserControl):
         nombre_imagen = pathlib.Path(imagen).name
         radio = self.contenedor.border_radius 
         # radio = 0
-        self.contenedor.crear_imagen(imagen, radio)
+        self.contenedor.imagen(imagen, radio)
 
         self.titulo.value = f"{self.indice} - {nombre_imagen}"
         self.estilo()
@@ -155,18 +155,24 @@ def pagina_etiquetado(page: ft.Page ):
 
     # estilos para el contenedor 
     estilo_defecto = Estilo_Contenedor(
+        width = 768,
+        height = 768,
         border_radius = 50, 
         bgcolor = ft.colors.BLUE_400,
         border=ft.border.all(20, ft.colors.INDIGO_100)
         )
 
     estilo_click = Estilo_Contenedor(
+        width = 768,
+        height = 768,
         border_radius = 5,
         bgcolor = ft.colors.RED_900,
         border = ft.border.all(20, ft.colors.PURPLE_900),
         )   
-    
+
     estilo_hover = Estilo_Contenedor(
+        width = 768,
+        height = 768,
         border_radius = 50, 
         bgcolor = ft.colors.AMBER_400,
         border=ft.border.all(20, ft.colors.ORANGE_600),
@@ -175,18 +181,21 @@ def pagina_etiquetado(page: ft.Page ):
 
     def funcion_click(cont, e):
         cont.estilo(estilo_click)
+        cont.update()
 
     def funcion_hover(cont, e):
         cont.estilo(estilo_hover)
+        cont.update()
 
     def funcion_longpress(cont, e):        
         cont.estilo(estilo_defecto)
+        cont.update()
 
 
     menu = MenuNavegacion()
     page.add(menu)
     menu.imagenes(rutas_imagen)
-    menu.contenedor.setup(dimensiones, dimensiones)
+    # menu.contenedor.setup(dimensiones, dimensiones)
 
     # menu.contenedor.estilo(estilo_defecto)
     menu.estilo_contenedor = estilo_defecto
@@ -194,7 +203,7 @@ def pagina_etiquetado(page: ft.Page ):
     menu.contenedor.click(funcion_click)
     menu.contenedor.hover(funcion_hover)
     menu.contenedor.longpress(funcion_longpress)
-    menu.contenedor.crear_imagen(
+    menu.contenedor.imagen(
         f"https://picsum.photos/400/400?0",
         100
         )
