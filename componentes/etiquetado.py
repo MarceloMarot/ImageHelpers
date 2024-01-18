@@ -4,9 +4,10 @@ import flet as ft
 from . procesar_etiquetas import Etiquetas 
 # from componentes.procesar_etiquetas import Etiquetas 
 
-class Columna_Etiquetas(ft.UserControl):
-
-    def build(self):
+# class Columna_Etiquetas(ft.UserControl):
+class Columna_Etiquetas(ft.Column):
+    # def build(self):
+    def __init__(self):
         
         self.checkboxes = []
         self.checkboxes_grafica= []
@@ -17,57 +18,64 @@ class Columna_Etiquetas(ft.UserControl):
         self.color_separador = ft.colors.INDIGO_200
         self.color_borde = ft.colors.INDIGO_400
 
-        ancho = 450
-        ancho_boton=130
+        self.ancho = 450
+        self.ancho_boton=130
 
         # cuadro de texto de salida
-        self.texto = ft.Text(size=15,width=ancho, height=100, bgcolor=ft.colors.AMBER_100, value="", expand = False )
+        self.texto = ft.Text(
+            size=15,
+            width=self.ancho, 
+            height=100, 
+            bgcolor=ft.colors.AMBER_100, 
+            value="", 
+            expand = False 
+            )
 
-        fila_texto=ft.Row(
+        self.fila_texto=ft.Row(
             wrap=False,
             spacing=50,       # espaciado horizontal entre contenedores
             run_spacing=50,     # espaciado vertical entre filas
             controls = [self.texto] ,
-            width=ancho, # anchura de columna   
+            width=self.ancho, # anchura de columna   
             alignment= ft.MainAxisAlignment.CENTER, 
             )
         # botones de comando
         self.boton_guardado = ft.ElevatedButton(
             text = "Guardar", 
             on_click = self.guardar_opciones, 
-            bgcolor="red",color="white", width=ancho_boton,
+            bgcolor="red",color="white", width=self.ancho_boton,
             )
         self.boton_todos = ft.ElevatedButton(
             text = "Todos", 
             on_click = self.checkboxes_todos,
-            width=ancho_boton,
+            width=self.ancho_boton,
             )
         self.boton_ninguno = ft.ElevatedButton(
             text = "Ninguno", 
             on_click = self.checkboxes_ninguno,
-            width=ancho_boton,
+            width=self.ancho_boton,
             )
         self.boton_restablecer = ft.ElevatedButton(
             text = "Restablecer", 
             on_click = self.restablecer_opciones, 
-            bgcolor="blue",color="white", width=ancho_boton,
+            bgcolor="blue",color="white", width=self.ancho_boton,
             )
 
-        fila_botones_checkboxes = ft.Row(
+        self.fila_botones_checkboxes = ft.Row(
             wrap=False,
             spacing=50,       # espaciado horizontal entre contenedores
             run_spacing=50,     # espaciado vertical entre filas
             controls = [ self.boton_todos, self.boton_ninguno],
-            width=ancho, # anchura de columna   
+            width=self.ancho, # anchura de columna   
             alignment= ft.MainAxisAlignment.CENTER,
             )
 
-        fila_boton_restablecer = ft.Row(
+        self.fila_boton_restablecer = ft.Row(
             wrap=False,
             spacing=50,       # espaciado horizontal entre contenedores
             run_spacing=50,     # espaciado vertical entre filas
             controls = [self.boton_restablecer, self.boton_guardado],
-            width=ancho, # anchura de columna   
+            width=self.ancho, # anchura de columna   
             alignment= ft.MainAxisAlignment.CENTER,
             )
 
@@ -79,7 +87,7 @@ class Columna_Etiquetas(ft.UserControl):
             # controls=self.checkboxes_grafica,
             controls=self.checkboxes,
             height=600,         # altura de columna
-            width=ancho,
+            width=self.ancho,
             scroll=ft.ScrollMode.AUTO,
             )
 
@@ -87,34 +95,34 @@ class Columna_Etiquetas(ft.UserControl):
         self.contenedor_checkboxes = ft.Container(
             margin=10,
             padding=10,
-            width   = ancho,
+            width   = self.ancho,
             height  = 600,
             content = self.columna_checkboxes,
             alignment=ft.alignment.center,
             # bgcolor=ft.colors.AMBER,
             border_radius=20,           # redondeo
-            animate=ft.animation.Animation(200, "bounceOut"),
+            animate=ft.animation.Animation(
+                200, 
+                "bounceOut"
+                ),
             border = ft.border.all(5, self.color_borde)
             )
 
         elementos_etiquetado=[]
-        # elementos_etiquetado.append(texto)
-        elementos_etiquetado.append(fila_texto)
-        # elementos_etiquetado.append(self.columna_checkboxes)
-        # elementos_etiquetado.append(self.checkboxes_grafica)
-        elementos_etiquetado.append(self.contenedor_checkboxes)
-        elementos_etiquetado.append(fila_botones_checkboxes)
-        elementos_etiquetado.append(fila_boton_restablecer)
-        # elementos_etiquetado.append(ft.Divider(height=9, thickness=3))
 
-        columna_etiquetado = ft.Column(
+        elementos_etiquetado.append(self.fila_texto)
+        elementos_etiquetado.append(self.contenedor_checkboxes)
+        elementos_etiquetado.append(self.fila_botones_checkboxes)
+        elementos_etiquetado.append(self.fila_boton_restablecer)
+
+        super().__init__(
             wrap=False,
             spacing=10,       # espaciado horizontal entre contenedores
             run_spacing=50,     # espaciado vertical entre filas
             controls = elementos_etiquetado, 
-            width=ancho # anchura de columna   
+            width=self.ancho # anchura de columna   
         )
-        return columna_etiquetado
+
 
 
     def guardar_opciones(self, e):
@@ -171,28 +179,6 @@ class Columna_Etiquetas(ft.UserControl):
                 selector.value=True  
             self.checkboxes.append(selector) 
 
-        
-        # version grafica con divisores (COSMETICA)
-        # self.checkboxes_grafica = [] # lista para grafica
-        # self.checkboxess_grafica = self.checkboxes.deepcopy()
-        # grupo = self.etiquetas_dataset.grupo
-        # conjunto_grupos = set( self.etiquetas_dataset.grupo )
-        # lista_grupos = list(conjunto_grupos)
-
-        # # Se añaden separadores de grupo de ultimp a primero
-        # for i in range(len(grupo)-1, 0 , -1):
-        #     if grupo[i-1] != grupo[i]:
-        #         k = lista_grupos.pop()   
-        #         msg_separador = f"Grupo {k}" 
-        #         separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=self.color_separador )
-        #         self.checkboxes_grafica.insert(i, separador )
-
-        # if len(lista_grupos)>0:
-        #     k = lista_grupos.pop()  
-        #     msg_separador = f"Grupo {k}" 
-        #     separador = ft.Text(size=20 ,width=100, height=30,  value=msg_separador, color=self.color_separador )
-        #     self.checkboxes_grafica.insert(0, separador )
-
         # self.checkboxes_grafica= lista_checkboxes_grafica
         self.update()
 
@@ -208,7 +194,7 @@ class Columna_Etiquetas(ft.UserControl):
 
         self.etiquetas_imagen = etiquetas_imagen
         ruta  = self.etiquetas_imagen.ruta
-        valor = self.texto.value 
+        # valor = self.texto.value 
         self.texto.value =f"{mensaje}{ruta}"
         # self.texto.value = f"ruta: {ruta}"  
         # print("SET - imagen: ",self.etiquetas_imagen.tags)    
@@ -251,8 +237,8 @@ def tema_pagina(pagina: ft.Page):
 def pagina_etiquetado(page: ft.Page ):
 
     # Procesado de archivos
-    archivo_dataset = "../demo_etiquetas.txt"
-    archivo_salida = "../etiquetas_salida.png"      
+    archivo_dataset = "demo_etiquetas.txt"
+    archivo_salida = "etiquetas_salida.txt"      
     etiquetas_dataset = Etiquetas(archivo_dataset)
     etiquetas_imagen = Etiquetas(archivo_salida)
 
