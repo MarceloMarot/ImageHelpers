@@ -12,6 +12,7 @@ class Etiquetas:
         self.tags   = tags	    # lista etiquetas
         self.grupo  = grupo     # numeros de grupo de las etiquetas
         self.ruta   = ruta      # ruta archivo
+        self.data = dict()
         # lectura automatica
         try:
             # self.ruta = pathlib.Path(ruta).with_suffix('.txt')
@@ -25,14 +26,22 @@ class Etiquetas:
     def leer(self):
         renglones_listas = LecturaLista(self.ruta)
         # [self.tags, self.grupo]= FiltradoEtiquetas(renglones_listas)
-        diccionario = FiltradoEtiquetas(renglones_listas)
-        self.tags  = list( diccionario.keys()   )
-        self.grupo = list( diccionario.values() )
+        self.data = FiltradoEtiquetas(renglones_listas)
+        self.tags  = list( self.data.keys()   )
+        self.grupo = list( self.data.values() )
 
     # escritura en disco
-    def guardar(self):
-        texto = etiquetas2texto(self.tags)
-        return GuardadoTexto(self.ruta, texto)
+    def guardar(self, etiquetas= []):
+        # Si no hay lista de entrada se lee desde el objeto
+        if len(etiquetas) == 0:
+            texto = etiquetas2texto(self.tags)
+        else:
+            texto = etiquetas2texto(etiquetas)
+        # guardado, actualizacion del objeto e indicacion de exito
+        guardado_exitoso = GuardadoTexto(self.ruta, texto)
+        if guardado_exitoso:
+            self.leer()
+        return guardado_exitoso
 
 
 
@@ -80,7 +89,7 @@ def LecturaLista(entrada: str):
 # Descarta etiquetas repetidas
 # Asigna numero de grupo alos tags en base al  primer renglon de aparicion
 def FiltradoEtiquetas(lista_entrada: list):
-    # listas auxiliares para contener los datos
+    # diccionario auxiliar para contener los datos
     dicc_etiquetas = {}
     # conjunto auxiliar: se filtrarán las etiquetas repetidas 
     set_etiquetas=set([])
@@ -88,6 +97,7 @@ def FiltradoEtiquetas(lista_entrada: list):
     n = 0
 
     for i in range(0,len(lista_entrada)):
+        nuevo_tag = False
         # Eliminacion de renglones vacios
         if len(lista_entrada[i].strip()) > 0:
             etiquetas_renglon = lista_entrada[i].split(',')
