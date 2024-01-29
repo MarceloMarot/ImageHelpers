@@ -40,7 +40,6 @@ class BotonBiestable(ft.ElevatedButton):
 
 class BotonGrupo(ft.IconButton):
     def __init__(self):
-        # self.__valor = False
         self.estado = False
         super().__init__(
             icon=ft.icons.SELECT_ALL_ROUNDED ,
@@ -123,7 +122,6 @@ class FilasBotones(ft.Column):
         self.__ancho = valor
         for i in range(self.__numero_grupos):
             self.__filas_botones[i].width = self.__ancho
-            # self.update()
        
 
     def leer_dataset(self, ruta: str):
@@ -134,9 +132,7 @@ class FilasBotones(ft.Column):
         data = self.dataset.data
         # conteo grupos de etiquetas
         grupos = list(set(grupo))
-        # n = len(grupos)
         self.__numero_grupos = len(grupos)
-        # m = len(self.lista_colores)  
         self.__numero_colores = len(self.lista_colores)  
         # maquetado
         self.__filas_botones = []
@@ -166,9 +162,6 @@ class FilasBotones(ft.Column):
             b.color_true = self.lista_colores[i % self.__numero_colores ]
             self.__botones_grupo[i].bgcolor = self.lista_colores[i % self.__numero_colores ]
         self.controls = self.__filas_botones
-        # self.controls.append(ft.Divider())
-        # self.controls.append(ft.Row([self.boton_todos, self.boton_nada]))
-        # self.controls.append(ft.Row([self.boton_descartar, self.boton_guardar]))  
         self.update()
 
 
@@ -212,16 +205,12 @@ class FilasBotones(ft.Column):
                 etiquetas.append(etiqueta)
         # relectura de etiquetas para prevenir relecturas inutiles
         self.etiquetas.leer()    
-        # print("postlectura: ", self.etiquetas_imagen.ruta)
         if set(self.etiquetas.tags) != set(etiquetas): 
-            # self.texto.value = "Cambios guardados"
             print("cambios guardados")
             # guardado de etiquetas y reporte
             if self.etiquetas.guardar(etiquetas)==False:
-                # self.texto.value = " Error: guardado fallido"
                 print("guardado fallido")
         else:
-            # self.texto.value = "Sin cambios"
             print("sin cambios")
         self.update()
 
@@ -229,7 +218,6 @@ class FilasBotones(ft.Column):
     def conmutar_grupo(self, e: ft.ControlEvent ):
         boton_grupo = e.control
         grupo = boton_grupo.data
-
         # Se corrige el estado del grupo de modo que el click afecte al mayor numero de etiquetas posible
         # (mejora la respuesta al usuario)
         activados = 0
@@ -239,18 +227,13 @@ class FilasBotones(ft.Column):
                 activados += 1
             else:
                 desactivados += 1
-
         boton_grupo.estado = True if activados >= desactivados else False
-
-
         # cambio de estado lógico de todo el grupo
         boton_grupo.estado = True if boton_grupo.estado == False else False 
         for boton in self.__filas_botones[grupo].controls:
             boton.estado = boton_grupo.estado
-
         # actualizacion
         self.__filas_botones[grupo].update()
-
 
 
 class EtiquetadorBotones(ft.Column):
@@ -264,8 +247,9 @@ class EtiquetadorBotones(ft.Column):
             run_spacing=50,     # espaciado vertical entre filas
             scroll=ft.ScrollMode.HIDDEN, 
             )
-        self.controls.append(ft.Divider())
-
+        self.divisor = ft.Divider()
+        # self.divisor = ft.Divider(height=10)
+        self.controls.append(self.divisor)
         self.__f1 =ft.Row([
             filas_botones.boton_todos, filas_botones.boton_nada
             ],
@@ -307,18 +291,16 @@ def main(page: ft.Page):
     archivo_dataset = "demo_etiquetas.png"
     archivo_etiquetas = "etiquetas_salida.jpg"
 
-    filas = FilasBotones()
-    etiquetador = EtiquetadorBotones(filas)
+    # componente etiquetador
+    filas_etiquetas = FilasBotones()
+    etiquetador = EtiquetadorBotones(filas_etiquetas)
     page.add( etiquetador)
 
-    filas.height = 700
-    filas.ancho         = 500
+    filas_etiquetas.height = 700
+    filas_etiquetas.ancho         = 500
     etiquetador.ancho   = 500
-    filas.leer_dataset(archivo_dataset)
-    filas.leer_etiquetas(archivo_etiquetas)
-
-    page.add(etiquetador)
-
+    filas_etiquetas.leer_dataset(archivo_dataset)
+    filas_etiquetas.leer_etiquetas(archivo_etiquetas)
 
     page.title = "Botones etiquetado"
     page.window_height      = 900
@@ -327,4 +309,6 @@ def main(page: ft.Page):
     page.update()
 
 
-ft.app(target=main)
+
+if __name__ == "__main__":
+    ft.app(target=main)

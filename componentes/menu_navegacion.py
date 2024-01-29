@@ -6,7 +6,8 @@ import pathlib
 import flet as ft
 from functools import partial       # usado para los handlers
 
-from . contenedor import Contenedor, Contenedor_Imagen, Estilo_Contenedor
+# from . contenedor import Contenedor, Contenedor_Imagen, Estilo_Contenedor
+from . galeria_imagenes import  Contenedor_Imagen, Estilo_Contenedor, leer_imagenes, Imagen, rutas_imagenes_picsum
 
 
 
@@ -15,11 +16,12 @@ class MenuNavegacion(ft.Column):
 
     def __init__(self):
         # inicializacion
-        self.indice = 0
-        self.maximo = 0
+        self.__indice = 0
+        self.__maximo = 0
         self.incremento = 10
         self.ancho_boton = 200
-        self.rutas_imagen = []
+        # self.rutas_imagen = []
+        self.__imagenes = []
         self.funcion_botones = lambda _ : nada(_)
         self.estilo_contenedor = Estilo_Contenedor(        
             border_radius = 0, 
@@ -28,15 +30,28 @@ class MenuNavegacion(ft.Column):
             )
         self.titulo = ft.Text(
             value="", 
-            size=30,
-            height=50, 
+            size=20,
+            height=30, 
             weight=ft.FontWeight.BOLD,
             text_align=ft.TextAlign.CENTER,
             )
         self.fila_titulo = ft.Row(
-            # expand = True,
             controls = [self.titulo],
             alignment=ft.MainAxisAlignment.CENTER,
+            height=self.titulo.height,
+        )
+        self.subtitulo = ft.Text(
+            value="", 
+            size=15,
+            height=40, 
+            weight=ft.FontWeight.NORMAL,
+            text_align=ft.TextAlign.CENTER,
+            )
+        self.fila_subtitulo = ft.Row(
+            controls = [self.subtitulo],
+            alignment=ft.MainAxisAlignment.CENTER,
+            height=self.subtitulo.height,
+            wrap=True,
         )
         # Se invoca un contenedor hijo
         self.contenedor = Contenedor_Imagen()
@@ -77,77 +92,91 @@ class MenuNavegacion(ft.Column):
             alignment=ft.MainAxisAlignment.CENTER,
             # width=self.contenedor.width
         )
-
-        # self.columna_navegacion = ft.Column(
         super().__init__(
             wrap=False,
             # spacing=10,       # espaciado horizontal entre contenedores
-            run_spacing=50,     # espaciado vertical entre filas
+            run_spacing=30,     # espaciado vertical entre filas
             controls = [ 
                 self.fila_titulo,
                 self.fila_contenedor, 
+                self.fila_subtitulo,
                 self.fila_botones_navegacion_1, 
                 self.fila_botones_navegacion_2
                 ] 
         )
-            # self.columna_navegacion = ft.Column(
-        # self.wrap=False
-        #     # spacing=10,       # espaciado horizontal entre contenedores
-        # self.run_spacing=50     # espaciado vertical entre filas
-        # self.controls = [ 
-        #         fila_titulo,
-        #         fila_contenedor, 
-        #         fila_botones_navegacion_1, 
-        #         fila_botones_navegacion_2
-        #         ] 
-        # )
-        # return self.columna_navegacion
 
 
     # Metodo actualizacion
     def cargar_imagen(self):
-        imagen = self.rutas_imagen[self.indice]
-        nombre_imagen = pathlib.Path(imagen).name
-        radio = self.contenedor.border_radius 
-        # radio = 0
-        self.contenedor.imagen(imagen, radio)
-
-        self.titulo.value = f"{self.indice} - {nombre_imagen}"
+        """Este metodo lee la imagen correspondiente al indice actual."""
+        # visualizar imagen con el indice actual
+        imagen = self.__imagenes[self.__indice]
+        self.contenedor.content = imagen
+        nombre_imagen = pathlib.Path(imagen.src).name
+        ruta_imagen = imagen.src
+        self.titulo.value = f"{self.__indice + 1 } - {nombre_imagen}"
+        self.subtitulo.value = f"Ruta archivo: {ruta_imagen}"
+        # carga de estilo de contenedor y actualizacion visual
         self.estilo()
         self.update()
 
-    def estilo(self):
+
+    # def estilo(self):
+    def estilo(self, estilo=None):
+        """Carga o restablecimiento de aspecto para el contenedor de imagen."""
+        if estilo != None:
+            self.estilo_contenedor = estilo
         self.contenedor.estilo(self.estilo_contenedor)
         self.fila_titulo.width=self.contenedor.width
+        self.fila_subtitulo.width=self.contenedor.width
         self.fila_botones_navegacion_1.width=self.contenedor.width
         self.fila_botones_navegacion_2.width=self.contenedor.width
         self.fila_contenedor.width=self.contenedor.width
         self.update()
 
 
+    @property 
+    def indice(self):
+        return self.__indice   
+
+    @indice.setter
+    def indice(self, valor: int):
+        if valor >= 0 and valor < self.__maximo:
+            self.__indice = valor 
+        elif valor >= self.__maximo:
+            self.__indice = self.__maximo
+        else:
+            self.__indice = 0
+        self.cargar_imagen()
+        self.update()
+
+
     # def incrementar(self, numero):
     def cambiar_indice(self, incremento, _):
-        numero = self.indice + incremento
-        previo = self.indice 
+        """Refresca el indice de imagen actual."""
+        numero = self.__indice + incremento
+        previo = self.__indice 
         if numero <0:
-            self.indice = 0
-        elif numero >= self.maximo:
-            self.indice = self.maximo -1
+            self.__indice = 0
+        elif numero >= self.__maximo:
+            self.__indice = self.__maximo -1
         else:
-            self.indice = numero
+            self.__indice = numero
         # se actualiza solo si hubo cambio de indice          
-        if previo != self.indice:    
+        if previo != self.__indice:    
             self.cargar_imagen()
-            self.funcion_botones(self.indice)
+            self.funcion_botones(self.__indice)
 
-
-    def imagenes(self, rutas: list):
-        self.rutas_imagen = rutas
-        self.maximo= len(rutas)
     
+    def imagenes(self, imagenes: list[ft.Image]):
+        """Asigna imagenes (ft.Image) ya creadas al componente."""
+        self.__imagenes = imagenes
+        self.__maximo = len(imagenes)
+        self.cargar_imagen()
+
 
     def eventos(self, click = None, hover = None, longpress = None ):
-        # for contenedor in self.controls:
+        """Eventos para el contenedor de imagen. Pueden ser 'None'"""
         self.contenedor.eventos(click, hover, longpress)
 
 # funcion auxiliar con formato para los botones del menu
@@ -163,12 +192,9 @@ def pagina_etiquetado(page: ft.Page ):
 
     numero_imagenes = 20
 
-    dimensiones = 768
+    rutas_imagen = rutas_imagenes_picsum(numero_imagenes, 200) 
 
-    rutas_imagen = []
-    for i in range(numero_imagenes):
-        rutas_imagen.append(f"https://picsum.photos/400/400?{i}")
-
+    imagenes_picsum = leer_imagenes(rutas_imagen, ancho=768, alto=768, redondeo=50 )
 
     # estilos para el contenedor 
     estilo_defecto = Estilo_Contenedor(
@@ -196,38 +222,30 @@ def pagina_etiquetado(page: ft.Page ):
         )
 
 
-    def funcion_click(cont, e):
+    def funcion_click(e : ft.ControlEvent):
+        cont = e.control    
         cont.estilo(estilo_click)
         cont.update()
 
-    def funcion_hover(cont, e):
+    def funcion_hover( e: ft.ControlEvent):
+        cont = e.control
         cont.estilo(estilo_hover)
         cont.update()
 
-    def funcion_longpress(cont, e):        
+    def funcion_longpress( e: ft.ControlEvent):   
+        cont = e.control     
         cont.estilo(estilo_defecto)
         cont.update()
 
 
     menu = MenuNavegacion()
     page.add(menu)
-    menu.imagenes(rutas_imagen)
-    # menu.contenedor.setup(dimensiones, dimensiones)
-
-    # menu.contenedor.estilo(estilo_defecto)
+    menu.imagenes(imagenes_picsum)
     menu.estilo_contenedor = estilo_defecto
-
-    # menu.contenedor.click(funcion_click)
-    # menu.contenedor.hover(funcion_hover)
-    # menu.contenedor.longpress(funcion_longpress)
-
     menu.eventos(funcion_click, funcion_hover, funcion_longpress)
-    menu.contenedor.imagen(
-        f"https://picsum.photos/400/400?0",
-        100
-        )
+
     menu.estilo()
-    menu.cargar_imagen()
+    # menu.cargar_imagen()
 
     # Estilos 
     # Tema_Pagina(page)
