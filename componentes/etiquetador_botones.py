@@ -56,6 +56,7 @@ class FilasBotones(ft.Column):
         self.__numero_grupos = 0
         self.__numero_colores = 0
         self.__ancho = 600
+        self.__alto = 400
         self.lista_colores = [
             ft.colors.RED_800,
             ft.colors.ORANGE_800, 
@@ -74,7 +75,7 @@ class FilasBotones(ft.Column):
             run_spacing=50,     # espaciado vertical entre filas
             controls =  [], 
             width= self.__ancho, # anchura de columna   
-            height=400,
+            height=self.__alto,
             scroll=ft.ScrollMode.AUTO,
             )
 
@@ -199,10 +200,10 @@ class EtiquetadorBotones(ft.Column):
         super().__init__(
             controls = [],
             wrap=False,
-            spacing=10,       # espaciado horizontal 
-            run_spacing=50,     # espaciado vertical entre filas
+            # spacing=10,       # espaciado horizontal 
+            # run_spacing=50,     # espaciado vertical entre filas
             )
-        self.__divisor = ft.Divider()
+        self.__divisor = ft.Divider(height = 10)
         self.__f1 =ft.Row(
             controls= [ self.__boton_todos, self.__boton_nada ],
             width = self.__ancho, 
@@ -271,8 +272,10 @@ class EtiquetadorBotones(ft.Column):
     @alto.setter
     def alto(self, valor):
         self.height = valor
-        valor = valor -  self.__altura_filas * 4
-        self.__filas_botones.height = valor
+        resta = self.__altura_filas * 3 
+        resta = resta + int(self.__divisor.height) *3
+        self.__filas_botones.height = valor - resta
+        self.__filas_botones.update()
 
     def leer_dataset(self, etiquetas: Etiquetas):
         self.__filas_botones.leer_dataset( etiquetas.ruta )
@@ -302,8 +305,8 @@ def main(page: ft.Page):
     etiquetador.leer_etiquetas( etiquetas )
 
     page.title = "Botones etiquetado"
-    page.window_height      = 900
-    page.window_min_height  = 900
+    page.window_height      = 800
+    page.window_min_height  = 800
     page.window_width       = 650
     page.update()
 
