@@ -88,8 +88,6 @@ def main(pagina: ft.Page):
     ############# COMPONENTES ######################## 
 
     # etiquetas seleccionables
-    # filas_etiquetas     = FilasBotones()
-    # etiquetador_botones = EtiquetadorBotones(filas_etiquetas)
     etiquetador_botones = EtiquetadorBotones()
     # componente galeria
     galeria = Galeria()
@@ -105,6 +103,7 @@ def main(pagina: ft.Page):
         )
 
     # pestaña de etiquetado y navegacion de imagenes
+    altura_tab_etiquetado = 800
     fila_etiquetado_navegacion = ft.Row(
         controls = [ 
             menu_seleccion ,
@@ -112,8 +111,7 @@ def main(pagina: ft.Page):
             etiquetador_botones
             ], 
         spacing = 10, 
-        # width   = 1000, 
-        # expand  = True
+        height = altura_tab_etiquetado
     ) 
 
     tab_etiquetado = ft.Tab(
@@ -148,23 +146,14 @@ def main(pagina: ft.Page):
         """Esta imagen permite elegir una imagen desde la galeria y pasarla al selector de imagenes al tiempo que carga las etiquetas de archivo."""
         contenedor = e.control
         key = contenedor.content.key
-        # actualizacion de imagen seleccionada 
-        # menu_seleccion.indice = int(key)
-        # actualizacion del archivo de etiquetado
-        # lectura de nombre archivo
-        # ruta = contenedor.content.src
-        # filas_etiquetas.leer_etiquetas(ruta)
-        # imagen = contenedor.content
-        # print(imagen)
-        # print(imagen.key)
         i = int(key) 
+        # actualizacion de imagen seleccionada y etiquetado
         etiquetador_botones.leer_etiquetas(imagenes_etiquetadas[i])
         menu_seleccion.indice = i
         #cambio de pestaña
         pestanias.selected_index=1
         # actualizacion grafica
         pagina.update()
-        # menu_seleccion.cargar_imagen()
 
 
     # Funcion para el click sobre la imagen seleccionada
@@ -185,8 +174,6 @@ def main(pagina: ft.Page):
         """ Esta funcion controla el cambio de imagen en el selector"""
         # (el cambio de imagen está integrado al componente)
         # actualizacion etiquetas
-        # ruta = imagenes_etiquetadas[indice].src
-        # filas_etiquetas.leer_etiquetas(ruta)
         etiquetador_botones.leer_etiquetas(imagenes_etiquetadas[indice])
         # actualizacion pagina
         tab_etiquetado.update()
@@ -195,13 +182,14 @@ def main(pagina: ft.Page):
     ############## CONFIGURACIONES ################                                     FIX
 
     # Objeto seleccion imagen
-    # menu_seleccion.estilo_contenedor = menu_estilo_defecto
     menu_seleccion.imagenes( imagenes_etiquetadas )
     menu_seleccion.estilo(menu_estilo_defecto)
+    menu_seleccion.indice = 0
     menu_seleccion.cargar_imagen()
-    menu_seleccion.eventos(click=click_imagen_seleccion)
-    menu_seleccion.funcion_botones = lambda _ : click_botones_seleccion(_)
-    # menu_seleccion.funcion_botones = click_botones_seleccion()
+    menu_seleccion.eventos(
+        click=click_imagen_seleccion,
+        funcion_botones = lambda _ : click_botones_seleccion(_)
+        )
 
     # Objeto galeria
     galeria.cargar_imagenes( imagenes_galeria )
@@ -209,8 +197,6 @@ def main(pagina: ft.Page):
     galeria.eventos(click = click_imagen_galeria)
 
     # Objeto etiquetador
-    # filas_etiquetas.leer_dataset(archivo_dataset)
-    # filas_etiquetas.leer_etiquetas(rutas_imagen[0])
     dataset = Etiquetas(archivo_dataset) 
     etiquetador_botones.leer_dataset( dataset )
     etiquetador_botones.leer_etiquetas(imagenes_etiquetadas[0])
@@ -219,16 +205,20 @@ def main(pagina: ft.Page):
 
     # galeria.ancho =1200
 
-    menu_seleccion.alto  = 800
+    menu_seleccion.alto  = altura_tab_etiquetado
     menu_seleccion.ancho = 600
+    menu_seleccion.expand = True
+    menu_seleccion.update()
 
-    etiquetador_botones.alto  = 800
+    etiquetador_botones.alto  = altura_tab_etiquetado
     etiquetador_botones.ancho = 500
+    etiquetador_botones.expand = True
+    etiquetador_botones.update()
 
     # Propiedades pagina 
     pagina.title = "Etiquetador Imágenes"
-    pagina.window_width  = 1200
-    pagina.window_height = 1000
+    pagina.window_width  = 1500
+    pagina.window_height = 900
     pagina.window_maximizable=True
     pagina.window_minimizable=True
     pagina.window_maximized=False

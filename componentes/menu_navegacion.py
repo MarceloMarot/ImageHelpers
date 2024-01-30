@@ -74,24 +74,25 @@ class MenuNavegacion(ft.Column):
         self.__botones_1 =[self.__boton_prev     , self.__boton_next     ]
         self.__botones_2 =[self.__boton_prev_fast, self.__boton_next_fast]
 
+
+        self.__altura_filas_botones = 40
         self.__fila_botones_navegacion_1 = ft.Row(
             # wrap=False,
             spacing=50,       # espaciado horizontal entre contenedores
             # run_spacing=50,     # espaciado vertical entre filas
             controls = self.__botones_1,
             alignment=ft.MainAxisAlignment.CENTER,
-            # width=self.contenedor.width
+            height = self.__altura_filas_botones,
         )
-
         self.__fila_botones_navegacion_2 = ft.Row(
             # wrap=False,
             spacing=50,       # espaciado horizontal entre contenedores
             # run_spacing=50,     # espaciado vertical entre filas
             controls = self.__botones_2,
             alignment=ft.MainAxisAlignment.CENTER,
-            # width=self.contenedor.width
+            height = self.__altura_filas_botones,
         )
-        self.__divisor = ft.Divider()
+        self.__divisor = ft.Divider(height = 10)
         super().__init__(
             wrap=False,
             # spacing=10,       # espaciado horizontal entre contenedores
