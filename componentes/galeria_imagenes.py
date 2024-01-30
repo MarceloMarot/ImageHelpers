@@ -136,6 +136,24 @@ class Galeria(ft.Row):
         for contenedor in self.controls:
             contenedor.eventos(click, hover, longpress)
 
+    @property
+    def alto(self):
+        return self.height
+
+    @alto.setter
+    def alto(self, valor):
+        self.height = valor
+
+    @property
+    def ancho(self):
+        """Lee el ancho maximo de galeria"""
+        return self.width
+
+    @ancho.setter
+    def ancho(self, valor):
+        """Establece el ancho maximo de galeria"""
+        self.width = valor
+
 
 class Imagen(ft.Image):
     """Esta clase auxiliar permite inicializar imagenes de forma simplificada."""""
@@ -247,6 +265,7 @@ def pagina_galeria(page: ft.Page):
         )
 
 
+
     def scroll_to_key(n, e):
         galeria.scroll_to(key=str(n), duration=1000)
         print(f"Imagen Nº:{n}")
@@ -278,11 +297,15 @@ def pagina_galeria(page: ft.Page):
 
     page.add(ft.Row([boton_inicio, boton_medio, boton_fin]))
 
+    # dimensiones componente
+    # galeria.ancho = 1400      # ancho maximo
+    # galeria.alto = 600
+    galeria.update()
 
     # Elementos generales de la pagina
     page.title = "Galería Imágenes"
-    page.window_width=1200
-    page.window_height=900
+    page.window_width=1500
+    page.window_height=800
     page.theme_mode = ft.ThemeMode.LIGHT
     # page.theme_mode = ft.ThemeMode.DARK
 

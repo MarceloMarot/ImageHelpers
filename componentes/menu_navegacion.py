@@ -20,7 +20,6 @@ class MenuNavegacion(ft.Column):
         self.__maximo = 0
         self.incremento = 10
         self.ancho_boton = 200
-        # self.rutas_imagen = []
         self.__imagenes = []
         self.funcion_botones = lambda _ : nada(_)
         self.estilo_contenedor = Estilo_Contenedor(        
@@ -28,35 +27,35 @@ class MenuNavegacion(ft.Column):
             bgcolor = ft.colors.WHITE,
             border=ft.border.all(0, ft.colors.WHITE)
             )
-        self.titulo = ft.Text(
+        self.__titulo= ft.Text(
             value="", 
             size=20,
             height=30, 
             weight=ft.FontWeight.BOLD,
             text_align=ft.TextAlign.CENTER,
             )
-        self.fila_titulo = ft.Row(
-            controls = [self.titulo],
+        self.__fila_titulo = ft.Row(
+            controls = [self.__titulo],
             alignment=ft.MainAxisAlignment.CENTER,
-            height=self.titulo.height,
+            height=self.__titulo.height,
         )
-        self.subtitulo = ft.Text(
+        self.__subtitulo = ft.Text(
             value="", 
             size=15,
             height=40, 
             weight=ft.FontWeight.NORMAL,
             text_align=ft.TextAlign.CENTER,
             )
-        self.fila_subtitulo = ft.Row(
-            controls = [self.subtitulo],
+        self.__fila_subtitulo = ft.Row(
+            controls = [self.__subtitulo],
             alignment=ft.MainAxisAlignment.CENTER,
-            height=self.subtitulo.height,
+            height=self.__subtitulo.height,
             wrap=True,
         )
         # Se invoca un contenedor hijo
-        self.contenedor = Contenedor_Imagen()
-        self.fila_contenedor = ft.Row(
-            controls = [self.contenedor],
+        self.__contenedor = Contenedor_Imagen()
+        self.__fila_contenedor = ft.Row(
+            controls = [self.__contenedor],
             alignment=ft.MainAxisAlignment.CENTER,
         )
 
@@ -67,41 +66,44 @@ class MenuNavegacion(ft.Column):
 
 
         # botones de navegacion
-        self.boton_next      = ft.ElevatedButton(text="Siguiente",     on_click=adelantar ,width=self.ancho_boton)
-        self.boton_prev      = ft.ElevatedButton(text="Anterior" ,     on_click=retroceder ,width=self.ancho_boton)
-        self.boton_next_fast = ft.ElevatedButton(text=f"Siguiente + {self.incremento}", on_click=adelantar_fast ,width=self.ancho_boton)
-        self.boton_prev_fast = ft.ElevatedButton(text=f"Anterior  - {self.incremento}", on_click=retroceder_fast ,width=self.ancho_boton)
+        self.__boton_next      = ft.ElevatedButton(text="Siguiente",     on_click=adelantar ,width=self.ancho_boton)
+        self.__boton_prev      = ft.ElevatedButton(text="Anterior" ,     on_click=retroceder ,width=self.ancho_boton)
+        self.__boton_next_fast = ft.ElevatedButton(text=f"Siguiente + {self.incremento}", on_click=adelantar_fast ,width=self.ancho_boton)
+        self.__boton_prev_fast = ft.ElevatedButton(text=f"Anterior  - {self.incremento}", on_click=retroceder_fast ,width=self.ancho_boton)
 
-        self.lista_botones_navegacion_1 =[self.boton_prev     , self.boton_next     ]
-        self.lista_botones_navegacion_2 =[self.boton_prev_fast, self.boton_next_fast]
+        self.__botones_1 =[self.__boton_prev     , self.__boton_next     ]
+        self.__botones_2 =[self.__boton_prev_fast, self.__boton_next_fast]
 
-        self.fila_botones_navegacion_1 = ft.Row(
+        self.__fila_botones_navegacion_1 = ft.Row(
             # wrap=False,
             spacing=50,       # espaciado horizontal entre contenedores
             # run_spacing=50,     # espaciado vertical entre filas
-            controls = self.lista_botones_navegacion_1,
+            controls = self.__botones_1,
             alignment=ft.MainAxisAlignment.CENTER,
             # width=self.contenedor.width
         )
 
-        self.fila_botones_navegacion_2 = ft.Row(
+        self.__fila_botones_navegacion_2 = ft.Row(
             # wrap=False,
             spacing=50,       # espaciado horizontal entre contenedores
             # run_spacing=50,     # espaciado vertical entre filas
-            controls = self.lista_botones_navegacion_2,
+            controls = self.__botones_2,
             alignment=ft.MainAxisAlignment.CENTER,
             # width=self.contenedor.width
         )
+        self.__divisor = ft.Divider()
         super().__init__(
             wrap=False,
             # spacing=10,       # espaciado horizontal entre contenedores
-            run_spacing=30,     # espaciado vertical entre filas
+            # run_spacing=30,     # espaciado vertical entre filas
             controls = [ 
-                self.fila_titulo,
-                self.fila_contenedor, 
-                self.fila_subtitulo,
-                self.fila_botones_navegacion_1, 
-                self.fila_botones_navegacion_2
+                self.__fila_titulo,
+                self.__fila_contenedor, 
+                self.__fila_subtitulo,
+                self.__divisor,
+                self.__fila_botones_navegacion_1, 
+                self.__fila_botones_navegacion_2,
+                self.__divisor,
                 ] 
         )
 
@@ -111,11 +113,11 @@ class MenuNavegacion(ft.Column):
         """Este metodo lee la imagen correspondiente al indice actual."""
         # visualizar imagen con el indice actual
         imagen = self.__imagenes[self.__indice]
-        self.contenedor.content = imagen
+        self.__contenedor.content = imagen
         nombre_imagen = pathlib.Path(imagen.src).name
         ruta_imagen = imagen.src
-        self.titulo.value = f"{self.__indice + 1 } - {nombre_imagen}"
-        self.subtitulo.value = f"Ruta archivo: {ruta_imagen}"
+        self.__titulo.value = f"{self.__indice + 1 } - {nombre_imagen}"
+        self.__subtitulo.value = f"Ruta archivo: {ruta_imagen}"
         # carga de estilo de contenedor y actualizacion visual
         self.estilo()
         self.update()
@@ -126,13 +128,34 @@ class MenuNavegacion(ft.Column):
         """Carga o restablecimiento de aspecto para el contenedor de imagen."""
         if estilo != None:
             self.estilo_contenedor = estilo
-        self.contenedor.estilo(self.estilo_contenedor)
-        self.fila_titulo.width=self.contenedor.width
-        self.fila_subtitulo.width=self.contenedor.width
-        self.fila_botones_navegacion_1.width=self.contenedor.width
-        self.fila_botones_navegacion_2.width=self.contenedor.width
-        self.fila_contenedor.width=self.contenedor.width
+        self.__contenedor.estilo(self.estilo_contenedor)
+        # self.__fila_titulo.width=self.__contenedor.width
+        # self.__fila_subtitulo.width=self.__contenedor.width
+        # self.__fila_botones_navegacion_1.width=self.__contenedor.width
+        # self.__fila_botones_navegacion_2.width=self.__contenedor.width
+        # self.__fila_contenedor.width=self.__contenedor.width
         self.update()
+
+    @property
+    def alto(self):
+        return self.height
+
+    @alto.setter
+    def alto(self, valor):
+        self.height = valor
+
+    @property
+    def ancho(self):
+        return self.width
+
+    @ancho.setter
+    def ancho(self, valor):
+        self.width = valor
+        self.__fila_titulo.width = valor
+        self.__fila_subtitulo.width = valor
+        self.__fila_botones_navegacion_1.width = valor
+        self.__fila_botones_navegacion_2.width = valor
+        self.__fila_contenedor.width = valor 
 
 
     @property 
@@ -175,9 +198,12 @@ class MenuNavegacion(ft.Column):
         self.cargar_imagen()
 
 
-    def eventos(self, click = None, hover = None, longpress = None ):
+    def eventos(self, click = None, hover = None, longpress = None, funcion_botones = None ):
         """Eventos para el contenedor de imagen. Pueden ser 'None'"""
-        self.contenedor.eventos(click, hover, longpress)
+        self.__contenedor.eventos(click, hover, longpress)
+        if funcion_botones != None:
+            self.funcion_botones = funcion_botones
+            
 
 # funcion auxiliar con formato para los botones del menu
 def nada( indice ):
@@ -191,31 +217,32 @@ def nada( indice ):
 def pagina_etiquetado(page: ft.Page ):
 
     numero_imagenes = 20
-
     rutas_imagen = rutas_imagenes_picsum(numero_imagenes, 200) 
 
-    imagenes_picsum = leer_imagenes(rutas_imagen, ancho=768, alto=768, redondeo=50 )
+    dimension = 512
+    imagenes_picsum = leer_imagenes(rutas_imagen, ancho=dimension, alto=dimension, redondeo=50 )
+
 
     # estilos para el contenedor 
     estilo_defecto = Estilo_Contenedor(
-        width = 768,
-        height = 768,
+        width = dimension,
+        height = dimension,
         border_radius = 50, 
         bgcolor = ft.colors.BLUE_400,
         border=ft.border.all(20, ft.colors.INDIGO_100)
         )
 
     estilo_click = Estilo_Contenedor(
-        width = 768,
-        height = 768,
+        width = dimension,
+        height = dimension,
         border_radius = 5,
         bgcolor = ft.colors.RED_900,
         border = ft.border.all(20, ft.colors.PURPLE_900),
         )   
 
     estilo_hover = Estilo_Contenedor(
-        width = 768,
-        height = 768,
+        width = dimension,
+        height = dimension,
         border_radius = 50, 
         bgcolor = ft.colors.AMBER_400,
         border=ft.border.all(20, ft.colors.ORANGE_600),
@@ -241,14 +268,13 @@ def pagina_etiquetado(page: ft.Page ):
     menu = MenuNavegacion()
     page.add(menu)
     menu.imagenes(imagenes_picsum)
-    menu.estilo_contenedor = estilo_defecto
+    # menu.estilo_contenedor = estilo_defecto
     menu.eventos(funcion_click, funcion_hover, funcion_longpress)
 
-    menu.estilo()
-    # menu.cargar_imagen()
+    menu.estilo(estilo_defecto)
 
-    # Estilos 
-    # Tema_Pagina(page)
+    menu.alto = 800
+    menu.ancho = 800
 
     page.title = "Navegación Imágenes"
     page.window_width=1200
@@ -256,34 +282,7 @@ def pagina_etiquetado(page: ft.Page ):
     page.window_maximizable=True
     page.window_minimizable=True
     page.window_maximized=False
-
-    # print("Listo")
     page.update()
-
-
-
-# # Tema aplicado globalmente
-# def Tema_Pagina(pagina: ft.Page):
-#     pagina.theme = ft.Theme(
-#         scrollbar_theme=ft.ScrollbarTheme(
-#             track_color={
-#                 ft.MaterialState.HOVERED: ft.colors.AMBER,
-#                 ft.MaterialState.DEFAULT: ft.colors.TRANSPARENT,
-#             },
-#             track_visibility=True,
-#             track_border_color=ft.colors.BLUE,
-#             thumb_visibility=True,
-#             thumb_color={
-#                 ft.MaterialState.HOVERED: ft.colors.RED,
-#                 ft.MaterialState.DEFAULT: ft.colors.GREY_300,
-#             },
-#             thickness=30,
-#             radius=15,
-#             main_axis_margin=5,
-#             cross_axis_margin=10,
-#         )
-#     )
-
 
 
 # Llamado al programa y su frontend

@@ -1,6 +1,4 @@
-
 import flet as ft
-
 from componentes.procesar_etiquetas import  Etiquetas
 
 
@@ -13,7 +11,7 @@ class BotonBiestable(ft.ElevatedButton):
             text = texto,
             bgcolor= self.color_false,
             on_click=self.click
-        )
+            )
 
     # implementacion del biestable
     def click(self,e: ft.ControlEvent):
@@ -70,48 +68,15 @@ class FilasBotones(ft.Column):
             ft.colors.PURPLE_800,      
             ft.colors.BROWN_800,
             ]
-        self.boton_guardar = ft.ElevatedButton(
-            text="guardar cambios",
-            # width =500,
-            width = 200,
-            bgcolor= ft.colors.RED_900,
-            color= ft.colors.WHITE,
-            # on_click= funcion_guardar
-            on_click= self.guardar_etiquetas
-            )
-
-        self.boton_todos = ft.ElevatedButton(
-            text="todas",
-            width = 200,
-            bgcolor= ft.colors.INDIGO_400,
-            color= ft.colors.WHITE,
-            on_click= self.todas_etiquetas
-            )
-
-        self.boton_nada = ft.ElevatedButton(
-            text="ninguna",
-            width = 200,
-            bgcolor= ft.colors.INDIGO_400,
-            color= ft.colors.WHITE,
-            on_click= self.ninguna_etiqueta
-            )
-
-        self.boton_descartar = ft.ElevatedButton(
-            text="descartar cambios",
-            width = 200,
-            bgcolor= ft.colors.GREEN_800,
-            color= ft.colors.WHITE,
-            on_click= self.restablecer_etiquetas
-            )
         super().__init__(
             wrap=False,
             spacing=10,       # espaciado horizontal 
             run_spacing=50,     # espaciado vertical entre filas
             controls =  [], 
             width= self.__ancho, # anchura de columna   
-            # height=500,
+            height=400,
             scroll=ft.ScrollMode.AUTO,
-        )
+            )
 
     @property
     def ancho(self):
@@ -123,7 +88,6 @@ class FilasBotones(ft.Column):
         for i in range(self.__numero_grupos):
             self.__filas_botones[i].width = self.__ancho
        
-
     def leer_dataset(self, ruta: str):
         self.dataset = Etiquetas(ruta) 
         self.dataset.leer()
@@ -164,12 +128,10 @@ class FilasBotones(ft.Column):
         self.controls = self.__filas_botones
         self.update()
 
-
     def leer_etiquetas(self, ruta: str):
         self.etiquetas = Etiquetas(ruta) 
         self.etiquetas.leer()
         self.actualizar_botones()
-
 
     def actualizar_botones(self):
         for boton in self.botones_etiquetas:
@@ -179,41 +141,6 @@ class FilasBotones(ft.Column):
             else:
                 boton.estado = False
         self.update()
-
-    def todas_etiquetas(self, e):
-        for boton in self.botones_etiquetas:
-            boton.estado = True
-
-
-    def ninguna_etiqueta(self,e):
-        for boton in self.botones_etiquetas:
-            boton.estado = False
-
-
-    def restablecer_etiquetas(self, e):
-        self.etiquetas.leer()
-        self.actualizar_botones()
-
-
-    def guardar_etiquetas(self, e):
-        etiquetas=[]
-
-        for boton in self.botones_etiquetas:
-            etiqueta = boton.text
-            valor    = boton.estado
-            if valor:
-                etiquetas.append(etiqueta)
-        # relectura de etiquetas para prevenir relecturas inutiles
-        self.etiquetas.leer()    
-        if set(self.etiquetas.tags) != set(etiquetas): 
-            print("cambios guardados")
-            # guardado de etiquetas y reporte
-            if self.etiquetas.guardar(etiquetas)==False:
-                print("guardado fallido")
-        else:
-            print("sin cambios")
-        self.update()
-
 
     def conmutar_grupo(self, e: ft.ControlEvent ):
         boton_grupo = e.control
@@ -237,51 +164,122 @@ class FilasBotones(ft.Column):
 
 
 class EtiquetadorBotones(ft.Column):
-    def __init__(self, filas_botones: FilasBotones):
-        # self.controles: FilasBotones
+    def __init__(self):
+        self.__filas_botones = FilasBotones()   # componente interno --> composicion
         self.__ancho = 600
+        self.__altura_filas = 40
+        self.__boton_guardar = ft.ElevatedButton(
+            text="guardar cambios",
+            width = 200,
+            bgcolor= ft.colors.RED_900,
+            color= ft.colors.WHITE,
+            on_click= self.guardar_etiquetas
+            )
+        self.__boton_todos = ft.ElevatedButton(
+            text="todas",
+            width = 200,
+            bgcolor= ft.colors.INDIGO_400,
+            color= ft.colors.WHITE,
+            on_click= self.todas_etiquetas
+            )
+        self.__boton_nada = ft.ElevatedButton(
+            text="ninguna",
+            width = 200,
+            bgcolor= ft.colors.INDIGO_400,
+            color= ft.colors.WHITE,
+            on_click= self.ninguna_etiqueta
+            )
+        self.__boton_descartar = ft.ElevatedButton(
+            text="descartar cambios",
+            width = 200,
+            bgcolor= ft.colors.GREEN_800,
+            color= ft.colors.WHITE,
+            on_click= self.restablecer_etiquetas
+            )
         super().__init__(
-            controls = [filas_botones],
+            controls = [],
             wrap=False,
             spacing=10,       # espaciado horizontal 
             run_spacing=50,     # espaciado vertical entre filas
-            scroll=ft.ScrollMode.HIDDEN, 
             )
-        self.divisor = ft.Divider()
-        # self.divisor = ft.Divider(height=10)
-        self.controls.append(self.divisor)
-        self.__f1 =ft.Row([
-            filas_botones.boton_todos, filas_botones.boton_nada
-            ],
+        self.__divisor = ft.Divider()
+        self.__f1 =ft.Row(
+            controls= [ self.__boton_todos, self.__boton_nada ],
             width = self.__ancho, 
             wrap = True,    
             alignment = ft.MainAxisAlignment.CENTER,
             vertical_alignment = ft.CrossAxisAlignment.CENTER,
             spacing = 100,
-            # run_spacing=100
+            height = self.__altura_filas,
             )
-        self.controls.append(self.__f1)
-        self.__f2 = ft.Row([
-            filas_botones.boton_descartar, filas_botones.boton_guardar
-            ],
+        self.__f2 = ft.Row(
+            controls= [ self.__boton_descartar, self.__boton_guardar],
             width = self.__ancho, 
             wrap = True,
             alignment = ft.MainAxisAlignment.CENTER,
             vertical_alignment = ft.CrossAxisAlignment.CENTER,
             spacing = 100,
-            # run_spacing=100
+            height = self.__altura_filas,
             )  
-        self.controls.append(self.__f2)
+        self.controls=[self.__filas_botones, self.__divisor, self.__f1, self.__f2, self.__divisor]
+
+    def todas_etiquetas(self, e):
+        for boton in self.__filas_botones.botones_etiquetas:
+            boton.estado = True
+
+    def ninguna_etiqueta(self, e):
+        for boton in self.__filas_botones.botones_etiquetas:
+            boton.estado = False
+
+    def restablecer_etiquetas(self, e):
+        self.__filas_botones.etiquetas.leer()
+        self.__filas_botones.actualizar_botones()
+
+    def guardar_etiquetas(self, e):
+        etiquetas=[]
+        for boton in self.__filas_botones.botones_etiquetas:
+            etiqueta = boton.text
+            valor    = boton.estado
+            if valor:
+                etiquetas.append(etiqueta)
+        # relectura de etiquetas para prevenir relecturas inutiles
+        self.__filas_botones.etiquetas.leer()    
+        if set(self.__filas_botones.etiquetas.tags) != set(etiquetas): 
+            print("cambios guardados")
+            # guardado de etiquetas y reporte
+            if self.__filas_botones.etiquetas.guardar(etiquetas)==False:
+                print("guardado fallido")
+        else:
+            print("sin cambios")
+        self.update()
 
     @property
     def ancho(self):
-        return self.ancho
+        return self.__ancho
 
     @ancho.setter
     def ancho(self, valor):
         self.__ancho = valor
         self.__f1.width = valor
         self.__f2.width = valor
+        self.__filas_botones.ancho = valor
+
+    @property
+    def alto(self):
+        return self.height
+
+    @alto.setter
+    def alto(self, valor):
+        self.height = valor
+        valor = valor -  self.__altura_filas * 4
+        self.__filas_botones.height = valor
+
+    def leer_dataset(self, etiquetas: Etiquetas):
+        self.__filas_botones.leer_dataset( etiquetas.ruta )
+
+    def leer_etiquetas(self, etiquetas: Etiquetas):
+        self.__filas_botones.leer_etiquetas( etiquetas.ruta )
+
 
 
 def main(page: ft.Page):
@@ -292,20 +290,21 @@ def main(page: ft.Page):
     archivo_etiquetas = "etiquetas_salida.jpg"
 
     # componente etiquetador
-    filas_etiquetas = FilasBotones()
-    etiquetador = EtiquetadorBotones(filas_etiquetas)
+    etiquetador = EtiquetadorBotones()
     page.add( etiquetador)
 
-    filas_etiquetas.height = 700
-    filas_etiquetas.ancho         = 500
-    etiquetador.ancho   = 500
-    filas_etiquetas.leer_dataset(archivo_dataset)
-    filas_etiquetas.leer_etiquetas(archivo_etiquetas)
+    dataset     = Etiquetas(archivo_dataset) 
+    etiquetas   = Etiquetas(archivo_etiquetas) 
+
+    etiquetador.alto = 800
+    etiquetador.ancho  = 500
+    etiquetador.leer_dataset(   dataset   )
+    etiquetador.leer_etiquetas( etiquetas )
 
     page.title = "Botones etiquetado"
     page.window_height      = 900
     page.window_min_height  = 900
-    page.window_width       = 600
+    page.window_width       = 650
     page.update()
 
 
