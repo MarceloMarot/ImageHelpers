@@ -52,6 +52,13 @@ menu_estilo_defecto = Estilo_Contenedor(
 
 def main(pagina: ft.Page):
 
+
+ 
+
+
+
+
+
     # BASURA XD
     # b1=ft.ElevatedButton(text= "nada")
     # b2=ft.ElevatedButton(text= "todo")
@@ -177,6 +184,36 @@ def main(pagina: ft.Page):
         etiquetador_botones.leer_etiquetas(imagenes_etiquetadas[indice])
         # actualizacion pagina
         tab_etiquetado.update()
+
+
+
+    # manejador del teclado
+    def on_keyboard(e: ft.KeyboardEvent):
+        tecla = e.key   
+        print(tecla)
+
+        # Avance y retroseso de imagenes en seleccion y galeria
+        incremento = 0
+        if tecla == "Arrow Left" or tecla == "A":
+            incremento = -1     # retroceso
+        elif tecla == "Arrow Right" or tecla == "D":
+            incremento = 1      # avance
+        # cambio de imagen seleccion
+        menu_seleccion.cambiar_indice(incremento, 1 )
+        # actualizacion de galeria
+        # indice = menu_seleccion.indice
+        # scroll_to_key(indice)
+
+
+    # propiedad de pagina: handler del teclado elegido
+    pagina.on_keyboard_event = on_keyboard
+
+    def cambio_pestanias(e):
+        indice = menu_seleccion.indice
+        if pestanias.selected_index == 0:
+            scroll_to_key(indice)
+
+    pestanias.on_change = cambio_pestanias
 
 
     ############## CONFIGURACIONES ################                                     FIX
