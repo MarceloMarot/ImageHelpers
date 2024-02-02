@@ -211,8 +211,8 @@ def main(pagina: ft.Page):
             # ruta_directorio_origen.update()
             # habilitar otros botones de ser necesario
             # habilitar_controles()
-            # global imagenes_etiquetadas
-            # global imagenes_galeria
+            global imagenes_etiquetadas
+            global imagenes_galeria
             imagenes_etiquetadas, imagenes_galeria = cargar_imagenes(rutas_imagen)
             # Objeto seleccion imagen
             # print("imag:",len(imagenes_etiquetadas  ))
@@ -237,6 +237,12 @@ def main(pagina: ft.Page):
             galeria.eventos(click = click_imagen_galeria)
             galeria.update()
 
+
+            print("[bold red]Carga imagenes")
+            print("[bold red]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
+            print("[bold red]Nº imagenes galeria     : ", len(imagenes_galeria))
+
+
             menu_seleccion.alto  = altura_tab_etiquetado
             menu_seleccion.ancho = 600
             menu_seleccion.expand = True
@@ -254,7 +260,7 @@ def main(pagina: ft.Page):
             # print(e.files)
             # print("tipo:", type(e.files))
             # print("longitud:",  len(e.files))
-            ruta = e.files[0]
+            ruta = e.files[0]                   # SOLO UN ARCHIVO DE LISTA ( FIX )
             # print(e.files("name"))
             # print(e.files("path"))
             # print(e.files("size"))
@@ -281,6 +287,9 @@ def main(pagina: ft.Page):
             etiquetador_botones.expand = True
             etiquetador_botones.update()
 
+            print("[bold cyan]Carga dataset")
+            # print("[bold red]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
+            # print("[bold red]Nº imagenes galeria     : ", len(imagenes_galeria))
 
 
         else:
@@ -308,8 +317,8 @@ def main(pagina: ft.Page):
         contenedor = e.control
         key = contenedor.content.key
         i = int(key) 
-        # global imagenes_etiquetadas
-        # global imagenes_galeria
+        global imagenes_etiquetadas
+        global imagenes_galeria
         # actualizacion de imagen seleccionada y etiquetado
         print("[bold yellow]Click imagen galeria")
         print("[bold yellow]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
@@ -329,6 +338,8 @@ def main(pagina: ft.Page):
         #regreso a la galeria
         contenedor_imagen = e.control
         key = contenedor_imagen.content.key
+        global imagenes_etiquetadas
+        global imagenes_galeria
         print("[bold green]Click imagen seleccion")
         print("[bold green]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
         print("[bold green]Nº imagenes galeria     : ", len(imagenes_galeria))
@@ -346,6 +357,8 @@ def main(pagina: ft.Page):
         # (el cambio de imagen está integrado al componente)
         # actualizacion etiquetas
         # global imagenes_etiquetadas
+        global imagenes_etiquetadas
+        global imagenes_galeria
         print("[bold magenta]Botones seleccion")
         print("[bold magenta]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
         print("[bold magenta]Nº imagenes galeria     : ", len(imagenes_galeria))
