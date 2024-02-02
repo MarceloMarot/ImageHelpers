@@ -190,7 +190,7 @@ def main(pagina: ft.Page):
             tab_etiquetado
         ],
         expand=1,
-        # disabled=True,
+        # disabled=True,        # deshabilita controles internos, no las pestañas en si
     )
 
     # Añadido componentes (todos juntos)
@@ -243,6 +243,10 @@ def main(pagina: ft.Page):
             print("[bold red]Nº imagenes galeria     : ", len(imagenes_galeria))
 
 
+            menu_seleccion.habilitar()
+            etiquetador_botones.habilitar()
+            etiquetador_botones.update()
+
             menu_seleccion.alto  = altura_tab_etiquetado
             menu_seleccion.ancho = 600
             menu_seleccion.expand = True
@@ -277,6 +281,7 @@ def main(pagina: ft.Page):
             dataset = Etiquetas(archivo_dataset) 
             etiquetador_botones.leer_dataset( dataset )
             # etiquetador_botones.leer_etiquetas(imagenes_etiquetadas[0])
+            etiquetador_botones.deshabilitar()
             etiquetador_botones.update() 
 
             boton_carpeta.disabled = False
@@ -427,11 +432,13 @@ def main(pagina: ft.Page):
     # menu_seleccion.alto  = altura_tab_etiquetado
     menu_seleccion.ancho = 600
     menu_seleccion.expand = True
+    menu_seleccion.deshabilitar()
     # menu_seleccion.update()
 
     # etiquetador_botones.alto  = altura_tab_etiquetado
     etiquetador_botones.ancho = 500
     etiquetador_botones.expand = True
+    etiquetador_botones.deshabilitar()
     # etiquetador_botones.update()
 
     # Propiedades pagina 

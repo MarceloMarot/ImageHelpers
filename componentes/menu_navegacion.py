@@ -108,6 +108,26 @@ class MenuNavegacion(ft.Column):
                 ] 
         )
 
+    # metodos habilitar / dehabilitar controles
+    def deshabilitar(self):
+        """Anula manualmente los controles del selector"""
+        self.__boton_prev_fast  .disabled = True
+        self.__boton_prev       .disabled = True
+        self.__boton_next_fast  .disabled = True
+        self.__boton_next       .disabled = True
+        self.__contenedor       .disabled = True
+        # self.update()
+
+    def habilitar(self):
+        """Habilita manualmente los controles del selector"""
+        self.__boton_prev_fast  .disabled = False
+        self.__boton_prev       .disabled = False
+        self.__boton_next_fast  .disabled = False
+        self.__boton_next       .disabled = False
+        self.__contenedor       .disabled = False
+        # self.update()
+
+
 
     # Metodo actualizacion
     def cargar_imagen(self):

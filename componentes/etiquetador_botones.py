@@ -283,6 +283,28 @@ class EtiquetadorBotones(ft.Column):
     def leer_etiquetas(self, etiquetas: Etiquetas):
         self.__filas_botones.leer_etiquetas( etiquetas.ruta )
 
+    # metodos habilitar / dehabilitar controles
+    def deshabilitar(self):
+        """Anula manualmente los controles del etiquetador"""
+        self.__boton_descartar.disabled = True
+        self.__boton_nada     .disabled = True
+        self.__boton_todos    .disabled = True
+        self.__boton_guardar  .disabled = True
+        for boton in self.__filas_botones.botones_etiquetas:
+            boton.disabled = True
+
+
+    def habilitar(self):
+        """Habilita manualmente los controles del etiquetador"""
+        self.__boton_descartar.disabled = False
+        self.__boton_nada     .disabled = False
+        self.__boton_todos    .disabled = False
+        self.__boton_guardar  .disabled = False
+        for boton in self.__filas_botones.botones_etiquetas:
+            boton.disabled = False
+
+
+
 
 
 def main(page: ft.Page):
