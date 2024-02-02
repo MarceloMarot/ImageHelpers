@@ -20,7 +20,8 @@ class MenuNavegacion(ft.Column):
         self.__maximo = 0
         self.incremento = 10
         self.ancho_boton = 200
-        self.__imagenes = []
+        self.__imagenes : list[ft.Image]
+        self.__habilitado = False
         self.funcion_botones = lambda _ : nada(_)
         self.estilo_contenedor = Estilo_Contenedor(        
             border_radius = 0, 
@@ -107,25 +108,41 @@ class MenuNavegacion(ft.Column):
                 self.__divisor,
                 ] 
         )
+        # inicializacion con botones anulados
+        self.habilitado = False
 
     # metodos habilitar / dehabilitar controles
-    def deshabilitar(self):
-        """Anula manualmente los controles del selector"""
-        self.__boton_prev_fast  .disabled = True
-        self.__boton_prev       .disabled = True
-        self.__boton_next_fast  .disabled = True
-        self.__boton_next       .disabled = True
-        self.__contenedor       .disabled = True
-        # self.update()
+    # def deshabilitar(self):
+    #     """Anula manualmente los controles del selector"""
+    #     self.__boton_prev_fast  .disabled = True
+    #     self.__boton_prev       .disabled = True
+    #     self.__boton_next_fast  .disabled = True
+    #     self.__boton_next       .disabled = True
+    #     self.__contenedor       .disabled = True
+    #     self.__habilitado = False
 
-    def habilitar(self):
-        """Habilita manualmente los controles del selector"""
-        self.__boton_prev_fast  .disabled = False
-        self.__boton_prev       .disabled = False
-        self.__boton_next_fast  .disabled = False
-        self.__boton_next       .disabled = False
-        self.__contenedor       .disabled = False
-        # self.update()
+    @property
+    def habilitado(self):
+        return self.__habilitado
+
+
+    @habilitado.setter
+    def habilitado(self, booleano):
+        """Habilita/anula manualmente los controles del selector"""
+        if booleano:
+            self.__boton_prev_fast  .disabled = False
+            self.__boton_prev       .disabled = False
+            self.__boton_next_fast  .disabled = False
+            self.__boton_next       .disabled = False
+            self.__contenedor       .disabled = False
+            self.__habilitado = True
+        else:
+            self.__boton_prev_fast  .disabled = True
+            self.__boton_prev       .disabled = True
+            self.__boton_next_fast  .disabled = True
+            self.__boton_next       .disabled = True
+            self.__contenedor       .disabled = True
+            self.__habilitado = False
 
 
 
@@ -144,17 +161,11 @@ class MenuNavegacion(ft.Column):
         self.update()
 
 
-    # def estilo(self):
     def estilo(self, estilo=None):
         """Carga o restablecimiento de aspecto para el contenedor de imagen."""
         if estilo != None:
             self.estilo_contenedor = estilo
         self.__contenedor.estilo(self.estilo_contenedor)
-        # self.__fila_titulo.width=self.__contenedor.width
-        # self.__fila_subtitulo.width=self.__contenedor.width
-        # self.__fila_botones_navegacion_1.width=self.__contenedor.width
-        # self.__fila_botones_navegacion_2.width=self.__contenedor.width
-        # self.__fila_contenedor.width=self.__contenedor.width
         self.update()
 
     @property
@@ -217,6 +228,9 @@ class MenuNavegacion(ft.Column):
         self.__imagenes = imagenes
         self.__maximo = len(imagenes)
         self.cargar_imagen()
+        # con la lista de imagenes asignada se habilitan los controles
+        if len(imagenes) >0:
+            self.habilitado = True
 
 
     def eventos(self, click = None, hover = None, longpress = None, funcion_botones = None ):
@@ -232,9 +246,6 @@ def nada( indice ):
 
 
 
-
-
-
 def pagina_etiquetado(page: ft.Page ):
 
     numero_imagenes = 20
@@ -242,7 +253,6 @@ def pagina_etiquetado(page: ft.Page ):
 
     dimension = 512
     imagenes_picsum = leer_imagenes(rutas_imagen, ancho=dimension, alto=dimension, redondeo=50 )
-
 
     # estilos para el contenedor 
     estilo_defecto = Estilo_Contenedor(
@@ -288,8 +298,10 @@ def pagina_etiquetado(page: ft.Page ):
 
     menu = MenuNavegacion()
     page.add(menu)
-    menu.imagenes(imagenes_picsum)
-    # menu.estilo_contenedor = estilo_defecto
+
+    # carga de imagenes --> habilita controles
+    # menu.imagenes(imagenes_picsum)
+  
     menu.eventos(funcion_click, funcion_hover, funcion_longpress)
 
     menu.estilo(estilo_defecto)

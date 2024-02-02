@@ -129,7 +129,7 @@ class FilasBotones(ft.Column):
         self.controls = self.__filas_botones
         self.update()
 
-    def leer_etiquetas(self, ruta: str):
+    def setear_salida(self, ruta: str):
         self.etiquetas = Etiquetas(ruta) 
         self.etiquetas.leer()
         self.actualizar_botones()
@@ -169,6 +169,9 @@ class EtiquetadorBotones(ft.Column):
         self.__filas_botones = FilasBotones()   # componente interno --> composicion
         self.__ancho = 600
         self.__altura_filas = 40
+        self.__habilitado = False
+        self.__dataset_seteado = False
+        self.__salida_seteada = False
         self.__boton_guardar = ft.ElevatedButton(
             text="guardar cambios",
             width = 200,
@@ -256,10 +259,12 @@ class EtiquetadorBotones(ft.Column):
 
     @property
     def ancho(self):
+        """Devuelve el ancho total del componente grafico"""
         return self.__ancho
 
     @ancho.setter
     def ancho(self, valor):
+        """Define el ancho total del componente grafico"""
         self.__ancho = valor
         self.__f1.width = valor
         self.__f2.width = valor
@@ -267,10 +272,12 @@ class EtiquetadorBotones(ft.Column):
 
     @property
     def alto(self):
+        """Devuelve el alto total del componente grafico"""
         return self.height
 
     @alto.setter
     def alto(self, valor):
+        """Define el alto total del componente grafico"""
         self.height = valor
         resta = self.__altura_filas * 3 
         resta = resta + int(self.__divisor.height) *3
@@ -278,32 +285,58 @@ class EtiquetadorBotones(ft.Column):
         self.__filas_botones.update()
 
     def leer_dataset(self, etiquetas: Etiquetas):
+        """Lee las etiquetas del dataset y actualiza etiquetas de salida si corresponde"""
         self.__filas_botones.leer_dataset( etiquetas.ruta )
-
-    def leer_etiquetas(self, etiquetas: Etiquetas):
-        self.__filas_botones.leer_etiquetas( etiquetas.ruta )
-
-    # metodos habilitar / dehabilitar controles
-    def deshabilitar(self):
-        """Anula manualmente los controles del etiquetador"""
-        self.__boton_descartar.disabled = True
-        self.__boton_nada     .disabled = True
-        self.__boton_todos    .disabled = True
-        self.__boton_guardar  .disabled = True
-        for boton in self.__filas_botones.botones_etiquetas:
-            boton.disabled = True
+        self.__dataset_seteado = True
+        self.habilitado = True if self.__salida_seteada else False
+        # actualiza aspecto grafico para prevenir errores
+        if self.__salida_seteada : 
+            self.restablecer_etiquetas( "e")
 
 
-    def habilitar(self):
-        """Habilita manualmente los controles del etiquetador"""
-        self.__boton_descartar.disabled = False
-        self.__boton_nada     .disabled = False
-        self.__boton_todos    .disabled = False
-        self.__boton_guardar  .disabled = False
-        for boton in self.__filas_botones.botones_etiquetas:
-            boton.disabled = False
+    def setear_salida(self, etiquetas: Etiquetas):
+        """Elige el archivo de salida de etiquetas y establece qué botones se activan """
+        self.__filas_botones.setear_salida( etiquetas.ruta )
+        self.__salida_seteada = True
+        self.habilitado = True if self.__dataset_seteado else False
+            
+    
+    @property
+    def dataset_seteado(self):
+        """Indica si se eligio el archivo del dataset con todas las etiquetas"""
+        return self.__dataset_seteado
 
+    @property
+    def salida_seteada(self):
+        """Indica si se eligio el archivo de salida para las etiquetas"""
+        return self.__salida_seteada
 
+    @property
+    def habilitado(self):
+        """Indica si los controles están habilitados o no"""
+        return self.__habilitado
+
+    @habilitado.setter
+    def habilitado(self, booleano):
+        """Habilita / deshabilita manualmente los controles del etiquetador"""
+        if booleano: 
+            self.__boton_descartar.disabled = False
+            self.__boton_nada     .disabled = False
+            self.__boton_todos    .disabled = False
+            self.__boton_guardar  .disabled = False
+            for boton in self.__filas_botones.botones_etiquetas:
+                boton.disabled = False
+            # flag de estado
+            self.__habilitado = True
+        else: 
+            self.__boton_descartar.disabled = True
+            self.__boton_nada     .disabled = True
+            self.__boton_todos    .disabled = True
+            self.__boton_guardar  .disabled = True
+            for boton in self.__filas_botones.botones_etiquetas:
+                boton.disabled = True
+            # flag de estado
+            self.__habilitado = False
 
 
 
@@ -323,8 +356,9 @@ def main(page: ft.Page):
 
     etiquetador.alto = 800
     etiquetador.ancho  = 500
+    # carga de archivos (sentido inverso)
+    etiquetador.setear_salida( etiquetas )
     etiquetador.leer_dataset(   dataset   )
-    etiquetador.leer_etiquetas( etiquetas )
 
     page.title = "Botones etiquetado"
     page.window_height      = 800
