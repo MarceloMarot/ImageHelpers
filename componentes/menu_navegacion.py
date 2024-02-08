@@ -7,7 +7,8 @@ import flet as ft
 from functools import partial       # usado para los handlers
 
 # from . contenedor import Contenedor, Contenedor_Imagen, Estilo_Contenedor
-from . galeria_imagenes import  Contenedor_Imagen, Estilo_Contenedor, leer_imagenes, Imagen, rutas_imagenes_picsum
+# from . galeria_imagenes import  Contenedor_Imagen, Estilo_Contenedor, leer_imagenes, Imagen, rutas_imagenes_picsum
+from . galeria_imagenes import  Contenedor, Contenedor_Imagen, Estilo_Contenedor, Galeria, rutas_imagenes_picsum, leer_imagenes
 
 
 
@@ -20,10 +21,12 @@ class MenuNavegacion(ft.Column):
         self.__maximo = 0
         self.incremento = 10
         self.ancho_boton = 200
-        self.__imagenes : list[ft.Image]
+        self.__contenedores_imagen : list[Contenedor]
         self.__habilitado = False
-        self.funcion_botones = lambda _ : nada(_)
-        self.estilo_contenedor = Estilo_Contenedor(        
+        self.funcion_botones = lambda _ : nada( _ )
+        self.estilo_contenedor = Estilo_Contenedor(   
+            height = 512,
+            width  = 512,     
             border_radius = 0, 
             bgcolor = ft.colors.WHITE,
             border=ft.border.all(0, ft.colors.WHITE)
@@ -54,7 +57,7 @@ class MenuNavegacion(ft.Column):
             wrap=True,
         )
         # Se invoca un contenedor hijo
-        self.__contenedor = Contenedor_Imagen()
+        self.__contenedor = Contenedor_Imagen("")
         self.__fila_contenedor = ft.Row(
             controls = [self.__contenedor],
             alignment=ft.MainAxisAlignment.CENTER,
@@ -111,15 +114,6 @@ class MenuNavegacion(ft.Column):
         # inicializacion con botones anulados
         self.habilitado = False
 
-    # metodos habilitar / dehabilitar controles
-    # def deshabilitar(self):
-    #     """Anula manualmente los controles del selector"""
-    #     self.__boton_prev_fast  .disabled = True
-    #     self.__boton_prev       .disabled = True
-    #     self.__boton_next_fast  .disabled = True
-    #     self.__boton_next       .disabled = True
-    #     self.__contenedor       .disabled = True
-    #     self.__habilitado = False
 
     @property
     def habilitado(self):
@@ -150,10 +144,10 @@ class MenuNavegacion(ft.Column):
     def cargar_imagen(self):
         """Este metodo lee la imagen correspondiente al indice actual."""
         # visualizar imagen con el indice actual
-        imagen = self.__imagenes[self.__indice]
-        self.__contenedor.content = imagen
-        nombre_imagen = pathlib.Path(imagen.src).name
-        ruta_imagen = imagen.src
+        contenedor_imagen = self.__contenedores_imagen[self.__indice]
+        self.__contenedor.content = contenedor_imagen
+        nombre_imagen = pathlib.Path(contenedor_imagen.content.src).name
+        ruta_imagen = contenedor_imagen.content.src
         self.__titulo.value = f"{self.__indice + 1 } - {nombre_imagen}"
         self.__subtitulo.value = f"Ruta archivo: {ruta_imagen}"
         # carga de estilo de contenedor y actualizacion visual
@@ -214,7 +208,7 @@ class MenuNavegacion(ft.Column):
         if numero <0:
             self.__indice = 0
         elif numero >= self.__maximo:
-            self.__indice = self.__maximo -1
+            self.__indice = self.__maximo - 1
         else:
             self.__indice = numero
         # se actualiza solo si hubo cambio de indice          
@@ -222,15 +216,32 @@ class MenuNavegacion(ft.Column):
             self.cargar_imagen()
             self.funcion_botones(self.__indice)
 
-    
-    def imagenes(self, imagenes: list[ft.Image]):
-        """Asigna imagenes (ft.Image) ya creadas al componente."""
-        self.__imagenes = imagenes
-        self.__maximo = len(imagenes)
+    @property
+    def imagenes(self):
+        # """Asigna imagenes (ft.Image) ya asignada sal componente."""
+        return self.__contenedores_imagen 
+
+    # @imagenes.setter
+    def leer_imagenes(self, rutas_imagen: list[str], ancho=256, alto=256, redondeo=0):
+        # """Asigna imagenes (ft.Image) ya creadas al componente."""
+        self.__contenedores_imagen = leer_imagenes(
+            rutas_imagen, 
+            ancho, 
+            alto, 
+            redondeo
+            ) 
+        self.__maximo = len(self.__contenedores_imagen)
         self.cargar_imagen()
         # con la lista de imagenes asignada se habilitan los controles
-        if len(imagenes) >0:
-            self.habilitado = True
+        self.habilitado = True if len(self.__contenedores_imagen) > 0 else False
+
+
+    def cargar_imagenes(self, imagenes: list[Contenedor]):
+        self.__contenedores_imagen = imagenes 
+        self.__maximo = len(self.__contenedores_imagen)
+        self.cargar_imagen()
+        # con la lista de imagenes asignada se habilitan los controles
+        self.habilitado = True if len(self.__contenedores_imagen) > 0 else False
 
 
     def eventos(self, click = None, hover = None, longpress = None, funcion_botones = None ):
@@ -252,7 +263,6 @@ def pagina_etiquetado(page: ft.Page ):
     rutas_imagen = rutas_imagenes_picsum(numero_imagenes, 200) 
 
     dimension = 512
-    imagenes_picsum = leer_imagenes(rutas_imagen, ancho=dimension, alto=dimension, redondeo=50 )
 
     # estilos para el contenedor 
     estilo_defecto = Estilo_Contenedor(
@@ -300,21 +310,19 @@ def pagina_etiquetado(page: ft.Page ):
     page.add(menu)
 
     # carga de imagenes --> habilita controles
-    # menu.imagenes(imagenes_picsum)
-  
     menu.eventos(funcion_click, funcion_hover, funcion_longpress)
-
     menu.estilo(estilo_defecto)
+    menu.leer_imagenes(rutas_imagen, dimension, dimension, 30)
 
-    menu.alto = 800
+    menu.alto  = 800
     menu.ancho = 800
 
     page.title = "Navegación Imágenes"
-    page.window_width=1200
-    page.window_height=1000
-    page.window_maximizable=True
-    page.window_minimizable=True
-    page.window_maximized=False
+    page.window_width  = 1200
+    page.window_height = 1000
+    page.window_maximizable = True
+    page.window_minimizable = True
+    page.window_maximized   = False
     page.update()
 
 

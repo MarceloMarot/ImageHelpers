@@ -1,5 +1,4 @@
 from rich import print 
-import sys
 import pathlib 
 
 
@@ -24,9 +23,8 @@ class Etiquetas:
 
     #lectura desde disco
     def leer(self):
-        renglones_listas = LecturaLista(self.ruta)
-        # [self.tags, self.grupo]= FiltradoEtiquetas(renglones_listas)
-        self.data = FiltradoEtiquetas(renglones_listas)
+        renglones_listas = lectura_archivo(self.ruta)
+        self.data = filtrado_etiquetas(renglones_listas)
         self.tags  = list( self.data.keys()   )
         self.grupo = list( self.data.values() )
 
@@ -38,7 +36,7 @@ class Etiquetas:
         else:
             texto = etiquetas2texto(etiquetas)
         # guardado, actualizacion del objeto e indicacion de exito
-        guardado_exitoso = GuardadoTexto(self.ruta, texto)
+        guardado_exitoso = guardar_archivo(self.ruta, texto)
         if guardado_exitoso:
             self.leer()
         return guardado_exitoso
@@ -61,7 +59,7 @@ def etiquetas2texto(lista_renglones: list):
 
 
 # Guardado en archivo (modo SOBREESCRITURA)
-def GuardadoTexto(ruta: str, texto:str):
+def guardar_archivo(ruta: str, texto:str):
     print(ruta)
     path = pathlib.Path(ruta).with_suffix('.txt')
     try:
@@ -74,7 +72,7 @@ def GuardadoTexto(ruta: str, texto:str):
 
 #lectura de un archivo de texto 
 #devuelve una lista de los renglones leidos
-def LecturaLista(entrada: str): 
+def lectura_archivo(entrada: str): 
     path = pathlib.Path(entrada).with_suffix('.txt')
     try:
         with open(path,"r") as archivo:
@@ -88,7 +86,7 @@ def LecturaLista(entrada: str):
 # Funcion que separa etiquetas en base a comas y puntos aparte
 # Descarta etiquetas repetidas
 # Asigna numero de grupo alos tags en base al  primer renglon de aparicion
-def FiltradoEtiquetas(lista_entrada: list):
+def filtrado_etiquetas(lista_entrada: list):
     # diccionario auxiliar para contener los datos
     dicc_etiquetas = {}
     # conjunto auxiliar: se filtrarán las etiquetas repetidas 
