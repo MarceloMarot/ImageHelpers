@@ -11,6 +11,9 @@ from componentes.etiquetador_botones import FilasBotones, EtiquetadorBotones
 
 from sistema_archivos.buscar_extension import buscar_imagenes
 
+def nada( e ):
+    pass
+
 
 class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
     def __init__(self, ruta, ancho=768, alto=768, redondeo=0):
@@ -21,12 +24,13 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         self.__defectuosa = False
         self.verificar_imagen()
         self.verificar_etiquetado()
-        self.verificar_guardado()
+        self.verificar_guardado(None)
 
 
     def verificar_imagen(self):
-        """Este metodo verificará extension y dimensiones de archivo"""
-        pass 
+        """INCOMPLETA - Este metodo verificará extension y dimensiones de archivo"""
+        # self.defectuosa = False
+        self.__defectuosa = False
 
     @property
     def defectuosa(self):
@@ -41,35 +45,59 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
     def etiquetada(self):
         return self.__etiquetada 
 
-    def verificar_guardado(self):
+
+    def verificar_guardado(self , tags: list[str] | None):
         """Comprueba si las etiquetas actuales son las mismas que las guardas en archivo de texto"""
         archivado = Etiquetas(self.ruta)
-        self.verificar_etiquetado()
-        guardado = set(self.tags) == set(archivado.tags)   # si los tags son iguales da True; en caso contrario da False
-        self.__guardada = guardado and self.etiquetada      # se descartan no etiquetados
+        # etiquetado = self.verificar_etiquetado()
+        if tags == None:
+            guardado = True if set(self.tags) == set(archivado.tags) else False   # si los tags son iguales da True; en caso contrario da False
+        else:    
+            guardado = True if set(tags) == set(archivado.tags) else False   # si los tags son iguales da True; en caso contrario da False
+        # se lee cuantas etiquetas hay en archivo
+        etiquetado = True if len(archivado.tags) > 0 else False
+        self.__guardada = guardado  and etiquetado     # se descartan no etiquetados
+        # print(etiquetado, guardado, self.__guardada)
+
 
     @property
     def guardada(self):
         return self.__guardada 
 
+    @guardada.setter
+    def guardada(self, valor: bool):
+        self.__guardada = valor
 
 
-class Etiquetador_Imagenes( EtiquetadorBotones ):
+class EtiquetadorImagenes( EtiquetadorBotones ):
     def __init__(self):
         super().__init__()
+        self.funcion_actualizacion = nada
+        #correccion de handlers
+        # self.__boton_descartar  .on_click = self.restablecer_etiquetas
+        # self.__boton_todos      .on_click = self.todas_etiquetas
+        # self.__boton_nada       .on_click = self.ninguna_etiqueta
+        # self.__boton_guardar    .on_click = self.guardar_etiquetas
 
     def todas_etiquetas(self, e):
+        # print("todas")
         super().todas_etiquetas(e)
-        # codigo agregado
+        self.funcion_actualizacion(e)
 
     def ninguna_etiqueta(self, e):
+        # print("ninguna")
         super().ninguna_etiqueta(e)
+        self.funcion_actualizacion(e)
 
     def restablecer_etiquetas(self, e):
+        # print("restablecer")
         super().restablecer_etiquetas(e)
+        self.funcion_actualizacion(e)
 
     def guardar_etiquetas(self, e):
+        # print("guardar")
         super().guardar_etiquetas(e)
+        self.funcion_actualizacion(e)
 
 
 class MenuEtiquetado( MenuNavegacion):
@@ -112,7 +140,9 @@ class GaleriaEtiquetado( Galeria):
         actualizar_estilo_estado( contenedores, self.estilos)
 
 
-    def cargar_imagenes(self, imagenes: list[Contenedor], cuadricula=True):
+    def cargar_imagenes(self, 
+        imagenes: list[Contenedor_Etiquetado | Contenedor_Imagen], 
+        cuadricula=True):
         super().cargar_imagenes(imagenes, cuadricula)
         actualizar_estilo_estado( imagenes, self.estilos)  # FIX
 
@@ -173,8 +203,8 @@ estilo_galeria_modificado = Estilo_Contenedor(
     width = 256, 
     height = 256,
     border_radius = 10, 
-    bgcolor = ft.colors.AMBER_400,
-    border=ft.border.all(5, ft.colors.YELLOW_300)
+    bgcolor = ft.colors.YELLOW_600,
+    border=ft.border.all(5, ft.colors.AMBER_600)
     )
 
 estilo_galeria_guardado = Estilo_Contenedor(
@@ -213,8 +243,8 @@ estilo_menu_modificado = Estilo_Contenedor(
     width = 512,
     height = 512,
     border_radius = 20, 
-    bgcolor = ft.colors.AMBER_400,
-    border=ft.border.all(10, ft.colors.YELLOW_300)
+    bgcolor = ft.colors.YELLOW_600,
+    border=ft.border.all(10, ft.colors.AMBER_600)
     )
 estilo_menu_guardado = Estilo_Contenedor(
     width = 512,
@@ -289,7 +319,10 @@ def main(pagina: ft.Page):
         )
     )
     # etiquetas seleccionables
-    etiquetador_botones = EtiquetadorBotones()
+    # etiquetador_botones = EtiquetadorBotones()
+    etiquetador_botones = EtiquetadorImagenes()
+
+
 
     galeria = GaleriaEtiquetado( estilos_galeria )
 
@@ -344,6 +377,57 @@ def main(pagina: ft.Page):
 
 
     ############## HANDLERS ##################################
+
+    def actualizar_bordes( e: ft.ControlEvent ):
+
+
+        print(f'[bold green]Boton "{e.control.text}" accedido')
+
+        # print("Rutina actualizacion accedida")
+        # acceso a elementos globales
+        global imagenes_etiquetadas
+        global imagenes_galeria
+
+        etiquetas_botones = etiquetador_botones.leer_botones()
+
+        indice = menu_seleccion.indice
+        print("indice: ",indice)
+        # print("etiquetas botones: ", etiquetas_botones)
+
+        # RECORDAR: LOS TAGS DEBEN TRANSFERIRSE DE LOS BOTONES A LA IMAGEN
+        # etiquetas_imagen = imagenes_etiquetadas[indice].tags
+        imagenes_galeria[indice].tags = etiquetas_botones
+        imagenes_etiquetadas[indice].tags = etiquetas_botones
+        # print("etiquetas imagen: ",etiquetas_imagen)
+
+
+        imagenes_galeria[indice].verificar_etiquetado()
+        imagenes_galeria[indice].verificar_imagen()
+        imagenes_galeria[indice].verificar_guardado(etiquetas_botones) # FIX
+        imagenes_galeria[indice].update()
+
+
+        imagenes_etiquetadas[indice].verificar_etiquetado()
+        imagenes_etiquetadas[indice].verificar_imagen()
+        imagenes_etiquetadas[indice].verificar_guardado(etiquetas_botones) # FIX
+        imagenes_etiquetadas[indice].update()
+
+
+        # print("etiquetada: ", imagenes_etiquetadas[indice].etiquetada)
+        # print("guardada  : ", imagenes_etiquetadas[indice].guardada)
+        # print("defectuosa: ", imagenes_etiquetadas[indice].defectuosa)
+
+        menu_seleccion.cargar_imagen()
+        menu_seleccion.update()
+
+        galeria.cargar_imagenes( imagenes_galeria )
+        galeria.update()
+
+
+
+    etiquetador_botones.funcion_actualizacion = actualizar_bordes
+
+
 
 
     # Funcion de apertura de directorio
@@ -448,10 +532,10 @@ def main(pagina: ft.Page):
         global imagenes_etiquetadas
         global imagenes_galeria
         # actualizacion de imagen seleccionada y etiquetado
-        print("[bold yellow]Click imagen galeria")
-        print("[bold yellow]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
-        print("[bold yellow]Nº imagenes galeria     : ", len(imagenes_galeria))
-        print("[bold yellow]Clave imagen: " , clave)
+        # print("[bold yellow]Click imagen galeria")
+        # print("[bold yellow]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
+        # print("[bold yellow]Nº imagenes galeria     : ", len(imagenes_galeria))
+        # print("[bold yellow]Clave imagen: " , clave)
 
         key_imagen = lambda x: clave_imagen(clave, x)
         objeto_filtrado = filter(key_imagen ,imagenes_etiquetadas)
@@ -462,7 +546,7 @@ def main(pagina: ft.Page):
         patron = r"[0-9]+" 
         retorno = re.search(patron, clave)
         indice = retorno.group()
-        print(clave, retorno)
+        # print(clave, retorno)
         menu_seleccion.indice = int(indice)
         #cambio de pestaña
         pestanias.selected_index = 1
@@ -478,10 +562,10 @@ def main(pagina: ft.Page):
         key = contenedor_imagen.content.key
         global imagenes_etiquetadas
         global imagenes_galeria
-        print("[bold green]Click imagen seleccion")
-        print("[bold green]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
-        print("[bold green]Nº imagenes galeria     : ", len(imagenes_galeria))
-        print("[bold green]Indice : " , key)
+        # print("[bold green]Click imagen seleccion")
+        # print("[bold green]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
+        # print("[bold green]Nº imagenes galeria     : ", len(imagenes_galeria))
+        # print("[bold green]Indice : " , key)
         scroll_to_key( key)      
         #cambio de pestaña
         pestanias.selected_index=0
@@ -496,10 +580,10 @@ def main(pagina: ft.Page):
         # global imagenes_etiquetadas
         global imagenes_etiquetadas
         global imagenes_galeria
-        print("[bold magenta]Botones seleccion")
-        print("[bold magenta]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
-        print("[bold magenta]Nº imagenes galeria     : ", len(imagenes_galeria))
-        print("[bold magenta]Imagen boton seleccion:" , indice)
+        # print("[bold magenta]Botones seleccion")
+        # print("[bold magenta]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
+        # print("[bold magenta]Nº imagenes galeria     : ", len(imagenes_galeria))
+        # print("[bold magenta]Imagen boton seleccion:" , indice)
         etiquetador_botones.setear_salida(imagenes_etiquetadas[indice])
         # actualizacion pagina
         tab_etiquetado.update()

@@ -15,14 +15,14 @@ class Etiquetas:
         # lectura automatica
         try:
             # self.ruta = pathlib.Path(ruta).with_suffix('.txt')
-            self.leer()
+            self.leer_archivo()
         except:
             self.tags  = []
             self.grupo = []
 
 
     #lectura desde disco
-    def leer(self):
+    def leer_archivo(self):
         renglones_listas = lectura_archivo(self.ruta)
         self.data = filtrado_etiquetas(renglones_listas)
         self.tags  = list( self.data.keys()   )
@@ -31,14 +31,15 @@ class Etiquetas:
     # escritura en disco
     def guardar(self, etiquetas= []):
         # Si no hay lista de entrada se lee desde el objeto
-        if len(etiquetas) == 0:
-            texto = etiquetas2texto(self.tags)
-        else:
-            texto = etiquetas2texto(etiquetas)
+        # if len(etiquetas) == 0:
+        #     texto = etiquetas2texto(self.tags)
+        # else:
+        #     texto = etiquetas2texto(etiquetas)
+        texto = etiquetas2texto(etiquetas)
         # guardado, actualizacion del objeto e indicacion de exito
         guardado_exitoso = guardar_archivo(self.ruta, texto)
         if guardado_exitoso:
-            self.leer()
+            self.leer_archivo()
         return guardado_exitoso
 
 

@@ -91,7 +91,7 @@ class FilasBotones(ft.Column):
        
     def leer_dataset(self, ruta: str):
         self.dataset = Etiquetas(ruta) 
-        self.dataset.leer()
+        self.dataset.leer_archivo()
         tags = self.dataset.tags
         grupo = self.dataset.grupo
         data = self.dataset.data
@@ -131,7 +131,7 @@ class FilasBotones(ft.Column):
 
     def setear_salida(self, ruta: str):
         self.etiquetas = Etiquetas(ruta) 
-        self.etiquetas.leer()
+        self.etiquetas.leer_archivo()
         self.actualizar_botones()
 
     def actualizar_botones(self):
@@ -142,6 +142,18 @@ class FilasBotones(ft.Column):
             else:
                 boton.estado = False
         self.update()
+
+    def leer_botones(self):
+        etiquetas = []
+        for boton in self.botones_etiquetas:
+            if boton.estado:
+                tag = boton.text
+                etiquetas.append(tag)
+        return etiquetas
+
+    def leer_etiquetas_archivo(self):
+        self.etiquetas.leer_archivo()  
+        
 
     def conmutar_grupo(self, e: ft.ControlEvent ):
         boton_grupo = e.control
@@ -230,29 +242,34 @@ class EtiquetadorBotones(ft.Column):
     def todas_etiquetas(self, e):
         for boton in self.__filas_botones.botones_etiquetas:
             boton.estado = True
+        # etiquetas = self.__filas_botones.leer_botones()
+        # self.__filas_botones.etiquetas.tags = etiquetas
+
 
     def ninguna_etiqueta(self, e):
         for boton in self.__filas_botones.botones_etiquetas:
             boton.estado = False
+        # etiquetas = self.__filas_botones.leer_botones()
+        # self.__filas_botones.etiquetas.tags = etiquetas
+
 
     def restablecer_etiquetas(self, e):
-        self.__filas_botones.etiquetas.leer()
+        self.__filas_botones.leer_etiquetas_archivo()
         self.__filas_botones.actualizar_botones()
 
     def guardar_etiquetas(self, e):
-        etiquetas=[]
-        for boton in self.__filas_botones.botones_etiquetas:
-            etiqueta = boton.text
-            valor    = boton.estado
-            if valor:
-                etiquetas.append(etiqueta)
+        etiquetas = self.__filas_botones.leer_botones()
         # relectura de etiquetas para prevenir relecturas inutiles
-        self.__filas_botones.etiquetas.leer()    
+        # self.__filas_botones.etiquetas.leer()    
+        print("etiquetas:", etiquetas)
+        self.__filas_botones.leer_etiquetas_archivo()    
         if set(self.__filas_botones.etiquetas.tags) != set(etiquetas): 
-            print("cambios guardados")
             # guardado de etiquetas y reporte
             if self.__filas_botones.etiquetas.guardar(etiquetas)==False:
                 print("guardado fallido")
+            else:
+                print("guardado exitoso")
+                # self.__filas_botones.leer_etiquetas_archivo()
         else:
             print("sin cambios")
         self.update()
@@ -337,6 +354,10 @@ class EtiquetadorBotones(ft.Column):
                 boton.disabled = True
             # flag de estado
             self.__habilitado = False
+
+    def leer_botones(self):
+        etiquetas = self.__filas_botones.leer_botones()
+        return etiquetas
 
 
 
