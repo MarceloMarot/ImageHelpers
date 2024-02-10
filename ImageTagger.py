@@ -1,4 +1,3 @@
-from typing import Sequence
 from rich import print as print
 import flet as ft
 
@@ -170,8 +169,8 @@ estilo_galeria_erroneo = Estilo_Contenedor(
     width = 256, 
     height = 256,
     border_radius = 10, 
-    bgcolor = ft.colors.RED_400,
-    border=ft.border.all(5, ft.colors.BROWN_300)
+    bgcolor = ft.colors.RED_800,
+    border=ft.border.all(5, ft.colors.BROWN_800)
     )
 
 estilos_galeria = {
@@ -190,6 +189,7 @@ estilo_menu_defecto = Estilo_Contenedor(
     bgcolor = ft.colors.BLUE_100,
     border=ft.border.all(10, ft.colors.INDIGO_100)
     )
+
 estilo_menu_modificado = Estilo_Contenedor(
     width = 512,
     height = 512,
@@ -197,6 +197,7 @@ estilo_menu_modificado = Estilo_Contenedor(
     bgcolor = ft.colors.YELLOW_600,
     border=ft.border.all(10, ft.colors.AMBER_600)
     )
+
 estilo_menu_guardado = Estilo_Contenedor(
     width = 512,
     height = 512,
@@ -204,12 +205,13 @@ estilo_menu_guardado = Estilo_Contenedor(
     bgcolor = ft.colors.LIME_800,
     border=ft.border.all(10, ft.colors.GREEN_800)
     )
+
 estilo_menu_erroneo = Estilo_Contenedor(
     width = 512,
     height = 512,
     border_radius = 20, 
-    bgcolor = ft.colors.RED_400,
-    border=ft.border.all(10, ft.colors.BROWN_300)
+    bgcolor = ft.colors.RED_800,
+    border=ft.border.all(10, ft.colors.BROWN_800)
     )
 
 estilos_seleccion = {
@@ -244,7 +246,6 @@ def main(pagina: ft.Page):
             redondeo=10
             )
         return [etiquetadas, galeria]
-
 
     ############# COMPONENTES ######################## 
 
@@ -325,6 +326,28 @@ def main(pagina: ft.Page):
 
     ############## HANDLERS ##################################
 
+    def etiquetas_a_imagen(indice: int):
+        global imagenes_etiquetadas
+        global imagenes_galeria
+        # Se transfieren los botones de la botonera a las imagenes 
+        etiquetas_botones = etiquetador_imagen.leer_botones()
+        imagenes_galeria[indice].tags = etiquetas_botones
+        imagenes_etiquetadas[indice].tags = etiquetas_botones
+        # etiquetador_imagen.update()
+        return etiquetas_botones
+
+
+    def etiquetas_a_botones(indice: int):
+        global imagenes_etiquetadas
+        # Se transfieren los botones de la imagen  a la botonera 
+        # etiquetas_botones = etiquetador_imagen.leer_botones()
+        etiquetas_imagen = imagenes_etiquetadas[indice].tags 
+
+        # actualizacion grafica
+        etiquetador_imagen.asignar_etiquetas(etiquetas_imagen)
+        return etiquetas_imagen
+
+
     def actualizar_bordes( e: ft.ControlEvent ):
 
         # acceso a elementos globales
@@ -334,9 +357,11 @@ def main(pagina: ft.Page):
         indice = menu_seleccion.indice
 
         # Se transfieren los botones de la botonera a las imagenes 
-        etiquetas_botones = etiquetador_imagen.leer_botones()
-        imagenes_galeria[indice].tags = etiquetas_botones
-        imagenes_etiquetadas[indice].tags = etiquetas_botones
+        etiquetas_botones = etiquetas_a_imagen(indice)
+        # indice = menu_seleccion.indice
+        # etiquetas_botones = etiquetador_imagen.leer_botones()
+        # imagenes_galeria[indice].tags = etiquetas_botones
+        # imagenes_etiquetadas[indice].tags = etiquetas_botones
 
         # actualizacion bordes galeria
         imagenes_galeria[indice].verificar_etiquetado()
@@ -450,7 +475,7 @@ def main(pagina: ft.Page):
         galeria.scroll_to(key=clave, duration=1000)
 
 
-    def clave_imagen(key, x: Contenedor_Etiquetado):
+    def clave_imagen_correcta(key, x: Contenedor_Etiquetado):
         return True if key == x.content.key else False
 
 
@@ -464,7 +489,7 @@ def main(pagina: ft.Page):
         global imagenes_galeria
 
         # actualizacion de imagen seleccionada y etiquetado
-        key_imagen = lambda x: clave_imagen(clave, x)
+        key_imagen = lambda x: clave_imagen_correcta(clave, x)
         objeto_filtrado = filter(key_imagen ,imagenes_etiquetadas)
         imagen_seleccionada = list(objeto_filtrado)[0]
 
@@ -472,8 +497,11 @@ def main(pagina: ft.Page):
         etiquetador_imagen.setear_salida(imagen_seleccionada)
         patron = r"[0-9]+" 
         retorno = re.search(patron, clave)
-        indice = retorno.group()
-        menu_seleccion.indice = int(indice)
+        indice_str = retorno.group()
+        indice = int(indice_str)
+        menu_seleccion.indice = indice
+        # carga de etiquetas a los botones
+        etiquetas_a_botones(indice)
         #cambio de pestaña
         pestanias.selected_index = 1
         # actualizacion grafica
@@ -492,9 +520,11 @@ def main(pagina: ft.Page):
         clave = imagenes_etiquetadas[indice].content.key
         apuntar_galeria( clave)   
 
+        # carga de etiquetas a los botones
+        etiquetas_a_botones(indice)
+
         #cambio de pestaña
         pestanias.selected_index=0
-
         pagina.update()
 
 
@@ -506,6 +536,8 @@ def main(pagina: ft.Page):
         global imagenes_galeria
 
         etiquetador_imagen.setear_salida(imagenes_etiquetadas[indice])
+        # carga de etiquetas a los botones
+        etiquetas_a_botones(indice)
         # actualizacion pagina
         tab_etiquetado.update()
 

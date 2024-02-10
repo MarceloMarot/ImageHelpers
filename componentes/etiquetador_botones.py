@@ -159,6 +159,11 @@ class FilasBotonesEtiquetas(ft.Column):
                 boton.estado = False
         self.update()
 
+    def asignar_etiquetas(self, etiquetas: list[str]):    
+        self.etiquetas.tags = etiquetas
+        self.actualizar_botones()
+
+
     def leer_botones(self):
         """Lee todas las etiquetas habilitadas mediante los botones"""
         etiquetas = []
@@ -276,8 +281,6 @@ class EtiquetadorBotones(ft.Column):
         for boton in self.__filas_botones.botones_etiquetas:
             boton.estado = True
         self.click_botones(e)
-        # etiquetas = self.__filas_botones.leer_botones()
-        # self.__filas_botones.etiquetas.tags = etiquetas
 
 
     def ninguna_etiqueta(self, e):
@@ -285,8 +288,6 @@ class EtiquetadorBotones(ft.Column):
         for boton in self.__filas_botones.botones_etiquetas:
             boton.estado = False
         self.click_botones(e)
-        # etiquetas = self.__filas_botones.leer_botones()
-        # self.__filas_botones.etiquetas.tags = etiquetas
 
 
     def restablecer_etiquetas(self, e):
@@ -300,25 +301,16 @@ class EtiquetadorBotones(ft.Column):
         """Guarda todas las etiquetas seleccionadas en el archivo de texto asignado al componente"""
         etiquetas = self.__filas_botones.leer_botones()
         # relectura de etiquetas para prevenir relecturas inutiles
-        # self.__filas_botones.etiquetas.leer()    
-        # print("etiquetas:", etiquetas)
         self.__filas_botones.leer_etiquetas_archivo()  
-        retorno = False  
+        retorno_guardado = False  
         if set(self.__filas_botones.etiquetas.tags) != set(etiquetas): 
             # guardado de etiquetas y reporte
-            retorno = self.__filas_botones.etiquetas.guardar(etiquetas)==False
-        #     if  retorno:
-        #         print("guardado fallido")
-        #     else:
-        #         print("guardado exitoso")
-        #         # self.__filas_botones.leer_etiquetas_archivo()
-        # else:
-        #     print("sin cambios")
+            retorno_guardado  = self.__filas_botones.etiquetas.guardar(etiquetas)==False
         #funcionalidad opcional
         self.click_botones(e)
         # actualizacion grafica y salida
         self.update()
-        return retorno
+        return retorno_guardado 
 
     @property
     def ancho(self):
@@ -405,6 +397,12 @@ class EtiquetadorBotones(ft.Column):
         """Lee todas las etiquetas habilitadas mediante los botones"""
         etiquetas = self.__filas_botones.leer_botones()
         return etiquetas
+
+    def actualizar_botones(self):
+        self.__filas_botones.actualizar_botones()
+
+    def asignar_etiquetas(self, etiquetas: list[str]):    
+        self.__filas_botones.asignar_etiquetas(etiquetas)
 
     def evento_click(self, funcion_etiquetas, funcion_grupo=nada, funcion_comando=nada):
         """Asigna una funcion para el click de todos los botones, segun sean de etiquetas o de grupos"""
