@@ -1,0 +1,11 @@
+
+ , fuente, arbol ,
+ , agua
+
+ casa, persona, auto
+ chica, chico,
+ persona, 
+ zapato, bota
+ rio, cascada, catarata,
+  montaña
+

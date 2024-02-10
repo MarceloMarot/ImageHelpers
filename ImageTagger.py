@@ -3,7 +3,8 @@ import flet as ft
 
 import re
 
-from componentes.procesar_etiquetas import Etiquetas 
+from manejo_texto.procesar_etiquetas import Etiquetas 
+
 from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor
 from componentes.menu_navegacion import  MenuNavegacion
 from componentes.etiquetador_botones import EtiquetadorBotones

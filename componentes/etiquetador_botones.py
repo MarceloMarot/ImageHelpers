@@ -1,6 +1,6 @@
 from rich import print as print
 import flet as ft
-from componentes.procesar_etiquetas import  Etiquetas
+from manejo_texto.procesar_etiquetas import  Etiquetas
 
 
 def nada( e ):
@@ -437,10 +437,19 @@ def funcion_grupos(e: ft.ControlEvent):
 
 def main(page: ft.Page):
 
+    archivo_dataset = "demo/dataset.png"
+    archivo_etiquetas = "demo/etiquetas_imagen.jpg"
+
+
+    print( "[bold green]        DEMO ETIQUETADOR        ")
+    print()
+    print("[bold blue]Este archivo simula las operaciones de etiquetado de una imagen.")
+    print("[bold blue]Los archivos del demo están incluidos en la carpeta 'demo'.")
+    print(f"[bold cyan] Archivo dataset: [bold yellow]{archivo_dataset} ")
+    print(f"[bold cyan] Archivo salida : [bold yellow]{archivo_etiquetas} ")
+
     # Recordar: se ignora la extension del archivo de etiqueta
     # éste siempre es TXT
-    archivo_dataset = "demo_etiquetas.png"
-    archivo_etiquetas = "etiquetas_salida.jpg"
 
     # componente etiquetador
     etiquetador = EtiquetadorBotones()
@@ -452,10 +461,11 @@ def main(page: ft.Page):
     etiquetador.alto = 800
     etiquetador.ancho  = 500
     # carga de archivos (sentido inverso)
-    etiquetador.setear_salida( etiquetas )
-    etiquetador.leer_dataset(   dataset   )
+    etiquetador.setear_salida( etiquetas )      # carga el estado de los botones
+    etiquetador.leer_dataset(   dataset   )     # crea los botones de etiquetado
 
-
+    # configuracion de eventos ante el click sobre los botones
+    # debe hacerse después de leer el dataset
     etiquetador.evento_click(funcion_etiqueta, funcion_grupos, funcion_comando)
 
 
