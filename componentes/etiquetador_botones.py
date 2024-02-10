@@ -1,5 +1,10 @@
+from rich import print as print
 import flet as ft
 from componentes.procesar_etiquetas import  Etiquetas
+
+
+def nada( e ):
+    pass
 
 
 class BotonBiestable(ft.ElevatedButton):
@@ -12,11 +17,14 @@ class BotonBiestable(ft.ElevatedButton):
             bgcolor= self.color_false,
             on_click=self.click
             )
+        # manejador opcional para el click 
+        self.click_boton = nada
 
     # implementacion del biestable
     def click(self,e: ft.ControlEvent):
         valor = True if self.__valor==False else False
         self.estado = valor
+        self.click_boton(e)     # (no hace nada a menos que se programe)
 
     @property
     def estado(self):
@@ -44,9 +52,12 @@ class BotonGrupo(ft.IconButton):
             icon_color=ft.colors.WHITE,
             bgcolor=ft.colors.RED_800,
             )
+        # manejador opcional para el click 
+        self.click_boton = nada
 
 
-class FilasBotones(ft.Column):
+class FilasBotonesEtiquetas(ft.Column):
+    """Este componente crea botones de activacion para cada etiqueta (descripcion) detectada en un archivo de texto"""
     def __init__(self):
         self.dataset: Etiquetas
         self.etiquetas: Etiquetas
@@ -90,6 +101,9 @@ class FilasBotones(ft.Column):
             self.__filas_botones[i].width = self.__ancho
        
     def leer_dataset(self, ruta: str):
+        """Lee TODAS las etiquetas (el 'dataset') desde un archivo de texto y crea los botones de activacion de la interfaz gráfica.
+        El componente clasifica las etiquetas en distintos 'grupos' en base al primer renglón del archivo en que se encuentran.
+        """
         self.dataset = Etiquetas(ruta) 
         self.dataset.leer_archivo()
         tags = self.dataset.tags
@@ -130,11 +144,13 @@ class FilasBotones(ft.Column):
         self.update()
 
     def setear_salida(self, ruta: str):
+        """Carga el archivo de etiquetas de salida y actualiza el etiquetador grafico"""
         self.etiquetas = Etiquetas(ruta) 
         self.etiquetas.leer_archivo()
         self.actualizar_botones()
 
     def actualizar_botones(self):
+        """Lee los estados de los botones en base a las etiquetas ingresadas al componente"""
         for boton in self.botones_etiquetas:
             tag = boton.text
             if tag in self.etiquetas.tags:
@@ -144,6 +160,7 @@ class FilasBotones(ft.Column):
         self.update()
 
     def leer_botones(self):
+        """Lee todas las etiquetas habilitadas mediante los botones"""
         etiquetas = []
         for boton in self.botones_etiquetas:
             if boton.estado:
@@ -152,10 +169,12 @@ class FilasBotones(ft.Column):
         return etiquetas
 
     def leer_etiquetas_archivo(self):
+        """Lee y carga las etiquetas ya guardadas en el archivo de salida"""
         self.etiquetas.leer_archivo()  
         
 
     def conmutar_grupo(self, e: ft.ControlEvent ):
+        """Esta funcion habilita o deshabilita un grupo completo de etiquetas"""
         boton_grupo = e.control
         grupo = boton_grupo.data
         # Se corrige el estado del grupo de modo que el click afecte al mayor numero de etiquetas posible
@@ -174,11 +193,23 @@ class FilasBotones(ft.Column):
             boton.estado = boton_grupo.estado
         # actualizacion
         self.__filas_botones[grupo].update()
+        # funcion opcional
+        boton_grupo.click_boton(e)
+
+
+
+    def evento_click(self, funcion_etiquetas , funcion_grupo = nada):
+        """Asigna una funcion para el click de todos los botones según sean de etiquetas o de grupos"""
+        for boton in self.botones_etiquetas:
+            boton.click_boton =  funcion_etiquetas
+        for boton in self.__botones_grupo:
+            boton.click_boton =  funcion_grupo
 
 
 class EtiquetadorBotones(ft.Column):
     def __init__(self):
-        self.__filas_botones = FilasBotones()   # componente interno --> composicion
+        """Inicializa un componente etiquuetador, agregando a los botones de etiquetas los botones de guardado, descarte de cambios, etc """
+        self.__filas_botones = FilasBotonesEtiquetas()   # componente interno --> composicion
         self.__ancho = 600
         self.__altura_filas = 40
         self.__habilitado = False
@@ -238,41 +269,56 @@ class EtiquetadorBotones(ft.Column):
             height = self.__altura_filas,
             )  
         self.controls=[self.__filas_botones, self.__divisor, self.__f1, self.__f2, self.__divisor]
+        self.click_botones = nada
 
     def todas_etiquetas(self, e):
+        """Activa todas las etiquetas del dataset"""
         for boton in self.__filas_botones.botones_etiquetas:
             boton.estado = True
+        self.click_botones(e)
         # etiquetas = self.__filas_botones.leer_botones()
         # self.__filas_botones.etiquetas.tags = etiquetas
 
 
     def ninguna_etiqueta(self, e):
+        """Descarta todas las etiquetas del dataset"""
         for boton in self.__filas_botones.botones_etiquetas:
             boton.estado = False
+        self.click_botones(e)
         # etiquetas = self.__filas_botones.leer_botones()
         # self.__filas_botones.etiquetas.tags = etiquetas
 
 
     def restablecer_etiquetas(self, e):
+        """Actualiza los botones de etiquetas a sus valores guardados en archivo"""
         self.__filas_botones.leer_etiquetas_archivo()
         self.__filas_botones.actualizar_botones()
+        self.click_botones(e)
+
 
     def guardar_etiquetas(self, e):
+        """Guarda todas las etiquetas seleccionadas en el archivo de texto asignado al componente"""
         etiquetas = self.__filas_botones.leer_botones()
         # relectura de etiquetas para prevenir relecturas inutiles
         # self.__filas_botones.etiquetas.leer()    
-        print("etiquetas:", etiquetas)
-        self.__filas_botones.leer_etiquetas_archivo()    
+        # print("etiquetas:", etiquetas)
+        self.__filas_botones.leer_etiquetas_archivo()  
+        retorno = False  
         if set(self.__filas_botones.etiquetas.tags) != set(etiquetas): 
             # guardado de etiquetas y reporte
-            if self.__filas_botones.etiquetas.guardar(etiquetas)==False:
-                print("guardado fallido")
-            else:
-                print("guardado exitoso")
-                # self.__filas_botones.leer_etiquetas_archivo()
-        else:
-            print("sin cambios")
+            retorno = self.__filas_botones.etiquetas.guardar(etiquetas)==False
+        #     if  retorno:
+        #         print("guardado fallido")
+        #     else:
+        #         print("guardado exitoso")
+        #         # self.__filas_botones.leer_etiquetas_archivo()
+        # else:
+        #     print("sin cambios")
+        #funcionalidad opcional
+        self.click_botones(e)
+        # actualizacion grafica y salida
         self.update()
+        return retorno
 
     @property
     def ancho(self):
@@ -356,10 +402,40 @@ class EtiquetadorBotones(ft.Column):
             self.__habilitado = False
 
     def leer_botones(self):
+        """Lee todas las etiquetas habilitadas mediante los botones"""
         etiquetas = self.__filas_botones.leer_botones()
         return etiquetas
 
+    def evento_click(self, funcion_etiquetas, funcion_grupo=nada, funcion_comando=nada):
+        """Asigna una funcion para el click de todos los botones, segun sean de etiquetas o de grupos"""
+        self.__filas_botones.evento_click(funcion_etiquetas, funcion_grupo)
+        self.click_botones = funcion_comando
 
+
+########### FUNCIONES TEST #####################
+
+def funcion_etiqueta(e: ft.ControlEvent):
+    boton = e.control
+    valor = boton.text
+    print( "[bold green]Etiqueta afectada!")
+    print(f"[bold blue]Valor etiqueta: [bold yellow]{valor}")
+
+
+def funcion_comando(e: ft.ControlEvent):
+    boton = e.control
+    valor = boton.text
+    print( "[bold magenta]Comando activado!")
+    print(f"[bold blue]Comando: [bold yellow]{valor} [bold blue]activado!")
+
+
+def funcion_grupos(e: ft.ControlEvent):
+    boton = e.control
+    valor = boton.data
+    print( "[bold cyan]Grupo afectado!")
+    print(f"[bold blue]Indice grupo: [bold yellow]{valor}")
+
+
+################## FUNCION PRINCIPAL ####################
 
 def main(page: ft.Page):
 
@@ -381,6 +457,10 @@ def main(page: ft.Page):
     etiquetador.setear_salida( etiquetas )
     etiquetador.leer_dataset(   dataset   )
 
+
+    etiquetador.evento_click(funcion_etiqueta, funcion_grupos, funcion_comando)
+
+
     page.title = "Botones etiquetado"
     page.window_height      = 800
     page.window_min_height  = 800
@@ -388,6 +468,7 @@ def main(page: ft.Page):
     page.update()
 
 
+################## EJECUCION ###################
 
 if __name__ == "__main__":
     ft.app(target=main)

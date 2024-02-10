@@ -30,11 +30,7 @@ class Etiquetas:
 
     # escritura en disco
     def guardar(self, etiquetas= []):
-        # Si no hay lista de entrada se lee desde el objeto
-        # if len(etiquetas) == 0:
-        #     texto = etiquetas2texto(self.tags)
-        # else:
-        #     texto = etiquetas2texto(etiquetas)
+        # conversion de lista de etiquetas a texto (añade comas y respeta saltos de renglón)
         texto = etiquetas2texto(etiquetas)
         # guardado, actualizacion del objeto e indicacion de exito
         guardado_exitoso = guardar_archivo(self.ruta, texto)
@@ -61,7 +57,7 @@ def etiquetas2texto(lista_renglones: list):
 
 # Guardado en archivo (modo SOBREESCRITURA)
 def guardar_archivo(ruta: str, texto:str):
-    print(ruta)
+    # print(ruta)
     path = pathlib.Path(ruta).with_suffix('.txt')
     try:
         with open(path,"w") as archivo:
@@ -99,6 +95,7 @@ def filtrado_etiquetas(lista_entrada: list):
         nuevo_tag = False
         # Eliminacion de renglones vacios
         if len(lista_entrada[i].strip()) > 0:
+            # separacion de etiquetas mediante comas (estas se eliminan)
             etiquetas_renglon = lista_entrada[i].split(',')
             # quita de espacios vacios y guardado en lista
             for etiqueta in etiquetas_renglon :
@@ -129,7 +126,7 @@ if __name__ == "__main__":
 
     # lectura de etiquetas desde archivo
     etiqueta = Etiquetas(archivo) 
-    etiqueta.leer()
+    etiqueta.leer_archivo()
 
     tags  = etiqueta.tags
     grupo = etiqueta.grupo 
