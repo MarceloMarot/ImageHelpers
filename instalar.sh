@@ -12,3 +12,6 @@ pip install --upgrade pip
 # instalacion desde archivo
 pip  install -r requirements.txt
  
+
+# crear ejecutables
+flet pack ImageTagger.py

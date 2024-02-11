@@ -32,13 +32,24 @@ def buscar_imagenes(ruta: str):
 
 
 # Lista TODOS los archivos y subcarpetas del directorio
-# CUIDADO con el tipo de salida
-def listar_directorios(ruta: str):
-    direcciones = sorted(
-        pathlib.Path(ruta).iterdir(),
-        key = lambda path: (path.is_dir(), path.name.lower())
-        )
-    return direcciones
+def listar_directorios(ruta: str, recursivo = False):
+    """Devuelve la lista con los subdirectorios de la carpeta de entrada.
+    También permite búsquedas recursivas."""
+    directorios= []
+    # Busqueda de elementos en el directorio de entrada
+    resultado = pathlib.Path(ruta).iterdir()
+    # filtrado: sólo se dejan los directorios
+    objeto = filter(lambda path: path.is_dir(), resultado )
+    directorios += list(objeto)
+    if recursivo:
+        subdirectorios = []
+        for directorio in directorios:
+            subdirectorios += listar_directorios(directorio , True)
+        resultado =  directorios + subdirectorios
+    else:   
+        resultado =  directorios 
+    resultado.sort()
+    return resultado
     
 
 # Interfaz usuario: elegir un archivo de la lista por indice
