@@ -7,29 +7,45 @@ import sys
 
 from rich import print
 
+# Formatos de texto reconocidos por OpenCV (casi todos)
+# NO se incluyen GIF y SVG
+extensiones_OpenCV = ["*.bmp", "*.dib", "*.jpeg", "*.jpg", "*.jpe", "*.jp2", "*.png", "*.webp", "*.pbm", "*.pgm", "*.ppm", "*.pxm", "*.pxm", "*.pnm", "*.pfm", "*.sr", "*.ras", "*.tiff", "*.tif", "*.exr", "*.hdr", "*.pic"]
 
-# Busqueda de archivos por extensión en una carpeta (incluye subdirectorios)
-def buscar_extension(ruta: str, extension: str):
+
+# Busqueda de archivos por extensión en una carpeta 
+# (por defecto incluye subdirectorios)
+def buscar_extension(ruta: str, extension: str, recursivo=True):
+    """Busca archivos con la extensión especificada dentro del directorio indicado.
+    Por defecto la búsqueda es recursiva (busca también en subdirectorios)."""
     #se buscan todos los elementos con la terminacion indicada
     lista_rutas_archivo = []
-    for direccion in pathlib.Path(ruta).rglob(extension):
+    if recursivo: 
+        direcciones = pathlib.Path(ruta).rglob(extension)
+    else:
+        direcciones = pathlib.Path(ruta).glob(extension)
+ 
+    for direccion in direcciones:
         direccion_actual = str(direccion.absolute())
         lista_rutas_archivo.append ( direccion_actual )
     return lista_rutas_archivo
 
 
-# Busqueda de imágenes en una carpeta (incluye subdirectorios)
-def buscar_imagenes(ruta: str):
+
+def buscar_extensiones(ruta: str, extensiones: list[str] , recursivo=True):
+    """Busca archivos con cualquiera de las extensiones especificadas dentro del directorio indicado.
+    Por defecto la búsqueda es recursiva (busca también en subdirectorios).""" 
     lista_rutas_imagen = []
-    # Formatos de texto reconocidos por OpenCV (casi todos)
-    # NO se incluyen GIF y SVG
-    extensiones_OpenCV = ["*.bmp", "*.dib", "*.jpeg", "*.jpg", "*.jpe", "*.jp2", "*.png", "*.webp", "*.pbm", "*.pgm", "*.ppm", "*.pxm", "*.pxm", "*.pnm", "*.pfm", "*.sr", "*.ras", "*.tiff", "*.tif", "*.exr", "*.hdr", "*.pic"]
     # se busca cada extensión, una por una
-    for extension in extensiones_OpenCV:
-        lista_rutas_imagen = lista_rutas_imagen + buscar_extension(ruta, extension) #Concatenacion de listas
+    for extension in extensiones:
+        lista_rutas_imagen = lista_rutas_imagen + buscar_extension(ruta, extension, recursivo) #Concatenacion de listas
     # numero_imagenes = len(lista_rutas)
     return lista_rutas_imagen
 
+# Busqueda de imágenes en una carpeta (incluye subdirectorios)
+def buscar_imagenes(ruta: str, extensiones = extensiones_OpenCV, recursivo=True):
+    """Busca archivos de imagen compatibles con la biblioteca OpenCV (puede modificarse).
+    Por defecto la búsqueda es recursiva (busca también en subdirectorios)."""
+    return buscar_extensiones(ruta, extensiones, recursivo)
 
 # Lista TODOS los archivos y subcarpetas del directorio
 def listar_directorios(ruta: str, recursivo = False):
@@ -102,6 +118,7 @@ if __name__ == "__main__" :
         print(f"[bold green]Directorio: [bold yellow]{ruta} [bold green]")
         # Lista de archivos de imagen editables con OpenCV
         rutas_imagen = buscar_imagenes(ruta)
+        # rutas_imagen = buscar_imagenes(ruta, recursivo=False)
     
         numero_imagenes = len(rutas_imagen)
         print(f"[bold green]Nº archivos encontrados: [/bold green][bold yellow] {numero_imagenes}") 
