@@ -1,34 +1,35 @@
 from pathlib import Path
 
-# archivo "clasificar_archivos" aledaño (mismo subdirectorio)
 from . buscar_extension import buscar_extension
-# from sistema_archivos.buscar_extension import buscar_extension
-
-from rich import print
-
 
 
 
 # listar todas las extensiones de archivo de un directorio
-def listar_extensiones(ruta: str, distinguir_mayusculas = False ):
-    lista_archivos =  buscar_extension(ruta, "*.*")
+def listar_extensiones(ruta: str, distinguir_mayusculas = False , recursivo = True ):
+    # busqueda de archivos (recursiva por defecto)
+    lista_archivos =  buscar_extension(ruta, "*.*", recursivo)
     set_extensiones = set()
     for archivo in lista_archivos:
         if distinguir_mayusculas: 
             extension = Path(archivo).suffix
         else:
             extension = Path(archivo).suffix.lower()
-        # print(extension)
         set_extensiones.add(extension)
 
-    return list(set_extensiones)
-
-
+    lista_extensiones = list(set_extensiones)
+    lista_extensiones.sort()
+    return lista_extensiones
+    
 
 
 
 # Función MAIN
 if __name__ == "__main__" :
+
+
+    import sys , os
+    from rich import print
+    
     try:
         # se busca en el directorio indicado
         ruta = os.path.abspath(sys.argv[1])

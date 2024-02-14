@@ -41,11 +41,13 @@ def buscar_extensiones(ruta: str, extensiones: list[str] , recursivo=True):
     # numero_imagenes = len(lista_rutas)
     return lista_rutas_imagen
 
+
 # Busqueda de imágenes en una carpeta (incluye subdirectorios)
 def buscar_imagenes(ruta: str, extensiones = extensiones_OpenCV, recursivo=True):
     """Busca archivos de imagen compatibles con la biblioteca OpenCV (puede modificarse).
     Por defecto la búsqueda es recursiva (busca también en subdirectorios)."""
     return buscar_extensiones(ruta, extensiones, recursivo)
+
 
 # Lista TODOS los archivos y subcarpetas del directorio
 def listar_directorios(ruta: str, recursivo = False):
@@ -53,9 +55,9 @@ def listar_directorios(ruta: str, recursivo = False):
     También permite búsquedas recursivas."""
     directorios= []
     # Busqueda de elementos en el directorio de entrada
-    resultado = pathlib.Path(ruta).iterdir()
+    rutas = pathlib.Path(ruta).iterdir()
     # filtrado: sólo se dejan los directorios
-    objeto = filter(lambda path: path.is_dir(), resultado )
+    objeto = filter(lambda path: path.is_dir(), rutas )
     directorios += list(objeto)
     if recursivo:
         subdirectorios = []
