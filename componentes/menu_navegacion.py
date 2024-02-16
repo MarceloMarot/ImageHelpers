@@ -199,6 +199,10 @@ class MenuNavegacion(ft.Column):
         self.cargar_imagen()
         self.update()
 
+    @property 
+    def maximo(self):
+        return self.__maximo   
+
 
     # def incrementar(self, numero):
     def cambiar_indice(self, incremento, _):

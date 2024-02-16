@@ -38,12 +38,12 @@ class Imagen(ft.Image):
 class Contenedor(ft.Container):
     """'Contenedor' es una implementacion simplificada del componente 'ft.Container' de FLET"""
     # Inicializacion
-    def __init__(self, ancho=256, alto=256, redondeo=0, margen=10):
+    def __init__(self, ancho=256, alto=256, redondeo=0, margen=4):
         """Crea el objeto contenedor con valores preestablecidos."""
         # herencia de atributos y asignaciones valores predeterminados
         super().__init__(
             margin  = margen,
-            padding = 0,
+            padding = 10,
             width   = ancho,
             height  = alto,
             alignment=ft.alignment.center,
@@ -98,6 +98,8 @@ class Galeria(ft.Row):
             expand = True,
             wrap = True, # version galería (si es 'False' las imagenes van en linea)
             scroll=ft.ScrollMode.ALWAYS,
+            spacing=0,              # espaciado horizontal extra
+            run_spacing=0,        # espaciado vertical extra
             )
         self.numero = 0
 
