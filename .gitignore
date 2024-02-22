@@ -13,3 +13,8 @@ dist/
 virtual_env/
 
 ensayo.py
+
+
+*.png
+*.webp
+*.jpg
