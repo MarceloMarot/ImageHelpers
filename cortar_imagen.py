@@ -1,4 +1,5 @@
 # Importamos OpenCV
+from types import NoneType
 import cv2
 import sys
 import numpy as np
@@ -6,9 +7,12 @@ import numpy as np
 
 
 class ImagenOpenCV:
-    def __init__(self, ruta_original: str = "",ruta_recorte: str = "recorte.jpg"):
-        self.ruta_imagen_original = ruta_original
-        self.ruta_imagen_recorte  = ruta_recorte
+    # def __init__(self, ruta_original: str = "",ruta_recorte: str = "recorte.jpg"):
+        # self.ruta_imagen_original = ruta_original
+        # self.ruta_imagen_recorte  = ruta_recorte
+    def __init__(self):
+        self.ruta_imagen_original = ""
+        self.ruta_imagen_recorte  = ""
         self.coordenadas_recorte = [0,0,0,0]
         self.coordenadas_seleccion = [0,0,0,0]
         self.coordenadas_guardado = [0,0,0,0]
@@ -22,20 +26,26 @@ class ImagenOpenCV:
         self.x_mouse = 0
         self.y_mouse = 0
         self.dimensiones_recorte = [256, 256]
-        self.imagen_original = cv2.imread(ruta_original)
-        self.imagen_escalada = self.imagen_original.copy()
-        self.imagen_recorte = None
-        self.imagen_seleccion = None
-        self.imagen_grafica = self.imagen_original.copy()
+        self.dimensiones_original = [512, 512]
+
+        # self.imagen_original = cv2.imread(ruta_original)
+        # self.imagen_escalada = self.imagen_original.copy()
+        self.imagen_original = None | np.ndarray
+        self.imagen_escalada = None | np.ndarray
+        self.imagen_recorte = None | np.ndarray
+        self.imagen_seleccion = None | np.ndarray
+
+        self.imagen_grafica = None | np.ndarray
+
         self.nombre_ventana = "Ventana Recorte"
-        self.nombre_trackbar = 'Scale' 
+        self.nombre_trackbar = 'Escala' 
         self.BGR_seleccion = (200,0,150)  # magenta
         self.BGR_recorte   = (0,200,200)  # amarillo
         self.BGR_guardado  = (100,150,0)  # verde oscuro
 
         self.BGR_error = (0,50,200)  # vermellon
 
-        self.__nro_aperturas_ventana = 0
+        # self.__nro_aperturas_ventana = 0
 
         self.__recorte_guardado = False
         self.__recorte_marcado  = False
@@ -43,6 +53,21 @@ class ImagenOpenCV:
         self.coordenadas_ventana = [900, 100]
         self.dimensiones_ventana = [768, 768]
         self.texto_consola = True
+
+
+        self.configurar_ventana()
+        self.crear_trackbar()
+        # self.ventana_imagen()
+
+
+
+
+    def crear_trackbar(self):
+        # creacion de la barra de escala
+        cv2.createTrackbar(self.nombre_trackbar, self.nombre_ventana, self.escala_actual , self.escala_maxima , self.actualizar_proporcion) 
+        #seteo del handler de escala
+        # cv2.setMouseCallback(self.nombre_ventana, self.marcar_recorte)  
+
 
 
     # Manejador para controlar el tamaño de la imagen
@@ -70,10 +95,8 @@ class ImagenOpenCV:
         self.y_mouse = y_mouse
 
         # reestablecimiento de escala
-        cv2.setTrackbarPos(self.nombre_trackbar, self.nombre_ventana, int(self.escala_actual))
-
-
-
+        self.actualizar_trackbar_escala()
+        # dibujar rectangulos
         self.calcular_rectangulo( )
         # evento movimiento cursor --> actualizar seleccion
         if evento == cv2.EVENT_MOUSEMOVE:
@@ -93,17 +116,29 @@ class ImagenOpenCV:
 
 
     # Funcion para redimencionar la imagen  de entrada sin alterar las proporciones
-    def redimensionar_imagen(self, escala):
+    def redimensionar_imagen(self, proporcion ):
         """Esta funcion crea una copia de la imagen de entrada ampliada o reducida en el factor de escala ingresado."""
-        anchura = self.imagen_original.shape[1] * escala
-        altura  = self.imagen_original.shape[0] * escala
+        # print("TIPO:",type(self.imagen_original))
+        if type(self.imagen_original) == NoneType:
 
-        # Prevencion de errores por entrada de numeros flotantes
-        anchura = int( anchura )
-        altura  = int( altura  )
-        # Se usa la interpolacion más lenta pero de mejor calidad
-        dimensiones = (anchura, altura)
-        self.imagen_escalada = cv2.resize(self.imagen_original, dimensiones , interpolation = cv2.INTER_LANCZOS4) 
+            [anchura, altura] = self.dimensiones_original 
+            self.dimensiones_escalada = self.dimensiones_original 
+            # Imagen vacia
+            self.imagen_escalada = np.zeros((altura, altura,3), np.uint8)
+
+        else:
+            anchura = self.imagen_original.shape[1] 
+            altura  = self.imagen_original.shape[0] 
+            self.dimensiones_original = [anchura, altura]
+
+            # Prevencion de errores por entrada de numeros flotantes
+            anchura = int( anchura * proporcion )
+            altura  = int( altura * proporcion  )
+            self.dimensiones_escalada = [anchura, altura]
+
+            # Se usa la interpolacion más lenta pero de mejor calidad
+            self.imagen_escalada = cv2.resize(self.imagen_original, self.dimensiones_escalada , interpolation = cv2.INTER_LANCZOS4) 
+
 
 
     def ventana_imagen(self, error=False):
@@ -117,7 +152,7 @@ class ImagenOpenCV:
         copia = cv2.convertScaleAbs(self.imagen_escalada, alpha=contraste, beta=brillo)
 
         # reestablecimiento de escala
-        self.actualizar_trackbar_escala()
+        # self.actualizar_trackbar_escala()
 
         # Regiones seleccionadas : brillo original
         if self.coordenadas_seleccion != [0,0,0,0]:
@@ -202,7 +237,6 @@ class ImagenOpenCV:
 
 
     def configurar_ventana(self):
-
         cv2.namedWindow(self.nombre_ventana, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_NORMAL )
         ancho_ventana = self.dimensiones_ventana[0]
         alto_ventana  = self.dimensiones_ventana[1]
@@ -210,20 +244,10 @@ class ImagenOpenCV:
         b = self.coordenadas_ventana[0]
         h = self.coordenadas_ventana[1]
         cv2.moveWindow(self.nombre_ventana, b, h)
+        cv2.setMouseCallback(self.nombre_ventana, self.marcar_recorte) 
 
-        # la barra de escala sólo puede crearse una vez
-        if self.__nro_aperturas_ventana == 0 :
-            # creacion de la barra de escala
-            cv2.createTrackbar(self.nombre_trackbar, self.nombre_ventana, self.escala_actual , self.escala_maxima , self.actualizar_proporcion) 
-            #seteo del handler de escala
-            cv2.setMouseCallback(self.nombre_ventana, self.marcar_recorte)  
-            # seteo de escala maxima y minima 
-            self.configurar_trackbar_escala()
 
-            self.__nro_aperturas_ventana += 1
-            return True
-        else: 
-            return False
+
 
 
     def configurar_trackbar_escala(self):
@@ -257,21 +281,70 @@ class ImagenOpenCV:
 
 
     def actualizar_trackbar_escala(self):
+        # Caso de reapertura de imagenes --> reestablecer escalas        
+        # if self.__recorte_guardado :
+        #     self.escala_actual = self.escala_guardado
+        # elif self.__recorte_marcado :
+        #     self.escala_actual = self.escala_recorte
         cv2.setTrackbarPos(self.nombre_trackbar, self.nombre_ventana, self.escala_actual) 
         cv2.setTrackbarMin(self.nombre_trackbar, self.nombre_ventana, self.escala_minima) 
         cv2.setTrackbarMax(self.nombre_trackbar, self.nombre_ventana, self.escala_maxima) 
 
 
+    def apertura_imagen(self, ruta: str|None = None):
+        if ruta != None:
+            # actualizacion de ruta de imagen 
+            self.ruta_imagen_original = ruta
+            # borrado de flags auxiliares
+            self.__recorte_guardado = False
+            self.__recorte_marcado  = False
+            self.recorte_vacio()
+
+        # lectura desde archivo
+        self.imagen_original = cv2.imread(self.ruta_imagen_original)
+
+        self.configurar_trackbar_escala()
+
+        # # Caso de reapertura de imagenes --> reestablecer escalas        
+        if self.__recorte_guardado :
+            self.escala_actual = self.escala_guardado
+        elif self.__recorte_marcado :
+            self.escala_actual = self.escala_recorte
+
+        self.actualizar_trackbar_escala()
+        self.redimensionar_imagen(self.escala_actual/100 )
+
+        self.ventana_imagen()
+
+
+    def recorte_vacio(self, dimensiones: list[int]|None = None):
+        #creacion recorte vacio
+        if dimensiones == None:
+            dimensiones = self.dimensiones_recorte
+        else:
+            self.dimensiones_recorte = dimensiones
+        ancho_recorte = dimensiones[0]
+        alto_recorte  = dimensiones[1]
+        # relleno preliminar con imagen en negro
+        self.imagen_recorte = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
+        self.imagen_seleccion = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
+
+
+
 
     def interfaz_edicion(
-        self, 
+        self,  
+        ruta_original: str = "",
+        ruta_recorte: str = "recorte.jpg",
         dimensiones_recorte=[512, 512], 
         dimensiones_ventana=[768, 768], 
         texto_consola=True,
-        guardado_teclado=True
+        escape_teclado=True
         ):
         """Funcion para abrir la ventana de edición. La ventana se cierra presionando alguna de las teclas indicadas. 
-        Por defecto se elije un tamaño de recorte de 512 x 512, que es el exigido por Stable Diffusion"""""
+        Por defecto se elije un tamaño de recorte de 512 x 512, que es el exigido por Stable Diffusion"""
+        self.ruta_imagen_original = ruta_original
+        self.ruta_imagen_recorte  = ruta_recorte
         self.texto_consola = texto_consola
 
         self.dimensiones_ventana = dimensiones_ventana
@@ -279,64 +352,56 @@ class ImagenOpenCV:
         exito = False
         tecla = "-"  # Caracter no implementado
         # Leemos la imagen de entrada, la mostramos e imprimimos sus dimensiones.
-        self.dimensiones_recorte = dimensiones_recorte
-        self.imagen_original = cv2.imread(self.ruta_imagen_original)    
+        # self.imagen_original = cv2.imread(self.ruta_imagen_original)    
         # se leen las dimensiones de imagen y de recorte
         # asignacion por defecto: NO ampliar ni reducir imagen de entrada
         # imagen_escalada = self.imagen_original.copy()
-        #creacion recorte vacio
-        ancho_recorte = dimensiones_recorte[0]
-        alto_recorte  = dimensiones_recorte[1]
-        self.imagen_recorte = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
-        self.imagen_seleccion = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
+        # #creacion recorte vacio
+        # self.dimensiones_recorte = dimensiones_recorte
+        # ancho_recorte = dimensiones_recorte[0]
+        # alto_recorte  = dimensiones_recorte[1]
+        # # relleno preliminar con imagen en negro
+        # self.imagen_recorte = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
+        # self.imagen_seleccion = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
+
+        self.recorte_vacio(dimensiones_recorte)
+        self.apertura_imagen()
+
+        # self.configurar_trackbar_escala()
+
+        # # # Caso de reapertura de imagenes --> reestablecer escalas        
+        # if self.__recorte_guardado :
+        #     self.escala_actual = self.escala_guardado
+        # elif self.__recorte_marcado :
+        #     self.escala_actual = self.escala_recorte
+
+        # self.actualizar_trackbar_escala()
+        # self.redimensionar_imagen(self.escala_actual/100 )
+        # self.ventana_imagen()
 
 
-
-
-
-
-        # Configuracion y llamado de la ventana gráfica
-        creacion_ventana =  self.configurar_ventana()
-        print(creacion_ventana)
-
-        # if creacion_ventana == False:
-        if self.__recorte_guardado :
-            self.escala_actual = self.escala_guardado
-        elif self.__recorte_marcado :
-            self.escala_actual = self.escala_recorte
-        self.ventana_imagen()
-
-
-
-
-        k = "y"
-        if guardado_teclado == False:
-            # Loop infinito
-            while tecla not in {" " }:
-                # espera en reposo a que se pulse una tecla del teclado
-                cv2.waitKey(0)
-                tecla = "-"
+        # Conjunto de teclas de escape
+        exito_guardado = False
+        if escape_teclado:
+            teclas_escape = {"a" , "s", "d" ," " }  # Teclas 'A', 'S', 'D', 'SPACE' 
         else:
-            # Conjunto de teclas permitidas
-            teclas_programadas = {"a" , "s", "d" ," " }  # Teclas 'A', 'S', 'D', 'SPACE' 
-            tecla = "-"  # Caracter no implementado
-            if texto_consola: print("Teclas implementadas: ", teclas_programadas )
-            while tecla not in teclas_programadas:
-                # espera en reposo a que se pulse una tecla del teclado
-                # k = cv2.waitKey(0)
-                k = cv2.waitKeyEx(0)
-                tecla = chr(k)  # Conversion de numero a caracter ASCII
+            teclas_escape = {}
+        tecla = "-"  # Caracter no implementado
+        if texto_consola: print("Teclas implementadas: ", teclas_escape )
+        while tecla not in teclas_escape:
+            # espera en reposo a que se pulse una tecla del teclado
+            # k = cv2.waitKey(0)
+            k = cv2.waitKeyEx(0)
+            tecla = chr(k)  # Conversion de numero a caracter ASCII
 
-                print(k, tecla )
-                if texto_consola: print("Tecla ingresada: ", tecla)
-        #si la tecla pulsada es 's' se guarda una copia del recorte
-        if k == ord("s"):
-            exito = self.guardado_recorte() # FIX
-            return tecla, exito
-        else: 
-            # Retorno de tecla ingresada
-            return tecla, exito
+            print(k, tecla )
+            if texto_consola: print("Tecla ingresada: ", tecla)
+            #si la tecla pulsada es 's' se guarda una copia del recorte
+            if k == ord("s"):
+                exito_guardado = self.guardado_recorte() 
 
+        # self.cerrar_ventana()
+        return tecla, exito_guardado
 
 
     def guardado_recorte(self):
@@ -359,8 +424,12 @@ class ImagenOpenCV:
             self.coordenadas_guardado = self.coordenadas_seleccion
             self.escala_guardado = self.escala_actual
             guardado_correcto = self.guardado_recorte()
-            self.__recorte_guardado = guardado_correcto
+            self.__recorte_guardado = guardado
             return guardado_correcto
+
+
+    def cerrar_ventana(self):
+        cv2.destroyWindow(self.nombre_ventana)
 
 
 # Rutina de prueba: Apertura de imagenes
@@ -373,31 +442,29 @@ if __name__ == "__main__" :
     if len(sys.argv) == 1 :
         #imagen por defecto 
         ruta_archivo_imagen = '00be5530-746a-42ad-a68a-9a40d6dda951.webp'
-
-
         print("Apertura de archivo de ejemplo:", ruta_archivo_imagen)
     else :
         ruta_archivo_imagen = str(sys.argv[1])
         print("Apertura de archivo indicado:", ruta_archivo_imagen)
 
     if len(sys.argv) < 3 :
-        # ruta de destino (el directorio debe ser preexistente)
         ruta_archivo_recorte = 'recorte.webp'
-        # archivo_recorte = '../Imagenes/HOLAH/recorte.jpg'
         print("Guardado de archivo por defecto:", ruta_archivo_recorte)
     else :
         ruta_archivo_recorte = str(sys.argv[2])
         print("Nombre de recorte:", ruta_archivo_recorte)
 
     ## PROCESAMIENTO
-    ventana = ImagenOpenCV(ruta_archivo_imagen, ruta_archivo_recorte)
+    ventana = ImagenOpenCV()
+    # ventana = ImagenOpenCV(ruta_archivo_imagen, ruta_archivo_recorte)
 
-    # ventana.interfaz_edicion(dimensiones_recorte=[256, 256],guardado_teclado=True) # Recorte pequeño
-    ventana.interfaz_edicion( guardado_teclado=True)    # Tamaño predefinido
-    # ventana.interfaz_edicion(dimensiones_recorte=[900, 900],guardado_teclado=True) # Recorte demasiado grande
+    
+    # ventana.interfaz_edicion(dimensiones_recorte=[256, 256],escape_teclado=True) # Recorte pequeño
+    ventana.interfaz_edicion( ruta_archivo_imagen, ruta_archivo_recorte, escape_teclado=True)    # Tamaño predefinido
+    # ventana.interfaz_edicion(dimensiones_recorte=[900, 900],escape_teclado=True) # Recorte demasiado grande
 
 
     # # Cierre de ventanas
-    cv2.destroyAllWindows()
-    
-
+    # cv2.destroyAllWindows()
+    # cv2.destroyWindow(ventana.nombre_ventana)
+    ventana.cerrar_ventana()

@@ -6,6 +6,9 @@ from cortar_imagen import ImagenOpenCV
 
 clickeos = 0
 
+ventana = None
+
+
 def main(page: ft.Page):
 
     ancho_pagina = 800
@@ -18,17 +21,25 @@ def main(page: ft.Page):
     ruta_imagen = '1686469590.png'
 
     ruta_recorte = "recorte.webp"
-    img = ImagenOpenCV(ruta_imagen, ruta_recorte)
+    # ventana = ImagenOpenCV()
+
 
 
     def clickeo(e):
         global clickeos
         clickeos += 1
-        # print(f"Nº clicks: {clickeos}")
+        print(f"Nº clicks: {clickeos}")
+        global ventana
 
-        img.interfaz_edicion([512,512],[768,768],texto_consola=False, guardado_teclado=False)  #tamaño recorte predefinido
+        if clickeos ==1: 
+            ventana = ImagenOpenCV()
+
+        if clickeos >=1: 
+            ventana.interfaz_edicion(ruta_imagen, ruta_recorte,[512,512],[768,768],texto_consola=False, escape_teclado=False)  #tamaño recorte predefinido
+        
         # Cierre de ventanas
-        cv2.destroyWindow(img.nombre_ventana)
+        # cv2.destroyWindow(img.nombre_ventana)
+        # ventana.cerrar_ventana()
 
 
     imagen = ft.Image(
