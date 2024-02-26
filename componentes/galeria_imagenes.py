@@ -1,7 +1,12 @@
 # Ejecutar demo como:
 # py -m componentes.galeria_imagenes
 from functools import partial
+from typing import Sequence, TypeVar
 import flet as ft
+
+
+
+
 
 # Clase auxiliar para configurar contenedores
 class Estilo_Contenedor:
@@ -78,6 +83,10 @@ class Contenedor(ft.Container):
             self.on_long_press = longpress
 
 
+# nuevos tipados para contenedor y sus subclases
+Cont     = TypeVar('Cont'     , bound=Contenedor)
+
+
 class Contenedor_Imagen(Contenedor):
     """ 'Contenedor' es una implementacion simplificada del componente 'ft.Container' de FLET"""
     # Inicializacion
@@ -97,6 +106,15 @@ class Contenedor_Imagen(Contenedor):
     @property
     def clave(self):
         return  self.content.key
+    
+    
+    @clave.setter
+    def clave(self, valor: str):
+        self.content.key = valor
+
+
+# nuevos tipados para contenedor de imagenes y sus subclases
+ContImag = TypeVar('ContImag' , bound=Contenedor_Imagen)
 
 
 class Galeria(ft.Row):
@@ -128,7 +146,7 @@ class Galeria(ft.Row):
         self.controls = leer_imagenes( rutas_imagen, ancho, alto, redondeo) 
 
 
-    def cargar_imagenes(self, imagenes: list[Contenedor_Imagen],  cuadricula=True):
+    def cargar_imagenes(self, imagenes: list[ContImag],  cuadricula=True):
         # """Este metodo carga imagenes de tipo ft.Image creadas externamente"""
         # Crea los contenedores vacios para la galeria y les carga las imagenes
         self.wrap = cuadricula # version galería (si es 'False' las imagenes van en linea)
@@ -184,17 +202,16 @@ def leer_imagenes(rutas_imagen: list[str], ancho=256, alto=256, redondeo=0,  cua
     return contenedores
 
 
-def clave_imagen_correcta(key, x: Contenedor_Imagen):
+def clave_imagen_correcta(key, x: ContImag):
     """Compara la clave interna del contenedor de imagen con la clave indicada"""
     return True if key == x.clave else False
 
 
-def imagen_clave(clave: str, imagenes: list[Contenedor_Imagen]):
+def imagen_clave(clave: str, imagenes: list[ContImag]):
     """Devuelve el contenedor de imagen con la clave seleccionada"""
     key_imagen = lambda x: clave_imagen_correcta(clave, x)
     objeto_filtrado = filter(key_imagen ,imagenes)
     return list(objeto_filtrado)[0]
-
 
 
 
@@ -301,8 +318,8 @@ def pagina_galeria(page: ft.Page):
 
     # Elementos generales de la pagina
     page.title = "Galería Imágenes"
-    page.window_width=1500
-    page.window_height=800
+    page.window_width  = 1500
+    page.window_height =  800
     page.theme_mode = ft.ThemeMode.LIGHT
     # page.theme_mode = ft.ThemeMode.DARK
 
