@@ -89,6 +89,16 @@ class Contenedor_Imagen(Contenedor):
         self.content= self.imagen
 
 
+    @property
+    def ruta_imagen(self):
+        return  self.content.src
+
+
+    @property
+    def clave(self):
+        return  self.content.key
+
+
 class Galeria(ft.Row):
     """Clase 'Galeria' compuesta creada para manejar fácilmente multiples contenedores de imagenes. 
     Es subclase del objeto 'fila' (ft.Row) de FLET
@@ -172,6 +182,19 @@ def leer_imagenes(rutas_imagen: list[str], ancho=256, alto=256, redondeo=0,  cua
         contenedor.content.key = f"imag_{i}"
         contenedores.append(contenedor)
     return contenedores
+
+
+def clave_imagen_correcta(key, x: Contenedor_Imagen):
+    """Compara la clave interna del contenedor de imagen con la clave indicada"""
+    return True if key == x.clave else False
+
+
+def imagen_clave(clave: str, imagenes: list[Contenedor_Imagen]):
+    """Devuelve el contenedor de imagen con la clave seleccionada"""
+    key_imagen = lambda x: clave_imagen_correcta(clave, x)
+    objeto_filtrado = filter(key_imagen ,imagenes)
+    return list(objeto_filtrado)[0]
+
 
 
 

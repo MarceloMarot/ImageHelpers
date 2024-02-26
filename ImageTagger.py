@@ -5,7 +5,7 @@ import re
 
 from manejo_texto.procesar_etiquetas import Etiquetas 
 
-from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor
+from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave
 from componentes.menu_navegacion import  MenuNavegacion
 from componentes.etiquetador_botones import EtiquetadorBotones
 
@@ -15,7 +15,7 @@ from sistema_archivos.buscar_extension import buscar_imagenes
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
-
+from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria
 
 
 def nada( e ):
@@ -174,86 +174,7 @@ def leer_imagenes_etiquetadas(rutas_imagen: list[str], ancho=1024, alto=1024, re
     return contenedores
 
 
-# estilos para contenedores 
-estilo_galeria_defecto = Estilo_Contenedor(
-    width = 256, 
-    height = 256,
-    border_radius = 10, 
-    bgcolor = ft.colors.BLUE_100,
-    border=ft.border.all(5, ft.colors.INDIGO_100)
-    )
 
-estilo_galeria_modificado = Estilo_Contenedor(
-    width = 256, 
-    height = 256,
-    border_radius = 10, 
-    bgcolor = ft.colors.YELLOW_600,
-    border=ft.border.all(5, ft.colors.AMBER_600)
-    )
-
-estilo_galeria_guardado = Estilo_Contenedor(
-    width = 256, 
-    height = 256,
-    border_radius = 10, 
-    bgcolor = ft.colors.LIME_800,
-    border=ft.border.all(5, ft.colors.GREEN_800)
-    )
-
-estilo_galeria_erroneo = Estilo_Contenedor(
-    width = 256, 
-    height = 256,
-    border_radius = 10, 
-    bgcolor = ft.colors.RED_800,
-    border=ft.border.all(5, ft.colors.BROWN_800)
-    )
-
-estilos_galeria = {
-    "predefinido" : estilo_galeria_defecto,
-    "modificado" : estilo_galeria_modificado,
-    "guardado" : estilo_galeria_guardado,
-    "erroneo" : estilo_galeria_erroneo
-    }
-
-
-# estilos para el contenedor 
-estilo_menu_defecto = Estilo_Contenedor(
-    width = 512,
-    height = 512,
-    border_radius = 20, 
-    bgcolor = ft.colors.BLUE_100,
-    border=ft.border.all(10, ft.colors.INDIGO_100)
-    )
-
-estilo_menu_modificado = Estilo_Contenedor(
-    width = 512,
-    height = 512,
-    border_radius = 20, 
-    bgcolor = ft.colors.YELLOW_600,
-    border=ft.border.all(10, ft.colors.AMBER_600)
-    )
-
-estilo_menu_guardado = Estilo_Contenedor(
-    width = 512,
-    height = 512,
-    border_radius = 20, 
-    bgcolor = ft.colors.LIME_800,
-    border=ft.border.all(10, ft.colors.GREEN_800)
-    )
-
-estilo_menu_erroneo = Estilo_Contenedor(
-    width = 512,
-    height = 512,
-    border_radius = 20, 
-    bgcolor = ft.colors.RED_800,
-    border=ft.border.all(10, ft.colors.BROWN_800)
-    )
-
-estilos_seleccion = {
-    "predefinido" : estilo_menu_defecto,
-    "modificado" : estilo_menu_modificado,
-    "guardado" : estilo_menu_guardado,
-    "erroneo" : estilo_menu_erroneo
-    }
 
 
 
@@ -558,9 +479,6 @@ def main(pagina: ft.Page):
         galeria.scroll_to(key=clave, duration=1000)
 
 
-    def clave_imagen_correcta(key, x: Contenedor_Etiquetado):
-        return True if key == x.content.key else False
-
 
     # Eventos galeria
     def click_imagen_galeria(e: ft.ControlEvent):
@@ -572,9 +490,7 @@ def main(pagina: ft.Page):
         global imagenes_galeria
 
         # actualizacion de imagen seleccionada y etiquetado
-        key_imagen = lambda x: clave_imagen_correcta(clave, x)
-        objeto_filtrado = filter(key_imagen ,imagenes_etiquetadas)
-        imagen_seleccionada = list(objeto_filtrado)[0]
+        imagen_seleccionada = imagen_clave(clave, imagenes_etiquetadas)
 
         # etiquetador_imagen.setear_salida(imagenes_etiquetadas[i])
         etiquetador_imagen.setear_salida(imagen_seleccionada)

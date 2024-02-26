@@ -3,16 +3,37 @@ from types import NoneType
 import cv2
 import sys
 import numpy as np
+from rich import print as print
 
+def nada( a ):
+    pass
+
+
+class ParametrosVentana:
+    def __init__(
+        self, 
+        ruta_origen: str = "", 
+        ruta_recorte: str = "recorte.webp",
+        clave: str = "---",
+        ):
+        self.ruta_origen = ruta_origen
+        self.ruta_recorte = ruta_recorte
+        self.clave = clave
+        self.coordenadas_recorte = [0,0,0,0]
+        self.coordenadas_seleccion = [0,0,0,0]
+        self.coordenadas_guardado = [0,0,0,0]     
+        self.escala_actual = 100
+        self.escala_recorte  = 0
+        self.escala_guardado = 0
+        self.recorte_guardado = False
+        self.recorte_marcado  = False
 
 
 class ImagenOpenCV:
-    # def __init__(self, ruta_original: str = "",ruta_recorte: str = "recorte.jpg"):
-        # self.ruta_imagen_original = ruta_original
-        # self.ruta_imagen_recorte  = ruta_recorte
     def __init__(self):
-        self.ruta_imagen_original = ""
-        self.ruta_imagen_recorte  = ""
+        self.ruta_imagen_original : str = ""    # valor provisional
+        self.ruta_imagen_recorte  : str = ""    # valor provisional
+        self.clave : str = "---"
         self.__coordenadas_recorte: list[int]
         self.__coordenadas_seleccion: list[int]
         self.__coordenadas_guardado: list[int]
@@ -24,8 +45,8 @@ class ImagenOpenCV:
         self.__escala_recorte : int 
         self.__escala_guardado: int 
 
-        self.__x_mouse = 0
-        self.__y_mouse = 0
+        self.__x_mouse : int = 0
+        self.__y_mouse : int = 0
 
         self.dimensiones_recorte = [256, 256]
         self.dimensiones_original = [512, 512]
@@ -44,8 +65,8 @@ class ImagenOpenCV:
         self.BGR_error     = (0,50,200)  # vermellon
 
         # flags de estado 
-        self.__recorte_guardado = False
-        self.__recorte_marcado  = False
+        self.__recorte_guardado : bool
+        self.__recorte_marcado  : bool
 
         self.coordenadas_ventana = [900, 100]
         self.dimensiones_ventana = [768, 768]
@@ -56,45 +77,72 @@ class ImagenOpenCV:
         # teclas para guardado
         self.teclas_guardado = {"s"}  
 
-        self.inicializar_valores()
+        self.brillo_ventana: int = 100
+        self.contraste_ventana: float = 0.5 
+
+        self.funcion_mouse = nada
+        self.funcion_trackbar = nada
+
+        self.parametros = ParametrosVentana()
+        self.inicializar_valores(self.parametros)
         self.__configurar_ventana()
         self.__crear_trackbar()
 
 
+
     def copiar_estados(self):
         """Metodo auxiliar para hacer un backup externo de las escalas y las coordenadas guardadas"""
-        return [
-            self.__coordenadas_recorte,
-            self.__coordenadas_seleccion,
-            self.__coordenadas_guardado,
-            self.__escala_actual,
-            self.__escala_recorte, 
-            self.__escala_guardado,
-            ]
-
-    def recuperar_estados(self, estados: list):
-        """Metodo auxiliar para recupera los valores de las últimas escalas y coordenadas asignadas"""
-        [
-            self.__coordenadas_recorte,
-            self.__coordenadas_seleccion,
-            self.__coordenadas_guardado,
-            self.__escala_actual,
-            self.__escala_recorte, 
-            self.__escala_guardado,
-        ] = estados
+        # print("[bold green] Valores copiados")
+        param = ParametrosVentana()
+        param.ruta_origen = self.ruta_imagen_original    
+        param.ruta_recorte = self.ruta_imagen_recorte
+        param.clave = self.clave 
+        param.coordenadas_recorte = self.__coordenadas_recorte  
+        param.coordenadas_seleccion = self.__coordenadas_seleccion 
+        param.coordenadas_guardado = self.__coordenadas_guardado 
+        param.escala_actual = self.__escala_actual   
+        param.escala_recorte = self.__escala_recorte   
+        param.escala_guardado = self.__escala_guardado
+        param.recorte_guardado = self.__recorte_guardado 
+        param.recorte_marcado  = self.__recorte_marcado  
+        return param
 
 
-    def inicializar_valores(self):
-        self.__coordenadas_recorte = [0,0,0,0]
-        self.__coordenadas_seleccion = [0,0,0,0]
-        self.__coordenadas_guardado = [0,0,0,0]
-        self.__recorte_guardado = False
-        self.__recorte_marcado  = False       
+    def recuperar_estados(self, param: ParametrosVentana):
+        """Metodo auxiliar para recupera los valores de las últimas escalas y coordenadas asignadas.
+        También actualiza la imagen"""
+        # print("[bold yellow] Valores restaurados")
+        self.ruta_imagen_original    = param.ruta_origen
+        self.ruta_imagen_recorte     = param.ruta_recorte
+        self.clave = param.clave
+        self.__coordenadas_recorte   = param.coordenadas_recorte
+        self.__coordenadas_seleccion = param.coordenadas_seleccion
+        self.__coordenadas_guardado  = param.coordenadas_guardado
+        self.__escala_actual    = param.escala_actual
+        self.__escala_recorte   = param.escala_recorte
+        self.__escala_guardado  = param.escala_guardado
+        self.__recorte_guardado = param.recorte_guardado
+        self.__recorte_marcado  = param.recorte_marcado
+        # self.__backup_estados = estados
+        self.parametros = param
+        self.apertura_imagenes()
+
+
+    def inicializar_valores(self, param: ParametrosVentana ):
+        self.ruta_imagen_original = param.ruta_origen
+        self.ruta_imagen_recorte = param.ruta_recorte
+        self.clave = param.clave
+        self.__coordenadas_recorte   = param.coordenadas_recorte
+        self.__coordenadas_seleccion = param.coordenadas_seleccion
+        self.__coordenadas_guardado  = param.coordenadas_guardado    
+        self.__escala_actual    = param.escala_actual
+        self.__escala_recorte   = param.escala_recorte
+        self.__escala_guardado  = param. escala_guardado
+        self.__recorte_guardado = param.recorte_guardado
+        self.__recorte_marcado  = param.recorte_marcado
+
         self.__escala_minima = 33     
         self.__escala_maxima = 200     
-        self.__escala_actual = 100
-        self.__escala_recorte  = 0
-        self.__escala_guardado = 0
         self.__recorte_vacio()
 
 
@@ -113,6 +161,8 @@ class ImagenOpenCV:
         self.__coordenadas_seleccion = [0,0,0,0]
         # actualizacion grafica
         self.ventana_imagen()
+        #funcionalidad opcional
+        self.funcion_trackbar(x)
 
 
     def __marcar_recorte(self, evento,x_mouse,y_mouse,flags,param):
@@ -132,16 +182,22 @@ class ImagenOpenCV:
         if evento == cv2.EVENT_MOUSEMOVE:
             # Actualizacion de graficas y retorno de coordenadas de seleccion
             self.ventana_imagen() 
+            #funcion usuario (opcional) 
+            self.funcion_mouse(evento)
         # evento click izquierdo --> crear recorte
         if evento == cv2.EVENT_LBUTTONDOWN:
             # Actualizacion de graficas y retorno del recorte y sus coordenadas
             self.copiar_recorte()
             self.ventana_imagen() 
+            #funcion usuario (opcional) 
+            self.funcion_mouse(evento)
         # evento click derecho --> crear recorte y guardarlo en archivo
         if evento == cv2.EVENT_RBUTTONDOWN:
             # Actualizacion de graficas y retorno del recorte y sus coordenadas
             self.copiar_recorte(guardado=True)
             self.ventana_imagen() 
+            #funcion usuario (opcional) 
+            self.funcion_mouse(evento)
 
 
     def __redimensionar_imagen(self, proporcion ):
@@ -172,8 +228,10 @@ class ImagenOpenCV:
         """función grafica: actualiza la ventana de imagen y le dibuja un rectángulo encima con las coordenadas indicadas"""
         # marcado del rectangulo sobre una copia de la imagen para no dañar la original
 
-        brillo = 100
-        contraste = 0.5 
+        brillo = self.brillo_ventana
+        contraste = self.contraste_ventana 
+        # brillo = 100
+        # contraste = 0.5 
         # brillo = 150
         # contraste = 0.33
         copia = cv2.convertScaleAbs(self.__imagen_escalada, alpha=contraste, beta=brillo)
@@ -308,19 +366,36 @@ class ImagenOpenCV:
         cv2.setTrackbarMax(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_maxima) 
 
 
-    def apertura_imagenes(self, ruta_origen: str|None = None, ruta_recorte: str|None = None):
+    def apertura_imagenes(
+        self, 
+        ruta_origen: str|None = None, 
+        ruta_recorte: str|None = None,
+        clave: str|None = None
+        ):
         """Este método relee las imagenes y permite actualizar las rutas de entrada y de salida"""
         # if ruta_origen != None:
-        if ruta_origen != None  and  ruta_origen != self.ruta_imagen_original :
+        # if ruta_origen != None  and  ruta_origen != self.ruta_imagen_original :
             # actualizacion de ruta de imagen 
+            # self.ruta_imagen_original = ruta_origen
+            # borrado de flags auxiliares
+            # self.inicializar_valores()
+        # if ruta_recorte != None:
+        #     # actualizacion de ruta de destino
+        #     self.ruta_imagen_recorte = ruta_recorte
+
+        if ruta_origen != None:
+            self.parametros.ruta_origen  = ruta_origen
             self.ruta_imagen_original = ruta_origen
-            # borrado de flags auxiliares
-            self.inicializar_valores()
         if ruta_recorte != None:
-            # actualizacion de ruta de destino
+            self.parametros.ruta_recorte = ruta_recorte
             self.ruta_imagen_recorte = ruta_recorte
-            # borrado de flags auxiliares
-            self.inicializar_valores()
+        if clave != None:
+            self.parametros.clave = clave
+            self.clave = clave
+        # actualizacion de ruta de imagen (sólo si ésta cambia)
+        # self.inicializar_valores(ruta_origen, ruta_recorte)
+        self.inicializar_valores(self.parametros)
+
 
         # lectura desde archivo
         self.__imagen_original = cv2.imread(self.ruta_imagen_original)
@@ -346,27 +421,38 @@ class ImagenOpenCV:
         # relleno preliminar con imagen en negro
         self.__imagen_recorte = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
         self.__imagen_seleccion = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
-
+        self.__imagen_escalada = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
+        self.__imagen_original = np.zeros((alto_recorte,ancho_recorte,3), np.uint8)
 
 
     def interfaz_edicion(
         self,  
         ruta_original: str = "",
         ruta_recorte: str = "recorte.jpg",
+        clave: str = "___",
         dimensiones_recorte=[512, 512], 
         dimensiones_ventana=[768, 768], 
         texto_consola=True,
-        escape_teclado=True
+        escape_teclado=True,
+        funcion_mouse=nada,
+        funcion_trackbar=nada,
         ):
         """Funcion para abrir la ventana de edición. La ventana se cierra presionando alguna de las teclas indicadas. 
         Por defecto se elije un tamaño de recorte de 512 x 512, que es el exigido por Stable Diffusion"""
         self.ruta_imagen_original = ruta_original
         self.ruta_imagen_recorte  = ruta_recorte
+        self.clave = clave
+
+        self.funcion_mouse = funcion_mouse
+        self.funcion_trackbar = funcion_trackbar
+        # self.parametros.ruta_origen  = ruta_original
+        # self.parametros.ruta_recorte = ruta_recorte
+
         self.texto_consola = texto_consola
 
         self.dimensiones_ventana = dimensiones_ventana
         self.dimensiones_recorte = dimensiones_recorte
-        self.apertura_imagenes()  
+        self.apertura_imagenes(ruta_original, ruta_recorte, clave)  
         # Conjunto de teclas de escape
         exito_guardado = False
         if escape_teclado:
@@ -381,7 +467,7 @@ class ImagenOpenCV:
             k = cv2.waitKeyEx(0)
             if k >= 0:
                 tecla = chr(k)  # Conversion de numero a caracter ASCII
-                print(k, tecla )
+                # print(k, tecla )
                 if texto_consola: print("Tecla ingresada: ", tecla)
                 # se guarda una copia del recorte si la tecla es correcta
                 # if k == ord("s"):
@@ -408,16 +494,26 @@ class ImagenOpenCV:
         self.__imagen_recorte = self.__imagen_seleccion.copy()
         self.__escala_recorte = self.__escala_actual
         self.__recorte_marcado = True
+        guardado_correcto = False
         if guardado: 
             self.__coordenadas_guardado = self.__coordenadas_seleccion
             self.__escala_guardado = self.__escala_actual
             guardado_correcto = self.__guardado_recorte()
             self.__recorte_guardado = guardado
-            return guardado_correcto
+
+        # backup de valores actuales
+        # self.__backup_estados = self.copiar_estados
+        self.parametros = self.copiar_estados()
+        # retorno con indicacion del guardado
+        return guardado_correcto
 
 
     def cerrar_ventana(self):
-        cv2.destroyWindow(self.__nombre_ventana)
+        # cv2.destroyWindow(self.__nombre_ventana) # la ventana debe estar abierta
+        cv2.destroyAllWindows() # ignora ventanas cerradas
+
+
+
 
 
 # Rutina de prueba: Apertura de imagenes
@@ -445,9 +541,19 @@ if __name__ == "__main__" :
     ## PROCESAMIENTO
     ventana = ImagenOpenCV()
 
-    
+    def mouse(x):
+        if x==cv2.EVENT_LBUTTONDOWN:
+            clave =  ventana.clave
+            print(f"[bold yellow]Clave imagen: {clave}")
+        elif x==cv2.EVENT_RBUTTONDOWN:
+            clave =  ventana.clave
+            print(f"[bold green]Clave imagen: {clave}")
+
+
+    # ventana.funcion_mouse = lambda x: mouse(x)
     # ventana.interfaz_edicion(dimensiones_recorte=[256, 256],escape_teclado=True) # Recorte pequeño
-    ventana.interfaz_edicion( ruta_archivo_imagen, ruta_archivo_recorte, escape_teclado=True)    # Tamaño predefinido
+    ventana.interfaz_edicion( ruta_archivo_imagen, ruta_archivo_recorte, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
     # ventana.interfaz_edicion(dimensiones_recorte=[900, 900],escape_teclado=True) # Recorte demasiado grande
 
-
+    # destruccion de ventanas
+    ventana.cerrar_ventana()
