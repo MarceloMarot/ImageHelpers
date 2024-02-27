@@ -111,7 +111,6 @@ class ImagenOpenCV:
     def recuperar_estados(self, param: ParametrosVentana):
         """Metodo auxiliar para recupera los valores de las últimas escalas y coordenadas asignadas.
         También actualiza la imagen"""
-        # print("[bold yellow] Valores restaurados")
         self.ruta_imagen_original    = param.ruta_origen
         self.ruta_imagen_recorte     = param.ruta_recorte
         self.clave = param.clave
@@ -123,7 +122,7 @@ class ImagenOpenCV:
         self.__escala_guardado  = param.escala_guardado
         self.__recorte_guardado = param.recorte_guardado
         self.__recorte_marcado  = param.recorte_marcado
-        # self.__backup_estados = estados
+        
         self.parametros = param
         self.apertura_imagenes()
 
@@ -187,14 +186,12 @@ class ImagenOpenCV:
         # evento click izquierdo --> crear recorte
         if evento == cv2.EVENT_LBUTTONDOWN:
             # Actualizacion de graficas y retorno del recorte y sus coordenadas
-            self.copiar_recorte()
             self.ventana_imagen() 
             #funcion usuario (opcional) 
             self.funcion_mouse(evento)
         # evento click derecho --> crear recorte y guardarlo en archivo
         if evento == cv2.EVENT_RBUTTONDOWN:
             # Actualizacion de graficas y retorno del recorte y sus coordenadas
-            self.copiar_recorte(guardado=True)
             self.ventana_imagen() 
             #funcion usuario (opcional) 
             self.funcion_mouse(evento)
@@ -373,16 +370,6 @@ class ImagenOpenCV:
         clave: str|None = None
         ):
         """Este método relee las imagenes y permite actualizar las rutas de entrada y de salida"""
-        # if ruta_origen != None:
-        # if ruta_origen != None  and  ruta_origen != self.ruta_imagen_original :
-            # actualizacion de ruta de imagen 
-            # self.ruta_imagen_original = ruta_origen
-            # borrado de flags auxiliares
-            # self.inicializar_valores()
-        # if ruta_recorte != None:
-        #     # actualizacion de ruta de destino
-        #     self.ruta_imagen_recorte = ruta_recorte
-
         if ruta_origen != None:
             self.parametros.ruta_origen  = ruta_origen
             self.ruta_imagen_original = ruta_origen
@@ -393,7 +380,6 @@ class ImagenOpenCV:
             self.parametros.clave = clave
             self.clave = clave
         # actualizacion de ruta de imagen (sólo si ésta cambia)
-        # self.inicializar_valores(ruta_origen, ruta_recorte)
         self.inicializar_valores(self.parametros)
 
 
@@ -445,8 +431,6 @@ class ImagenOpenCV:
 
         self.funcion_mouse = funcion_mouse
         self.funcion_trackbar = funcion_trackbar
-        # self.parametros.ruta_origen  = ruta_original
-        # self.parametros.ruta_recorte = ruta_recorte
 
         self.texto_consola = texto_consola
 
@@ -467,10 +451,8 @@ class ImagenOpenCV:
             k = cv2.waitKeyEx(0)
             if k >= 0:
                 tecla = chr(k)  # Conversion de numero a caracter ASCII
-                # print(k, tecla )
                 if texto_consola: print("Tecla ingresada: ", tecla)
                 # se guarda una copia del recorte si la tecla es correcta
-                # if k == ord("s"):
                 if tecla  in self.teclas_guardado:
                     exito_guardado = self.__guardado_recorte() 
 
@@ -502,7 +484,6 @@ class ImagenOpenCV:
             self.__recorte_guardado = guardado
 
         # backup de valores actuales
-        # self.__backup_estados = self.copiar_estados
         self.parametros = self.copiar_estados()
         # retorno con indicacion del guardado
         return guardado_correcto
@@ -543,11 +524,11 @@ if __name__ == "__main__" :
 
     def mouse(x):
         if x==cv2.EVENT_LBUTTONDOWN:
-            clave =  ventana.clave
-            print(f"[bold yellow]Clave imagen: {clave}")
+            # marcado de archivo
+            ventana.copiar_recorte()
         elif x==cv2.EVENT_RBUTTONDOWN:
-            clave =  ventana.clave
-            print(f"[bold green]Clave imagen: {clave}")
+            # guardado de archivo
+            ventana.copiar_recorte(guardado=True)
 
 
     # ventana.funcion_mouse = lambda x: mouse(x)

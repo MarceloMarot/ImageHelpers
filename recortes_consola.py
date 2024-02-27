@@ -1,6 +1,6 @@
 import sys
 from rich import print 
-from buscar_extension import buscar_imagenes, elegir_ruta
+from sistema_archivos.buscar_extension import buscar_imagenes, elegir_ruta
 from cortar_imagen import Interfaz_Edicion
 
 import os

@@ -14,4 +14,10 @@ pip  install -r requirements.txt
  
 
 # crear ejecutables
-flet pack ImageTagger.py
+# flet pack ImageTagger.py
+# flet pack FileMover.py --add-data ./local:./local  # Importacion de traducciones fallida
+# Running PyInstaller: ['ImageTagger.py', '--noconfirm', '--noconsole', '--onefile']
+
+pyinstaller FileMover.py --distpath dist/ --noconfirm --noconsole --onefile --add-data local/:dist/local/
+
+

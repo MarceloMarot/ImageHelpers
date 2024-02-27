@@ -1,27 +1,22 @@
 from cv2 import EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN
+import cv2
 from rich import print as print
 import flet as ft
 from typing import TypeVar
-# import cv2
 from cortar_imagen import ImagenOpenCV , ParametrosVentana
+import pathlib
 
 
 
-# from manejo_texto.procesar_etiquetas import Etiquetas 
 
 from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave
-# from componentes.menu_navegacion import  MenuNavegacion
-# from componentes.etiquetador_botones import EtiquetadorBotones
-
-# from componentes.lista_desplegable import crear_lista_desplegable,convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
 from sistema_archivos.buscar_extension import buscar_imagenes
 
-# from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 from componentes.estilos_contenedores import estilos_galeria
 
 
-# from componentes.galeria_imagenes import Cont, ContImag
+
 
 
 def nada( e ):
@@ -31,12 +26,21 @@ def nada( e ):
 class ContenedorRecortes( Contenedor_Imagen):
     def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0,):
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
-        # self.__etiquetada = False
         self.__marcada = False
         self.__guardada = False
         self.__defectuosa = False
         # datos de la ventana emergente
         self.parametros = ParametrosVentana(ruta_origen=ruta, clave=clave)
+
+
+    def ruta_recorte(self, ruta_directorio: str):
+        """Este metodo asigna una ruta de destino para el recorte dentro del directorio indicado"""
+        directorio = pathlib.Path(ruta_directorio)
+        nombre_archivo = pathlib.Path(self.ruta_imagen).name
+        # composicion del archivo de salida
+        ruta_recorte = pathlib.Path(directorio, nombre_archivo)
+        # asignacion de ruta de salida
+        self.parametros.ruta_recorte = str(ruta_recorte)
 
 
     @property
@@ -84,6 +88,11 @@ class GaleriaRecortes( Galeria):
         self.actualizar_estilos( )  # FIX
 
 
+    def ruta_recortes(self, ruta_directorio: str):
+        # contenedor: ContenedorRecortes
+        for contenedor in self.controls:
+            contenedor.ruta_recorte(ruta_directorio)    
+
 
     def actualizar_estilos(self):
         actualizar_estilo_estado( self.imagenes, self.estilos)    
@@ -114,6 +123,7 @@ def leer_imagenes_recortes(rutas_imagen: list[str], ancho=1024, alto=1024, redon
         contenedor = ContenedorRecortes(rutas_imagen[i], clave, ancho, alto, redondeo)
         contenedor.clave = clave
         contenedores.append(contenedor)
+
     return contenedores
 
 
@@ -142,55 +152,86 @@ def main(page: ft.Page):
 
     ruta_recorte = "recorte.webp"
 
+    # Botones
+    ancho_botones = 200
+    altura_botones = 40
+
+
     # Botones apertura de ventana emergente
-    boton_carpeta = ft.ElevatedButton(
-        text = "Abrir carpeta",
+    boton_carpeta_origen = ft.ElevatedButton(
+        text = "Carpeta capturas",
         icon=ft.icons.FOLDER_OPEN,
-        bgcolor=ft.colors.RED,
+        bgcolor=ft.colors.BLUE_900,
         color= ft.colors.WHITE,
+        height = altura_botones,
+        width  = ancho_botones,
         ## manejador
-        on_click=lambda _: dialogo_directorio.get_directory_path(
-            dialog_title="Elegir carpeta con todas las imágenes"
+        on_click=lambda _: dialogo_directorio_origen.get_directory_path(
+            dialog_title="Elegir carpeta con las capturas de imagen"
         ),
     )
 
-    page.add(boton_carpeta)
+    boton_carpeta_destino = ft.ElevatedButton(
 
+        text = "Carpeta recortes",
+        icon=ft.icons.FOLDER_OPEN,
+        ## manejador: leer sólo directorios
+        on_click=lambda _: dialogo_directorio_destino.get_directory_path(
+            dialog_title="Elegir carpeta para los recortes",
+            ),
+        disabled = True,       
+        height = altura_botones,
+        width  = ancho_botones,
+        bgcolor = ft.colors.RED_900,
+        color = ft.colors.WHITE,
+    )
+
+
+    page.add(ft.Row([
+        boton_carpeta_origen,
+        boton_carpeta_destino
+        ]))
 
     # Funcion de apertura de directorio
-    def resultado_directorio(e: ft.FilePickerResultEvent):
+    def resultado_directorio_origen(e: ft.FilePickerResultEvent):
         if e.path:
-
             # acceso a elementos globales
             global imagenes_galeria
             # busqueda 
             directorio = e.path
+            # print(f"[bold green]{directorio}")
             rutas_imagen = buscar_imagenes(directorio)
-            # Carga de imagenes del directorio
+            # Creacion y carga de imagenes del directorio
             imagenes_galeria = cargar_imagenes_recortes(rutas_imagen)
-
-            for img in imagenes_galeria:
-                print(f"imag: {img.clave}")
-
-            # Objeto galeria
-            # galeria.leer_imagenes(rutas_imagen, redondeo = 30)
             galeria.cargar_imagenes( imagenes_galeria )
             galeria.eventos(click = click_galeria)
             galeria.estilo(estilos_galeria["predefinido"])
             galeria.update()
+            # desbloquea el boton de recortes
+            boton_carpeta_destino.disabled=False
+            boton_carpeta_destino.update()
+
+
+    def resultado_directorio_destino(e: ft.FilePickerResultEvent):
+        if e.path:
+            directorio = e.path
+            # asignacion de rutas de salida
+            galeria.ruta_recortes(directorio)
 
 
     # Clase para manejar dialogos de archivo y de carpeta
-    dialogo_directorio   = ft.FilePicker(on_result = resultado_directorio )
+    dialogo_directorio_origen   = ft.FilePicker(on_result = resultado_directorio_origen )
+    dialogo_directorio_destino   = ft.FilePicker(on_result = resultado_directorio_destino )
    
     # Añadido de diálogos a la página
     page.overlay.extend([
-            dialogo_directorio
+            dialogo_directorio_origen, dialogo_directorio_destino
         ])
 
 
     def click_ventana_emergente( evento ):
         global ventana_emergente
+        # ventana_emergente: ImagenOpenCV
         clave =  ventana_emergente.clave
 
         if evento==EVENT_LBUTTONDOWN or evento==EVENT_RBUTTONDOWN:
@@ -199,12 +240,20 @@ def main(page: ft.Page):
             imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
             imagen_seleccionada.parametros = ventana_emergente.parametros
 
+        if evento == cv2.EVENT_LBUTTONDOWN:
+            # marcado de archivo
+            ventana_emergente.copiar_recorte()
+        elif evento == cv2.EVENT_RBUTTONDOWN:
+            # guardado de archivo
+            ventana_emergente.copiar_recorte(guardado=True)
+
+
+
 
     def click_galeria(e):
         global clickeos
         clickeos += 1
         global ventana_emergente
-        global imagen
         global imagenes_galeria
 
         contenedor = e.control     # es ft.Container
@@ -230,7 +279,7 @@ def main(page: ft.Page):
 
 
     # manejador del teclado
-    def desplazamiento_teclado(e: ft.KeyboardEvent):
+    def teclado_galeria(e: ft.KeyboardEvent):
         """Permite el desplazamiento rapido de imagenes con teclas del teclado predefinidas"""
         tecla = e.key   
         print(f"Tecla: {tecla}")
@@ -240,7 +289,7 @@ def main(page: ft.Page):
     page.add(galeria)
 
     # propiedad de pagina: handler del teclado elegido
-    page.on_keyboard_event = desplazamiento_teclado
+    page.on_keyboard_event = teclado_galeria
 
     page.title="Galeria Recorte"
     page.theme_mode = ft.ThemeMode.DARK
@@ -249,11 +298,6 @@ def main(page: ft.Page):
     page.window_width  = ancho_pagina
 
     page.update()
-
-
-
-
-
 
 
 

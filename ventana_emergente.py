@@ -6,7 +6,7 @@ from cortar_imagen import ImagenOpenCV
 
 clickeos = 0
 
-ventana = None
+# ventana = None
 
 
 def main(page: ft.Page):
@@ -94,6 +94,7 @@ def main(page: ft.Page):
     page.window_width  = ancho_pagina
 
     page.update()
+
 
 
 
