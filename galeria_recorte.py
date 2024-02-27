@@ -1,4 +1,4 @@
-from cv2 import EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN
+# from cv2 import EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN
 import cv2
 from rich import print as print
 import flet as ft
@@ -26,6 +26,7 @@ def nada( e ):
 class ContenedorRecortes( Contenedor_Imagen):
     def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0,):
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
+        # flags para el coloreo de bordes
         self.__marcada = False
         self.__guardada = False
         self.__defectuosa = False
@@ -147,7 +148,7 @@ clickeos = 0
 
 def main(page: ft.Page):
 
-    ancho_pagina = 800
+    ancho_pagina = 900
     altura_pagina = 800
 
     ruta_recorte = "recorte.webp"
@@ -234,23 +235,31 @@ def main(page: ft.Page):
         # ventana_emergente: ImagenOpenCV
         clave =  ventana_emergente.clave
 
-        if evento==EVENT_LBUTTONDOWN or evento==EVENT_RBUTTONDOWN:
+        if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
             imagen_seleccionada: ContenedorRecortes
             # print(f"[bold cyan]Ventana --> Clave imagen: {clave}")
             imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-            imagen_seleccionada.parametros = ventana_emergente.parametros
+            # imagen_seleccionada.parametros = ventana_emergente.parametros # datos viejos
+            imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
 
-        if evento == cv2.EVENT_LBUTTONDOWN:
-            # marcado de archivo
-            ventana_emergente.copiar_recorte()
-        elif evento == cv2.EVENT_RBUTTONDOWN:
-            # guardado de archivo
-            ventana_emergente.copiar_recorte(guardado=True)
+        # if evento == cv2.EVENT_LBUTTONDOWN:
+        #     # marcado de archivo
+        #     ventana_emergente.copiar_recorte()
+        #     print(f"[bold yellow]MARCAR {clave}")
+            # print(f"[bold yellow]Recorte : {ventana_emergente.parametros.coordenadas_recorte} {ventana_emergente.parametros.escala_recorte}")
+            # print(f"[bold green]Guardado: {ventana_emergente.parametros.coordenadas_guardado} {ventana_emergente.parametros.escala_guardado}")
+
+
+        # elif evento == cv2.EVENT_RBUTTONDOWN:
+        #     # guardado de archivo
+        #     ventana_emergente.copiar_recorte(guardado=True)
+        #     print(f"[bold green]GUARDAR {clave}")
+            # print(f"[bold yellow]Recorte : {ventana_emergente.parametros.coordenadas_recorte} {ventana_emergente.parametros.escala_recorte}")
+            # print(f"[bold green]Guardado: {ventana_emergente.parametros.coordenadas_guardado} {ventana_emergente.parametros.escala_guardado}")
 
 
 
-
-    def click_galeria(e):
+    def click_galeria(e: ft.ControlEvent):
         global clickeos
         clickeos += 1
         global ventana_emergente
@@ -269,12 +278,19 @@ def main(page: ft.Page):
                 texto_consola=False, escape_teclado=False, 
                 funcion_mouse=click_ventana_emergente
                 )  #tamaño recorte predefinido
+            print(f"[bold cyan]ELEGIR {clave}")
+            # print(f"[bold yellow]Recorte : {ventana_emergente.parametros.coordenadas_recorte} {ventana_emergente.parametros.escala_recorte}")
+            # print(f"[bold green]Guardado: {ventana_emergente.parametros.coordenadas_guardado} {ventana_emergente.parametros.escala_guardado}")
 
-        if clickeos >1: 
+        if clickeos > 1: 
             # print("[bold blue]Galeria -> clave imagen: ",clave)
             imagen = imagen_clave(clave, imagenes_galeria)
             parametros = imagen.parametros
             ventana_emergente.recuperar_estados(parametros)
+            print(f"[bold cyan]ELEGIR {clave}")
+            # print(f"[bold yellow]Recorte : {ventana_emergente.parametros.coordenadas_recorte} {ventana_emergente.parametros.escala_recorte}")
+            # print(f"[bold green]Guardado: {ventana_emergente.parametros.coordenadas_guardado} {ventana_emergente.parametros.escala_guardado}")
+
 
 
 

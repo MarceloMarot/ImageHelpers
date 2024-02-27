@@ -20,7 +20,7 @@ class ParametrosVentana:
         self.ruta_recorte = ruta_recorte
         self.clave = clave
         self.coordenadas_recorte = [0,0,0,0]
-        self.coordenadas_seleccion = [0,0,0,0]
+        self.coordenadas_actuales = [0,0,0,0]
         self.coordenadas_guardado = [0,0,0,0]     
         self.escala_actual = 100
         self.escala_recorte  = 0
@@ -35,7 +35,7 @@ class ImagenOpenCV:
         self.ruta_imagen_recorte  : str = ""    # valor provisional
         self.clave : str = "---"
         self.__coordenadas_recorte: list[int]
-        self.__coordenadas_seleccion: list[int]
+        self.__coordenadas_actuales: list[int]
         self.__coordenadas_guardado: list[int]
 
         # porcentajes de ampliacion entre grafica y archivo
@@ -65,8 +65,8 @@ class ImagenOpenCV:
         self.BGR_error     = (0,50,200)  # vermellon
 
         # flags de estado 
-        self.__recorte_guardado : bool
-        self.__recorte_marcado  : bool
+        self.__recorte_guardado : bool = False
+        self.__recorte_marcado  : bool = False
 
         self.coordenadas_ventana = [900, 100]
         self.dimensiones_ventana = [768, 768]
@@ -83,56 +83,58 @@ class ImagenOpenCV:
         self.funcion_mouse = nada
         self.funcion_trackbar = nada
 
-        self.parametros = ParametrosVentana()
-        self.inicializar_valores(self.parametros)
+        # self.parametros = ParametrosVentana()
+        # self.inicializar_valores(self.parametros)
+        parametros = ParametrosVentana()
+        self.inicializar_valores(parametros)
         self.__configurar_ventana()
         self.__crear_trackbar()
-
 
 
     def copiar_estados(self):
         """Metodo auxiliar para hacer un backup externo de las escalas y las coordenadas guardadas"""
         # print("[bold green] Valores copiados")
         param = ParametrosVentana()
-        param.ruta_origen = self.ruta_imagen_original    
-        param.ruta_recorte = self.ruta_imagen_recorte
-        param.clave = self.clave 
-        param.coordenadas_recorte = self.__coordenadas_recorte  
-        param.coordenadas_seleccion = self.__coordenadas_seleccion 
+        param.ruta_origen   = self.ruta_imagen_original    
+        param.ruta_recorte  = self.ruta_imagen_recorte
+        param.clave         = self.clave 
+        param.coordenadas_recorte  = self.__coordenadas_recorte  
+        # param.coordenadas_actuales = self.__coordenadas_actuales 
         param.coordenadas_guardado = self.__coordenadas_guardado 
-        param.escala_actual = self.__escala_actual   
-        param.escala_recorte = self.__escala_recorte   
-        param.escala_guardado = self.__escala_guardado
-        param.recorte_guardado = self.__recorte_guardado 
-        param.recorte_marcado  = self.__recorte_marcado  
+        param.escala_actual     = self.__escala_actual   
+        param.escala_recorte    = self.__escala_recorte   
+        param.escala_guardado   = self.__escala_guardado
+        param.recorte_guardado  = self.__recorte_guardado 
+        param.recorte_marcado   = self.__recorte_marcado  
         return param
 
 
     def recuperar_estados(self, param: ParametrosVentana):
         """Metodo auxiliar para recupera los valores de las últimas escalas y coordenadas asignadas.
         También actualiza la imagen"""
-        self.ruta_imagen_original    = param.ruta_origen
-        self.ruta_imagen_recorte     = param.ruta_recorte
-        self.clave = param.clave
-        self.__coordenadas_recorte   = param.coordenadas_recorte
-        self.__coordenadas_seleccion = param.coordenadas_seleccion
-        self.__coordenadas_guardado  = param.coordenadas_guardado
+        self.ruta_imagen_original   = param.ruta_origen
+        self.ruta_imagen_recorte    = param.ruta_recorte
+        self.clave                  = param.clave
+        self.__coordenadas_recorte  = param.coordenadas_recorte
+        # self.__coordenadas_actuales = param.coordenadas_actuales
+        self.__coordenadas_guardado = param.coordenadas_guardado
         self.__escala_actual    = param.escala_actual
         self.__escala_recorte   = param.escala_recorte
         self.__escala_guardado  = param.escala_guardado
         self.__recorte_guardado = param.recorte_guardado
         self.__recorte_marcado  = param.recorte_marcado
-        
-        self.parametros = param
+
+        # self.parametros = param
         self.apertura_imagenes()
 
 
     def inicializar_valores(self, param: ParametrosVentana ):
-        self.ruta_imagen_original = param.ruta_origen
-        self.ruta_imagen_recorte = param.ruta_recorte
-        self.clave = param.clave
+        """inicializa los parametros con los valores predefinidos"""
+        # self.ruta_imagen_original = param.ruta_origen
+        # self.ruta_imagen_recorte = param.ruta_recorte
+        # self.clave                  = param.clave
         self.__coordenadas_recorte   = param.coordenadas_recorte
-        self.__coordenadas_seleccion = param.coordenadas_seleccion
+        self.__coordenadas_actuales = param.coordenadas_actuales
         self.__coordenadas_guardado  = param.coordenadas_guardado    
         self.__escala_actual    = param.escala_actual
         self.__escala_recorte   = param.escala_recorte
@@ -157,7 +159,7 @@ class ImagenOpenCV:
         proporcion = porcentaje / 100
         self.__redimensionar_imagen(proporcion)
         # descarta la representacion de la actual posicion del mouse
-        self.__coordenadas_seleccion = [0,0,0,0]
+        self.__coordenadas_actuales = [0,0,0,0]
         # actualizacion grafica
         self.ventana_imagen()
         #funcionalidad opcional
@@ -185,12 +187,16 @@ class ImagenOpenCV:
             self.funcion_mouse(evento)
         # evento click izquierdo --> crear recorte
         if evento == cv2.EVENT_LBUTTONDOWN:
+            # marcado de archivo
+            self.copiar_recorte()
             # Actualizacion de graficas y retorno del recorte y sus coordenadas
             self.ventana_imagen() 
             #funcion usuario (opcional) 
             self.funcion_mouse(evento)
         # evento click derecho --> crear recorte y guardarlo en archivo
         if evento == cv2.EVENT_RBUTTONDOWN:
+            # guardado de archivo
+            self.copiar_recorte(guardado=True)
             # Actualizacion de graficas y retorno del recorte y sus coordenadas
             self.ventana_imagen() 
             #funcion usuario (opcional) 
@@ -227,16 +233,14 @@ class ImagenOpenCV:
 
         brillo = self.brillo_ventana
         contraste = self.contraste_ventana 
-        # brillo = 100
-        # contraste = 0.5 
-        # brillo = 150
-        # contraste = 0.33
+
+        # copia de salida con brillo y contraste cambiados
         copia = cv2.convertScaleAbs(self.__imagen_escalada, alpha=contraste, beta=brillo)
 
 
         # Regiones seleccionadas : brillo original
-        if self.__coordenadas_seleccion != [0,0,0,0]:
-            coordenadas_rectangulo = self.__coordenadas_seleccion
+        if self.__coordenadas_actuales != [0,0,0,0]:
+            coordenadas_rectangulo = self.__coordenadas_actuales
             (xi,yi) = coordenadas_rectangulo[0:2]
             (xf,yf) = coordenadas_rectangulo[2:4]
             copia[yi:yf, xi:xf] = self.__imagen_escalada[yi:yf, xi:xf]
@@ -252,8 +256,8 @@ class ImagenOpenCV:
             copia[yi:yf, xi:xf] = self.__imagen_escalada[yi:yf, xi:xf]
             
         # Rectángulos color
-        if self.__coordenadas_seleccion != [0,0,0,0]:
-            coordenadas_rectangulo = self.__coordenadas_seleccion
+        if self.__coordenadas_actuales != [0,0,0,0]:
+            coordenadas_rectangulo = self.__coordenadas_actuales
             color_rectangulo = self.BGR_seleccion 
             (xi,yi) = coordenadas_rectangulo[0:2]
             (xf,yf) = coordenadas_rectangulo[2:4]
@@ -311,7 +315,7 @@ class ImagenOpenCV:
         #retorno del recorte y sus coordenadas en una lista
         coordenadas = [xi, yi, xf, yf]
         self.__imagen_seleccion = recorte_imagen 
-        self.__coordenadas_seleccion = coordenadas
+        self.__coordenadas_actuales = coordenadas
         # retorno resultado (opcional)
         return [recorte_imagen , coordenadas]
 
@@ -371,18 +375,25 @@ class ImagenOpenCV:
         ):
         """Este método relee las imagenes y permite actualizar las rutas de entrada y de salida"""
         if ruta_origen != None:
-            self.parametros.ruta_origen  = ruta_origen
+            # actualizacion de ruta de imagen (sólo si ésta cambia)
+            # self.parametros.ruta_origen  = ruta_origen
             self.ruta_imagen_original = ruta_origen
+            #inicializacion de los parametros internos
+            # self.inicializar_valores(self.parametros)
+            parametros = ParametrosVentana()
+            self.inicializar_valores(parametros)
+            # lectura desde archivo
+            # self.__imagen_original = cv2.imread(self.ruta_imagen_original)
+            # self.__configurar_trackbar_escala()
         if ruta_recorte != None:
-            self.parametros.ruta_recorte = ruta_recorte
+            # self.parametros.ruta_recorte = ruta_recorte
             self.ruta_imagen_recorte = ruta_recorte
         if clave != None:
-            self.parametros.clave = clave
+            # self.parametros.clave = clave
             self.clave = clave
-        # actualizacion de ruta de imagen (sólo si ésta cambia)
-        self.inicializar_valores(self.parametros)
+        # # actualizacion de ruta de imagen (sólo si ésta cambia)
 
-
+        # self.inicializar_valores(self.parametros)
         # lectura desde archivo
         self.__imagen_original = cv2.imread(self.ruta_imagen_original)
         self.__configurar_trackbar_escala()
@@ -393,6 +404,7 @@ class ImagenOpenCV:
             self.__escala_actual = self.__escala_recorte
         self.__actualizar_trackbar_escala()
         self.__redimensionar_imagen(self.__escala_actual/100 )
+        # actualizacion imagen
         self.ventana_imagen()
 
 
@@ -462,7 +474,7 @@ class ImagenOpenCV:
 
     def __guardado_recorte(self):
         guardado_correcto = cv2.imwrite(self.ruta_imagen_recorte, self.__imagen_recorte)
-        if guardado_correcto == True :
+        if guardado_correcto:
             if self.texto_consola: 
                 print("¡Recorte guardado!")
         else:
@@ -472,19 +484,19 @@ class ImagenOpenCV:
 
     
     def copiar_recorte(self, guardado = False):
-        self.__coordenadas_recorte = self.__coordenadas_seleccion
+        self.__coordenadas_recorte = self.__coordenadas_actuales
         self.__imagen_recorte = self.__imagen_seleccion.copy()
         self.__escala_recorte = self.__escala_actual
         self.__recorte_marcado = True
         guardado_correcto = False
         if guardado: 
-            self.__coordenadas_guardado = self.__coordenadas_seleccion
+            self.__coordenadas_guardado = self.__coordenadas_actuales
             self.__escala_guardado = self.__escala_actual
-            guardado_correcto = self.__guardado_recorte()
-            self.__recorte_guardado = guardado
+            guardado_correcto = self.__guardado_recorte()   # creacion archivo
+            self.__recorte_guardado = guardado_correcto
 
         # backup de valores actuales
-        self.parametros = self.copiar_estados()
+        # self.parametros = self.copiar_estados()
         # retorno con indicacion del guardado
         return guardado_correcto
 
@@ -525,10 +537,10 @@ if __name__ == "__main__" :
     def mouse(x):
         if x==cv2.EVENT_LBUTTONDOWN:
             # marcado de archivo
-            ventana.copiar_recorte()
+            print(f"Marcado recorte, codigo {x}")
         elif x==cv2.EVENT_RBUTTONDOWN:
             # guardado de archivo
-            ventana.copiar_recorte(guardado=True)
+            print(f"Guardado recorte, codigo {x}")
 
 
     # ventana.funcion_mouse = lambda x: mouse(x)
