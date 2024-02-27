@@ -1,4 +1,3 @@
-# from cv2 import EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN
 import cv2
 from rich import print as print
 import flet as ft
@@ -6,17 +5,9 @@ from typing import TypeVar
 from cortar_imagen import ImagenOpenCV , ParametrosVentana
 import pathlib
 
-
-
-
-from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave
-
+from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, imagen_clave
 from sistema_archivos.buscar_extension import buscar_imagenes
-
 from componentes.estilos_contenedores import estilos_galeria
-
-
-
 
 
 def nada( e ):
@@ -140,10 +131,8 @@ def cargar_imagenes_recortes(rutas: list[str]):
     return galeria
 
 
-
-
+# Variable global: requerida para inicializar correctamente la ventana emergente
 clickeos = 0
-
 
 
 def main(page: ft.Page):
@@ -232,31 +221,12 @@ def main(page: ft.Page):
 
     def click_ventana_emergente( evento ):
         global ventana_emergente
-        # ventana_emergente: ImagenOpenCV
-        clave =  ventana_emergente.clave
+        clave = ventana_emergente.clave
 
         if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
             imagen_seleccionada: ContenedorRecortes
-            # print(f"[bold cyan]Ventana --> Clave imagen: {clave}")
             imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-            # imagen_seleccionada.parametros = ventana_emergente.parametros # datos viejos
             imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
-
-        # if evento == cv2.EVENT_LBUTTONDOWN:
-        #     # marcado de archivo
-        #     ventana_emergente.copiar_recorte()
-        #     print(f"[bold yellow]MARCAR {clave}")
-            # print(f"[bold yellow]Recorte : {ventana_emergente.parametros.coordenadas_recorte} {ventana_emergente.parametros.escala_recorte}")
-            # print(f"[bold green]Guardado: {ventana_emergente.parametros.coordenadas_guardado} {ventana_emergente.parametros.escala_guardado}")
-
-
-        # elif evento == cv2.EVENT_RBUTTONDOWN:
-        #     # guardado de archivo
-        #     ventana_emergente.copiar_recorte(guardado=True)
-        #     print(f"[bold green]GUARDAR {clave}")
-            # print(f"[bold yellow]Recorte : {ventana_emergente.parametros.coordenadas_recorte} {ventana_emergente.parametros.escala_recorte}")
-            # print(f"[bold green]Guardado: {ventana_emergente.parametros.coordenadas_guardado} {ventana_emergente.parametros.escala_guardado}")
-
 
 
     def click_galeria(e: ft.ControlEvent):
@@ -268,28 +238,23 @@ def main(page: ft.Page):
         contenedor = e.control     # es ft.Container
         clave = contenedor.clave
 
+        imagen = imagen_clave(clave, imagenes_galeria)
+        parametros = imagen.parametros
+
         if clickeos ==1: 
             imagen = e.control 
             # print("[bold blue]Galeria -> clave imagen: ", clave)
             ventana_emergente = ImagenOpenCV()
             ventana_emergente.interfaz_edicion(
-                imagen.ruta_imagen, ruta_recorte,clave ,
+                parametros,
                 [512,512],[768,768],
                 texto_consola=False, escape_teclado=False, 
                 funcion_mouse=click_ventana_emergente
                 )  #tamaño recorte predefinido
-            print(f"[bold cyan]ELEGIR {clave}")
-            # print(f"[bold yellow]Recorte : {ventana_emergente.parametros.coordenadas_recorte} {ventana_emergente.parametros.escala_recorte}")
-            # print(f"[bold green]Guardado: {ventana_emergente.parametros.coordenadas_guardado} {ventana_emergente.parametros.escala_guardado}")
 
         if clickeos > 1: 
-            # print("[bold blue]Galeria -> clave imagen: ",clave)
-            imagen = imagen_clave(clave, imagenes_galeria)
-            parametros = imagen.parametros
-            ventana_emergente.recuperar_estados(parametros)
-            print(f"[bold cyan]ELEGIR {clave}")
-            # print(f"[bold yellow]Recorte : {ventana_emergente.parametros.coordenadas_recorte} {ventana_emergente.parametros.escala_recorte}")
-            # print(f"[bold green]Guardado: {ventana_emergente.parametros.coordenadas_guardado} {ventana_emergente.parametros.escala_guardado}")
+            ventana_emergente.leer_estados(parametros)
+
 
 
 

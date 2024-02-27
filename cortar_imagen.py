@@ -13,7 +13,7 @@ class ParametrosVentana:
     def __init__(
         self, 
         ruta_origen: str = "", 
-        ruta_recorte: str = "recorte.webp",
+        ruta_recorte: str = "recorte.jpg",
         clave: str = "---",
         ):
         self.ruta_origen = ruta_origen
@@ -83,8 +83,6 @@ class ImagenOpenCV:
         self.funcion_mouse = nada
         self.funcion_trackbar = nada
 
-        # self.parametros = ParametrosVentana()
-        # self.inicializar_valores(self.parametros)
         parametros = ParametrosVentana()
         self.inicializar_valores(parametros)
         self.__configurar_ventana()
@@ -109,7 +107,7 @@ class ImagenOpenCV:
         return param
 
 
-    def recuperar_estados(self, param: ParametrosVentana):
+    def leer_estados(self, param: ParametrosVentana):
         """Metodo auxiliar para recupera los valores de las últimas escalas y coordenadas asignadas.
         También actualiza la imagen"""
         self.ruta_imagen_original   = param.ruta_origen
@@ -367,33 +365,9 @@ class ImagenOpenCV:
         cv2.setTrackbarMax(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_maxima) 
 
 
-    def apertura_imagenes(
-        self, 
-        ruta_origen: str|None = None, 
-        ruta_recorte: str|None = None,
-        clave: str|None = None
-        ):
+    def apertura_imagenes(self):
         """Este método relee las imagenes y permite actualizar las rutas de entrada y de salida"""
-        if ruta_origen != None:
-            # actualizacion de ruta de imagen (sólo si ésta cambia)
-            # self.parametros.ruta_origen  = ruta_origen
-            self.ruta_imagen_original = ruta_origen
-            #inicializacion de los parametros internos
-            # self.inicializar_valores(self.parametros)
-            parametros = ParametrosVentana()
-            self.inicializar_valores(parametros)
-            # lectura desde archivo
-            # self.__imagen_original = cv2.imread(self.ruta_imagen_original)
-            # self.__configurar_trackbar_escala()
-        if ruta_recorte != None:
-            # self.parametros.ruta_recorte = ruta_recorte
-            self.ruta_imagen_recorte = ruta_recorte
-        if clave != None:
-            # self.parametros.clave = clave
-            self.clave = clave
-        # # actualizacion de ruta de imagen (sólo si ésta cambia)
 
-        # self.inicializar_valores(self.parametros)
         # lectura desde archivo
         self.__imagen_original = cv2.imread(self.ruta_imagen_original)
         self.__configurar_trackbar_escala()
@@ -425,9 +399,7 @@ class ImagenOpenCV:
 
     def interfaz_edicion(
         self,  
-        ruta_original: str = "",
-        ruta_recorte: str = "recorte.jpg",
-        clave: str = "___",
+        parametros: ParametrosVentana,
         dimensiones_recorte=[512, 512], 
         dimensiones_ventana=[768, 768], 
         texto_consola=True,
@@ -437,9 +409,6 @@ class ImagenOpenCV:
         ):
         """Funcion para abrir la ventana de edición. La ventana se cierra presionando alguna de las teclas indicadas. 
         Por defecto se elije un tamaño de recorte de 512 x 512, que es el exigido por Stable Diffusion"""
-        self.ruta_imagen_original = ruta_original
-        self.ruta_imagen_recorte  = ruta_recorte
-        self.clave = clave
 
         self.funcion_mouse = funcion_mouse
         self.funcion_trackbar = funcion_trackbar
@@ -448,7 +417,9 @@ class ImagenOpenCV:
 
         self.dimensiones_ventana = dimensiones_ventana
         self.dimensiones_recorte = dimensiones_recorte
-        self.apertura_imagenes(ruta_original, ruta_recorte, clave)  
+
+        self.inicializar_valores(parametros)
+        self.leer_estados(parametros)
         # Conjunto de teclas de escape
         exito_guardado = False
         if escape_teclado:
@@ -495,8 +466,6 @@ class ImagenOpenCV:
             guardado_correcto = self.__guardado_recorte()   # creacion archivo
             self.__recorte_guardado = guardado_correcto
 
-        # backup de valores actuales
-        # self.parametros = self.copiar_estados()
         # retorno con indicacion del guardado
         return guardado_correcto
 
@@ -525,7 +494,7 @@ if __name__ == "__main__" :
         print("Apertura de archivo indicado:", ruta_archivo_imagen)
 
     if len(sys.argv) < 3 :
-        ruta_archivo_recorte = 'recorte.webp'
+        ruta_archivo_recorte = 'recorte.jpg'
         print("Guardado de archivo por defecto:", ruta_archivo_recorte)
     else :
         ruta_archivo_recorte = str(sys.argv[2])
@@ -542,11 +511,10 @@ if __name__ == "__main__" :
             # guardado de archivo
             print(f"Guardado recorte, codigo {x}")
 
-
-    # ventana.funcion_mouse = lambda x: mouse(x)
-    # ventana.interfaz_edicion(dimensiones_recorte=[256, 256],escape_teclado=True) # Recorte pequeño
-    ventana.interfaz_edicion( ruta_archivo_imagen, ruta_archivo_recorte, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
-    # ventana.interfaz_edicion(dimensiones_recorte=[900, 900],escape_teclado=True) # Recorte demasiado grande
+    # estructura con datos de imagen
+    parametros_imagen = ParametrosVentana(ruta_archivo_imagen, ruta_archivo_recorte)
+    # llamado a la ventana grafica
+    ventana.interfaz_edicion( parametros_imagen, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
 
     # destruccion de ventanas
     ventana.cerrar_ventana()
