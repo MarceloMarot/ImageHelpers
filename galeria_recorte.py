@@ -145,7 +145,7 @@ def main(page: ft.Page):
     ancho_pagina = 900
     altura_pagina = 800
 
-    ruta_recorte = "recorte.webp"
+    # ruta_recorte = "recorte.webp"
 
     # Botones
     ancho_botones = 200
@@ -228,19 +228,23 @@ def main(page: ft.Page):
         global ventana_emergente
         clave = ventana_emergente.clave
 
-        imagen_seleccionada: ContenedorRecortes
-        imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-        imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
+        # imagen_seleccionada: ContenedorRecortes
+        # imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+        # imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
 
-        # if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
-        #     imagen_seleccionada: ContenedorRecortes
-        #     imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-        #     imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
+        if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
+            imagen_seleccionada: ContenedorRecortes
+            imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+            imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
 
 
     def crear_ventana_opencv( parametros):
         global ventana_emergente
         ventana_emergente = ImagenOpenCV()
+        abrir_interfaz_opencv(parametros)
+
+
+    def abrir_interfaz_opencv(parametros):
         ventana_emergente.interfaz_edicion(
             parametros,
             [512,512],[768,768],
@@ -270,7 +274,8 @@ def main(page: ft.Page):
                 )
             hilo.start()
         else:
-            ventana_emergente.leer_estados(parametros)
+            # ventana_emergente.leer_estados(parametros)
+            abrir_interfaz_opencv(parametros)
 
 
     # manejador del teclado
