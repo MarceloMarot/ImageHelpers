@@ -30,7 +30,7 @@ class ParametrosVentana:
 
 
 class ImagenOpenCV:
-    def __init__(self):
+    def __init__(self,nombre_ventana="Ventana Recorte", nombre_trackbar='Escala' ):
         self.ruta_imagen_original : str = ""    # valor provisional
         self.ruta_imagen_recorte  : str = ""    # valor provisional
         self.clave : str = "---"
@@ -56,8 +56,8 @@ class ImagenOpenCV:
         self.__imagen_recorte = None | np.ndarray
         self.__imagen_seleccion = None | np.ndarray
 
-        self.__nombre_ventana = "Ventana Recorte"
-        self.__nombre_trackbar = 'Escala' 
+        self.__nombre_ventana = nombre_ventana
+        self.__nombre_trackbar = nombre_ventana
 
         self.BGR_seleccion = (200,0,150)  # magenta
         self.BGR_recorte   = (0,200,200)  # amarillo

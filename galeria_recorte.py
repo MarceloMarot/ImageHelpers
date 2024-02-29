@@ -9,6 +9,9 @@ from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, imagen_clav
 from sistema_archivos.buscar_extension import buscar_imagenes
 from componentes.estilos_contenedores import estilos_galeria
 
+# import threading
+from  threading import Thread
+
 
 def nada( e ):
     pass
@@ -134,6 +137,8 @@ def cargar_imagenes_recortes(rutas: list[str]):
 # Variable global: requerida para inicializar correctamente la ventana emergente
 clickeos = 0
 
+hilo = None
+
 
 def main(page: ft.Page):
 
@@ -219,14 +224,29 @@ def main(page: ft.Page):
         ])
 
 
-    def click_ventana_emergente( evento ):
+    def puntero_ventana_opencv( evento ):
         global ventana_emergente
         clave = ventana_emergente.clave
 
-        if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
-            imagen_seleccionada: ContenedorRecortes
-            imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-            imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
+        imagen_seleccionada: ContenedorRecortes
+        imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+        imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
+
+        # if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
+        #     imagen_seleccionada: ContenedorRecortes
+        #     imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+        #     imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
+
+
+    def crear_ventana_opencv( parametros):
+        global ventana_emergente
+        ventana_emergente = ImagenOpenCV()
+        ventana_emergente.interfaz_edicion(
+            parametros,
+            [512,512],[768,768],
+            texto_consola=False, escape_teclado=False, 
+            funcion_mouse=puntero_ventana_opencv
+            )  #tamaño recorte predefinido
 
 
     def click_galeria(e: ft.ControlEvent):
@@ -241,22 +261,16 @@ def main(page: ft.Page):
         imagen = imagen_clave(clave, imagenes_galeria)
         parametros = imagen.parametros
 
-        if clickeos ==1: 
-            imagen = e.control 
-            # print("[bold blue]Galeria -> clave imagen: ", clave)
-            ventana_emergente = ImagenOpenCV()
-            ventana_emergente.interfaz_edicion(
-                parametros,
-                [512,512],[768,768],
-                texto_consola=False, escape_teclado=False, 
-                funcion_mouse=click_ventana_emergente
-                )  #tamaño recorte predefinido
+        global hilo
 
-        if clickeos > 1: 
+        if hilo == None or hilo.is_alive() == False:
+            hilo = Thread(
+                target = crear_ventana_opencv,
+                args   = [parametros]
+                )
+            hilo.start()
+        else:
             ventana_emergente.leer_estados(parametros)
-
-
-
 
 
     # manejador del teclado
