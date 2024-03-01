@@ -158,9 +158,86 @@ subproceso_ventana = None
 def liberar_memoria():
     gc.collect(0)
 
-from multiprocessing import Process, Pipe
+from multiprocessing import Process, Pipe, freeze_support
+
+
+# Funciones y handlers GLOBALES para la ventana de OpenCV
+# Requerido para poder ejecutar en Windows
+
+# handler  para los clicks sobre las imagenes de galeria
+def click_galeria(e: ft.ControlEvent):
+
+    # global ventana_emergente
+    global imagenes_galeria
+
+    # lectura de datos de la imagen elegida
+    contenedor = e.control     # es ft.Container
+    clave = contenedor.clave
+    imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+    parametros = imagen_seleccionada.parametros
+
+    global subproceso_ventana
+
+    # caso primera seleccion: crear ventana desde cero
+    if subproceso_ventana==None:
+        subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
+        subproceso_ventana.start()
+        # subproceso_ventana.run()
+        tuberia_galeria.send([parametros])  
+    # caso contrario: destruir ventana y recrearla desde cero
+    elif subproceso_ventana.is_alive():
+        subproceso_ventana.terminate()
+        subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
+        subproceso_ventana.start()
+        # subproceso_ventana.run()
+        tuberia_galeria.send([parametros])  
+
+    liberar_memoria()
+    memory_usage_psutil()
+
+
+# Nuevo proceso: ventana de OpenCV
+def crear_ventana_opencv( conector):
+    global ventana_emergente
+    
+    [param] = conector.recv()
+    
+    ventana_emergente = ImagenOpenCV()
+    abrir_interfaz_opencv(param)
+
+
+def abrir_interfaz_opencv(parametros):
+    ventana_emergente.interfaz_edicion(
+        parametros,
+        [512,512],[768,768],
+        texto_consola=False, escape_teclado=False, 
+        funcion_mouse=puntero_ventana_emergente,
+        funcion_trackbar=memory_usage_psutil
+        )  #tamaño recorte predefinido
+
+
+# funcion adicional para el mouse --> envio datos
+def puntero_ventana_emergente( evento ):
+    clave = ventana_emergente.clave
+    if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
+        # envio de datos al proceso principal
+        parametros = ventana_emergente.copiar_estados()
+        clave = ventana_emergente.clave
+        tuberia_ventana.send([clave, parametros])
+        # monitoreo uso memoria
+        memory_usage_psutil()
+
+    liberar_memoria()
+
+
+# Pipe (tuberia) para interconectar interfases graficas
+tuberia_galeria, tuberia_ventana = Pipe()
+
 
 def main(page: ft.Page):
+
+    #(requerido para los  subprocesos en Windows)
+    freeze_support() # requerido para crear ejecutables en Windows
 
     ancho_pagina = 900
     altura_pagina = 800
@@ -239,22 +316,6 @@ def main(page: ft.Page):
             dialogo_directorio_origen, dialogo_directorio_destino
         ])
 
-    # Pipe (tuberia) para interconectar interfases graficas
-    tuberia_galeria, tuberia_ventana = Pipe()
-
-    # funcion adicional para el mouse --> envio datos
-    def puntero_ventana_emergente( evento ):
-        clave = ventana_emergente.clave
-        if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
-            # envio de datos al proceso principal
-            parametros = ventana_emergente.copiar_estados()
-            clave = ventana_emergente.clave
-            tuberia_ventana.send([clave, parametros])
-            # monitoreo uso memoria
-            memory_usage_psutil()
-
-        liberar_memoria()
-
 
     def recepcion_datos_ventana(tuberia):
         global galeria
@@ -268,56 +329,6 @@ def main(page: ft.Page):
     hilo_recepcion_datos = Thread(
         target=recepcion_datos_ventana, args=[tuberia_galeria,])
     hilo_recepcion_datos.start()
-
-
-    # Nuevo proceso: ventana de OpenCV
-    def crear_ventana_opencv( conector):
-        global ventana_emergente
-        
-        [param] = conector.recv()
-        
-        ventana_emergente = ImagenOpenCV()
-        abrir_interfaz_opencv(param)
-
-
-    def abrir_interfaz_opencv(parametros):
-        ventana_emergente.interfaz_edicion(
-            parametros,
-            [512,512],[768,768],
-            texto_consola=False, escape_teclado=False, 
-            funcion_mouse=puntero_ventana_emergente,
-            funcion_trackbar=memory_usage_psutil
-            )  #tamaño recorte predefinido
-
-
-    # handler para los clicks sobre las imagenes de galeria
-    def click_galeria(e: ft.ControlEvent):
-
-        # global ventana_emergente
-        global imagenes_galeria
-
-        # lectura de datos de la imagen elegida
-        contenedor = e.control     # es ft.Container
-        clave = contenedor.clave
-        imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-        parametros = imagen_seleccionada.parametros
-
-        global subproceso_ventana
-
-        # caso primera seleccion: crear ventana desde cero
-        if subproceso_ventana==None:
-            subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
-            subproceso_ventana.start()
-            tuberia_galeria.send([parametros])  
-        # caso contrario: destruir ventana y recrearla desde cero
-        elif subproceso_ventana.is_alive():
-            subproceso_ventana.terminate()
-            subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
-            subproceso_ventana.start()
-            tuberia_galeria.send([parametros])  
-
-        liberar_memoria()
-        memory_usage_psutil()
 
 
     # (NO USADO AUN) manejador del teclado
@@ -346,6 +357,7 @@ def main(page: ft.Page):
 
 
 if __name__=="__main__":
+    
     ft.app(target=main)
 
 
