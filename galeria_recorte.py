@@ -1,3 +1,4 @@
+import threading
 import cv2
 from rich import print as print
 import flet as ft
@@ -133,24 +134,40 @@ def cargar_imagenes_recortes(rutas: list[str]):
         )
     return galeria
 
+# INSTALAR
+# pip install psutil
+import psutil
+import os
+
+def memory_usage_psutil( x=""):
+    # return the memory usage in MB
+    process = psutil.Process(os.getpid())
+    mem = process.memory_info().rss / float(2 ** 20)
+    print(f"[bold green]Espacio en memoria: {mem}")
+    return mem
+
+import gc
 
 # Variable global: requerida para inicializar correctamente la ventana emergente
-clickeos = 0
+# clickeos = 0
 
-hilo = None
+# hilo = None
+subproceso_ventana = None
 
+
+def liberar_memoria():
+    gc.collect(0)
+
+from multiprocessing import Process, Pipe
 
 def main(page: ft.Page):
 
     ancho_pagina = 900
     altura_pagina = 800
 
-    # ruta_recorte = "recorte.webp"
-
     # Botones
     ancho_botones = 200
     altura_botones = 40
-
 
     # Botones apertura de ventana emergente
     boton_carpeta_origen = ft.ElevatedButton(
@@ -180,7 +197,6 @@ def main(page: ft.Page):
         bgcolor = ft.colors.RED_900,
         color = ft.colors.WHITE,
     )
-
 
     page.add(ft.Row([
         boton_carpeta_origen,
@@ -223,25 +239,45 @@ def main(page: ft.Page):
             dialogo_directorio_origen, dialogo_directorio_destino
         ])
 
+    # Pipe (tuberia) para interconectar interfases graficas
+    tuberia_galeria, tuberia_ventana = Pipe()
 
-    def puntero_ventana_opencv( evento ):
-        global ventana_emergente
+    # funcion adicional para el mouse --> envio datos
+    def puntero_ventana_emergente( evento ):
         clave = ventana_emergente.clave
-
-        # imagen_seleccionada: ContenedorRecortes
-        # imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-        # imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
-
         if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
-            imagen_seleccionada: ContenedorRecortes
+            # envio de datos al proceso principal
+            parametros = ventana_emergente.copiar_estados()
+            clave = ventana_emergente.clave
+            tuberia_ventana.send([clave, parametros])
+            # monitoreo uso memoria
+            memory_usage_psutil()
+
+        liberar_memoria()
+
+
+    def recepcion_datos_ventana(tuberia):
+        global galeria
+        while True:
+            [clave, parametros] = tuberia.recv()
             imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-            imagen_seleccionada.parametros = ventana_emergente.copiar_estados()
+            imagen_seleccionada.parametros = parametros
 
 
-    def crear_ventana_opencv( parametros):
+    # hilo perpetuo para recibir datos de la seleccion del recorte
+    hilo_recepcion_datos = Thread(
+        target=recepcion_datos_ventana, args=[tuberia_galeria,])
+    hilo_recepcion_datos.start()
+
+
+    # Nuevo proceso: ventana de OpenCV
+    def crear_ventana_opencv( conector):
         global ventana_emergente
+        
+        [param] = conector.recv()
+        
         ventana_emergente = ImagenOpenCV()
-        abrir_interfaz_opencv(parametros)
+        abrir_interfaz_opencv(param)
 
 
     def abrir_interfaz_opencv(parametros):
@@ -249,47 +285,56 @@ def main(page: ft.Page):
             parametros,
             [512,512],[768,768],
             texto_consola=False, escape_teclado=False, 
-            funcion_mouse=puntero_ventana_opencv
+            funcion_mouse=puntero_ventana_emergente,
+            funcion_trackbar=memory_usage_psutil
             )  #tamaño recorte predefinido
 
 
+    # handler para los clicks sobre las imagenes de galeria
     def click_galeria(e: ft.ControlEvent):
-        global clickeos
-        clickeos += 1
-        global ventana_emergente
+
+        # global ventana_emergente
         global imagenes_galeria
 
+        # lectura de datos de la imagen elegida
         contenedor = e.control     # es ft.Container
         clave = contenedor.clave
+        imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+        parametros = imagen_seleccionada.parametros
 
-        imagen = imagen_clave(clave, imagenes_galeria)
-        parametros = imagen.parametros
+        global subproceso_ventana
 
-        global hilo
+        # caso primera seleccion: crear ventana desde cero
+        if subproceso_ventana==None:
+            subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
+            subproceso_ventana.start()
+            tuberia_galeria.send([parametros])  
+        # caso contrario: destruir ventana y recrearla desde cero
+        elif subproceso_ventana.is_alive():
+            subproceso_ventana.terminate()
+            subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
+            subproceso_ventana.start()
+            tuberia_galeria.send([parametros])  
 
-        if hilo == None or hilo.is_alive() == False:
-            hilo = Thread(
-                target = crear_ventana_opencv,
-                args   = [parametros]
-                )
-            hilo.start()
-        else:
-            # ventana_emergente.leer_estados(parametros)
-            abrir_interfaz_opencv(parametros)
+        liberar_memoria()
+        memory_usage_psutil()
 
 
-    # manejador del teclado
+    # (NO USADO AUN) manejador del teclado
     def teclado_galeria(e: ft.KeyboardEvent):
         """Permite el desplazamiento rapido de imagenes con teclas del teclado predefinidas"""
         tecla = e.key   
         print(f"Tecla: {tecla}")
   
+    # propiedad de pagina: handler del teclado elegido
+    page.on_keyboard_event = teclado_galeria
 
     galeria = GaleriaRecortes(estilos_galeria)
     page.add(galeria)
 
-    # propiedad de pagina: handler del teclado elegido
-    page.on_keyboard_event = teclado_galeria
+
+    liberar_memoria()
+    memory_usage_psutil()
 
     page.title="Galeria Recorte"
     page.theme_mode = ft.ThemeMode.DARK
@@ -298,7 +343,6 @@ def main(page: ft.Page):
     page.window_width  = ancho_pagina
 
     page.update()
-
 
 
 if __name__=="__main__":
