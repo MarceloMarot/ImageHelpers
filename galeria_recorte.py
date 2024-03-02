@@ -149,9 +149,6 @@ def memory_usage_psutil( x=""):
 import gc
 
 # Variable global: requerida para inicializar correctamente la ventana emergente
-# clickeos = 0
-
-# hilo = None
 subproceso_ventana = None
 
 
@@ -161,52 +158,34 @@ def liberar_memoria():
 from multiprocessing import Process, Pipe, freeze_support
 
 
-# Funciones y handlers GLOBALES para la ventana de OpenCV
-# Requerido para poder ejecutar en Windows
-
-# handler  para los clicks sobre las imagenes de galeria
-def click_galeria(e: ft.ControlEvent):
-
-    # global ventana_emergente
-    global imagenes_galeria
-
-    # lectura de datos de la imagen elegida
-    contenedor = e.control     # es ft.Container
-    clave = contenedor.clave
-    imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-    parametros = imagen_seleccionada.parametros
-
-    global subproceso_ventana
-
-    # caso primera seleccion: crear ventana desde cero
-    if subproceso_ventana==None:
-        subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
-        subproceso_ventana.start()
-        # subproceso_ventana.run()
-        tuberia_galeria.send([parametros])  
-    # caso contrario: destruir ventana y recrearla desde cero
-    elif subproceso_ventana.is_alive():
-        subproceso_ventana.terminate()
-        subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
-        subproceso_ventana.start()
-        # subproceso_ventana.run()
-        tuberia_galeria.send([parametros])  
-
-    liberar_memoria()
-    memory_usage_psutil()
-
 
 # Nuevo proceso: ventana de OpenCV
-def crear_ventana_opencv( conector):
+def crear_ventana_opencv( lista_tuberias: list[Pipe]):
+
+    [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ] = lista_tuberias
+
     global ventana_emergente
     
-    [param] = conector.recv()
+    [data] =  tuberia_ventana.recv()
+    # print(f"[bold red] data recibida: {data}")
+    parametros = data 
     
+
+    # funcion adicional para el mouse --> envio datos
+    def puntero_ventana_emergente( evento ):
+        clave = ventana_emergente.clave
+        if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
+            # envio de datos al proceso principal
+            parametros = ventana_emergente.copiar_estados()
+            clave = ventana_emergente.clave
+            tuberia_ventana.send([clave, parametros])
+
+            # print("[bold blue]Ventana clickeada")
+            # monitoreo uso memoria
+            memory_usage_psutil()
+        liberar_memoria()
+
     ventana_emergente = ImagenOpenCV()
-    abrir_interfaz_opencv(param)
-
-
-def abrir_interfaz_opencv(parametros):
     ventana_emergente.interfaz_edicion(
         parametros,
         [512,512],[768,768],
@@ -216,28 +195,11 @@ def abrir_interfaz_opencv(parametros):
         )  #tamaño recorte predefinido
 
 
-# funcion adicional para el mouse --> envio datos
-def puntero_ventana_emergente( evento ):
-    clave = ventana_emergente.clave
-    if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
-        # envio de datos al proceso principal
-        parametros = ventana_emergente.copiar_estados()
-        clave = ventana_emergente.clave
-        tuberia_ventana.send([clave, parametros])
-        # monitoreo uso memoria
-        memory_usage_psutil()
 
-    liberar_memoria()
+def principal(page: ft.Page, tuberias: list[Pipe]):
 
-
-# Pipe (tuberia) para interconectar interfases graficas
-tuberia_galeria, tuberia_ventana = Pipe()
-
-
-def main(page: ft.Page):
-
-    #(requerido para los  subprocesos en Windows)
-    freeze_support() # requerido para crear ejecutables en Windows
+    # lista completa de tuberias disponibles
+    [tuberia_galeria, tuberia_ventana, tuberia_click, extremo_apertura ] = tuberias 
 
     ancho_pagina = 900
     altura_pagina = 800
@@ -287,7 +249,7 @@ def main(page: ft.Page):
             global imagenes_galeria
             # busqueda 
             directorio = e.path
-            # print(f"[bold green]{directorio}")
+
             rutas_imagen = buscar_imagenes(directorio)
             # Creacion y carga de imagenes del directorio
             imagenes_galeria = cargar_imagenes_recortes(rutas_imagen)
@@ -320,16 +282,31 @@ def main(page: ft.Page):
     def recepcion_datos_ventana(tuberia):
         global galeria
         while True:
+            # se espera a recibir data emitida por los eventos del mouse
             [clave, parametros] = tuberia.recv()
             imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
             imagen_seleccionada.parametros = parametros
+
+
+    def click_galeria(e: ft.ControlEvent):
+        # global ventana_emergente
+        global imagenes_galeria
+
+        # lectura de datos de la imagen elegida
+        contenedor = e.control     # es ft.Container
+        clave = contenedor.clave
+        imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+        parametros = imagen_seleccionada.parametros
+        # print(f"[bold cyan]Galeria clickeada - imagen {clave}")
+
+        tuberia_click.send([parametros])
+        # print(f"[bold cyan]info enviada : {parametros}")
 
 
     # hilo perpetuo para recibir datos de la seleccion del recorte
     hilo_recepcion_datos = Thread(
         target=recepcion_datos_ventana, args=[tuberia_galeria,])
     hilo_recepcion_datos.start()
-
 
     # (NO USADO AUN) manejador del teclado
     def teclado_galeria(e: ft.KeyboardEvent):
@@ -343,7 +320,6 @@ def main(page: ft.Page):
     galeria = GaleriaRecortes(estilos_galeria)
     page.add(galeria)
 
-
     liberar_memoria()
     memory_usage_psutil()
 
@@ -356,8 +332,68 @@ def main(page: ft.Page):
     page.update()
 
 
+
+def apertura_ventana(lista_tuberias = list[Pipe]):
+
+    [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ] = lista_tuberias
+ 
+    global subproceso_ventana
+    # print("[bold yellow]Rutina de espera - Proceso padre")
+
+    while True:
+        # se espera hasta que se pida una nueva apertura
+        # print("esperando...")
+        [parametros] = tuberia_apertura.recv()
+        # print(f"[green]parametros recibidos: {parametros}")
+        # caso primera seleccion: crear ventana desde cero
+        if subproceso_ventana==None:
+            # subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
+            subproceso_ventana = Process(target=crear_ventana_opencv, args=(lista_tuberias,))
+            subproceso_ventana.start()
+
+            tuberia_galeria.send([parametros])  
+
+        # caso contrario: destruir ventana y recrearla desde cero
+        elif subproceso_ventana.is_alive():
+            subproceso_ventana.terminate()
+            # subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
+            subproceso_ventana = Process(target=crear_ventana_opencv, args=(lista_tuberias,))
+            subproceso_ventana.start()
+            # subproceso_ventana.run()
+            tuberia_galeria.send([parametros])  
+     
+
+
+def crear_galeria(lista_tuberias = list[Pipe]):
+
+    # print("[bold yellow]Galeria invocada")
+    principal_tuberias = lambda pagina: principal(pagina, lista_tuberias)
+    ft.app(target=principal_tuberias)
+
+
+
 if __name__=="__main__":
     
-    ft.app(target=main)
+    # Pipe (tuberia) para interconectar interfases graficas
+    tuberia_galeria, tuberia_ventana = Pipe()
 
+    # Pipe (tuberia) para sincronizar la creacion de ventanas
+    tuberia_click, tuberia_apertura = Pipe()
 
+    tuberias = [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ]
+
+    #(requerido para los  subprocesos en Windows)
+    freeze_support() # requerido para crear ejecutables en Windows
+
+    subproceso_solicitud_ventana =  Process(
+        target=apertura_ventana, args=[tuberias ])
+    subproceso_solicitud_ventana.start()
+
+    subproceso_galeria = Process(
+        target=crear_galeria, args=[tuberias ])
+    subproceso_galeria.start()
+
+    # se espera al cierre de la galeria para forzar el cierre de la ventana 
+    subproceso_galeria.join()
+    subproceso_solicitud_ventana.terminate()
+ 
