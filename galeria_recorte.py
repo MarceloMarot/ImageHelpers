@@ -1,17 +1,22 @@
-import threading
+
 import cv2
 from rich import print as print
 import flet as ft
 from typing import TypeVar
-from cortar_imagen import ImagenOpenCV , ParametrosVentana
 import pathlib
-
-from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, imagen_clave
-from sistema_archivos.buscar_extension import buscar_imagenes
-from componentes.estilos_contenedores import estilos_galeria
-
-# import threading
 from  threading import Thread
+# INSTALAR
+# pip install psutil
+import psutil
+import os
+import gc
+from multiprocessing import Process, Pipe, freeze_support, Lock
+
+
+from cortar_imagen import ImagenOpenCV , ParametrosVentana
+from componentes.galeria_imagenes import ContImag, Galeria, Contenedor_Imagen, imagen_clave, imagen_nombre
+from sistema_archivos.buscar_extension import buscar_imagenes
+from componentes.estilos_contenedores import estilos_galeria,estilos_seleccion
 
 
 def nada( e ):
@@ -22,9 +27,9 @@ class ContenedorRecortes( Contenedor_Imagen):
     def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0,):
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
         # flags para el coloreo de bordes
-        self.__marcada = False
-        self.__guardada = False
-        self.__defectuosa = False
+        self.marcada = False
+        self.guardada = False
+        self.defectuosa = False
         # datos de la ventana emergente
         self.parametros = ParametrosVentana(ruta_origen=ruta, clave=clave)
 
@@ -38,20 +43,6 @@ class ContenedorRecortes( Contenedor_Imagen):
         # asignacion de ruta de salida
         self.parametros.ruta_recorte = str(ruta_recorte)
 
-
-    @property
-    def defectuosa(self):
-        return self.__defectuosa
-
-
-    @property
-    def guardada(self):
-        return self.__guardada 
-
-
-    @property
-    def marcada(self):
-        return self.__marcada
 
 
 # nuevos tipados para contenedor y sus subclases
@@ -80,33 +71,18 @@ class GaleriaRecortes( Galeria):
         cuadricula=True):
         super().cargar_imagenes(imagenes, cuadricula)
         self.imagenes = imagenes
-        # actualizar_estilo_estado( imagenes, self.estilos)  # FIX
-        self.actualizar_estilos( )  # FIX
+
+        self.actualizar_estilos( )  
 
 
     def ruta_recortes(self, ruta_directorio: str):
-        # contenedor: ContenedorRecortes
+
         for contenedor in self.controls:
             contenedor.ruta_recorte(ruta_directorio)    
 
 
     def actualizar_estilos(self):
         actualizar_estilo_estado( self.imagenes, self.estilos)    
-
-
-def actualizar_estilo_estado(
-    contenedores: list[ContRec], estilos : dict ):
-    for contenedor in contenedores:
-        if contenedor.defectuosa :
-            estilo = estilos["erroneo"]     
-        elif contenedor.guardada :
-            estilo = estilos["guardado"]
-        elif contenedor.marcada :
-            estilo = estilos["modificado"]
-        else: 
-            estilo = estilos["predefinido"]
-
-        contenedor.estilo( estilo )
 
 
 def leer_imagenes_recortes(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0):
@@ -134,10 +110,22 @@ def cargar_imagenes_recortes(rutas: list[str]):
         )
     return galeria
 
-# INSTALAR
-# pip install psutil
-import psutil
-import os
+
+def actualizar_estilo_estado(
+    contenedores: list[ContenedorRecortes], estilos : dict ):
+    for contenedor in contenedores:
+        if contenedor.defectuosa :
+            estilo = estilos["erroneo"]     
+        elif contenedor.marcada :
+            estilo = estilos["modificado"]
+        elif contenedor.guardada :
+            estilo = estilos["guardado"]
+        else: 
+            estilo = estilos["predefinido"]
+
+        contenedor.estilo( estilo )
+
+
 
 def memory_usage_psutil( x=""):
     # return the memory usage in MB
@@ -146,31 +134,23 @@ def memory_usage_psutil( x=""):
     print(f"[bold green]Espacio en memoria: {mem}")
     return mem
 
-import gc
-
-# Variable global: requerida para inicializar correctamente la ventana emergente
-subproceso_ventana = None
 
 
 def liberar_memoria():
     gc.collect(0)
 
-from multiprocessing import Process, Pipe, freeze_support
-
 
 
 # Nuevo proceso: ventana de OpenCV
-def crear_ventana_opencv( lista_tuberias: list[Pipe]):
-
-    [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ] = lista_tuberias
+def crear_ventana_opencv(tuberias, candado_recorte):
+    
+    [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ] = tuberias
 
     global ventana_emergente
     
     [data] =  tuberia_ventana.recv()
-    # print(f"[bold red] data recibida: {data}")
     parametros = data 
     
-
     # funcion adicional para el mouse --> envio datos
     def puntero_ventana_emergente( evento ):
         clave = ventana_emergente.clave
@@ -180,12 +160,12 @@ def crear_ventana_opencv( lista_tuberias: list[Pipe]):
             clave = ventana_emergente.clave
             tuberia_ventana.send([clave, parametros])
 
-            # print("[bold blue]Ventana clickeada")
             # monitoreo uso memoria
             memory_usage_psutil()
+
         liberar_memoria()
 
-    ventana_emergente = ImagenOpenCV()
+    ventana_emergente = ImagenOpenCV(candado=candado_recorte)
     ventana_emergente.interfaz_edicion(
         parametros,
         [512,512],[768,768],
@@ -195,9 +175,12 @@ def crear_ventana_opencv( lista_tuberias: list[Pipe]):
         )  #tamaño recorte predefinido
 
 
+# Variable global: requerida para inicializar correctamente la ventana emergente
+subproceso_ventana = None
 
-def principal(page: ft.Page, tuberias: list[Pipe]):
 
+def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
+    """Funcion gráfica para crear la galería de Flet"""
     # lista completa de tuberias disponibles
     [tuberia_galeria, tuberia_ventana, tuberia_click, extremo_apertura ] = tuberias 
 
@@ -267,6 +250,40 @@ def principal(page: ft.Page, tuberias: list[Pipe]):
             directorio = e.path
             # asignacion de rutas de salida
             galeria.ruta_recortes(directorio)
+            # busqueda de recortes preexistentes
+            rutas_recortes = buscar_imagenes(directorio)
+
+            nombres_recortes = []
+
+            for recorte in rutas_recortes:
+                nombres_recortes.append(str(pathlib.Path(recorte).name))
+
+            global imagenes_galeria
+
+            nombres_imagen = []
+
+            for imagen in imagenes_galeria:
+                ruta_imagen = imagen.ruta_imagen
+                nombres_imagen.append(str(pathlib.Path(ruta_imagen).name))
+
+            for nombre in nombres_imagen:
+                if nombre in nombres_recortes:
+
+                    imagen_seleccionada = imagen_nombre(nombre, imagenes_galeria)
+                    indice = nombres_recortes.index(nombre)
+                    imagen_seleccionada.guardada = True
+                    imagen_seleccionada.update()
+
+                    candado_recorte.acquire()
+                    imagen_seleccionada.ruta_imagen = rutas_recortes[indice]
+                    candado_recorte.release()
+
+                    imagen_seleccionada.update()
+
+            # actualizar graficas con los recortes 
+            galeria.actualizar_estilos()
+            galeria.update()
+
 
 
     # Clase para manejar dialogos de archivo y de carpeta
@@ -280,16 +297,44 @@ def principal(page: ft.Page, tuberias: list[Pipe]):
 
 
     def recepcion_datos_ventana(tuberia):
-        global galeria
+        # global galeria
         while True:
             # se espera a recibir data emitida por los eventos del mouse
             [clave, parametros] = tuberia.recv()
             imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+
+            imagen_seleccionada: ContenedorRecortes
+            parametros: ParametrosVentana
+
             imagen_seleccionada.parametros = parametros
+
+            if parametros.coordenadas_guardado != [0,0,0,0] :
+
+                imagen_seleccionada.guardada = True
+                imagen_seleccionada.marcada = False
+
+                imagen_seleccionada.update()
+
+                candado_recorte.acquire()
+                imagen_seleccionada.ruta_imagen = parametros.ruta_recorte
+                candado_recorte.release()
+
+                imagen_seleccionada.update()
+
+
+            if parametros.coordenadas_recorte != [0,0,0,0] and parametros.coordenadas_recorte != parametros.coordenadas_guardado :
+
+                imagen_seleccionada.marcada = True
+                # imagen_seleccionada.ruta_imagen = parametros.ruta_recorte
+                imagen_seleccionada.update()
+
+            # actualizacion de bordes
+            galeria.actualizar_estilos()
+            galeria.update()
 
 
     def click_galeria(e: ft.ControlEvent):
-        # global ventana_emergente
+
         global imagenes_galeria
 
         # lectura de datos de la imagen elegida
@@ -297,10 +342,8 @@ def principal(page: ft.Page, tuberias: list[Pipe]):
         clave = contenedor.clave
         imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
         parametros = imagen_seleccionada.parametros
-        # print(f"[bold cyan]Galeria clickeada - imagen {clave}")
 
         tuberia_click.send([parametros])
-        # print(f"[bold cyan]info enviada : {parametros}")
 
 
     # hilo perpetuo para recibir datos de la seleccion del recorte
@@ -333,22 +376,19 @@ def principal(page: ft.Page, tuberias: list[Pipe]):
 
 
 
-def apertura_ventana(lista_tuberias = list[Pipe]):
+def apertura_ventana( tuberias, candado_recorte ):
 
-    [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ] = lista_tuberias
+    [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ] = tuberias
  
     global subproceso_ventana
-    # print("[bold yellow]Rutina de espera - Proceso padre")
 
     while True:
         # se espera hasta que se pida una nueva apertura
-        # print("esperando...")
         [parametros] = tuberia_apertura.recv()
-        # print(f"[green]parametros recibidos: {parametros}")
         # caso primera seleccion: crear ventana desde cero
         if subproceso_ventana==None:
-            # subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
-            subproceso_ventana = Process(target=crear_ventana_opencv, args=(lista_tuberias,))
+            subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberias, candado_recorte,))
+            subproceso_ventana.daemon=True
             subproceso_ventana.start()
 
             tuberia_galeria.send([parametros])  
@@ -356,44 +396,43 @@ def apertura_ventana(lista_tuberias = list[Pipe]):
         # caso contrario: destruir ventana y recrearla desde cero
         elif subproceso_ventana.is_alive():
             subproceso_ventana.terminate()
-            # subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberia_ventana,))
-            subproceso_ventana = Process(target=crear_ventana_opencv, args=(lista_tuberias,))
+            subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberias, candado_recorte,))
+            subproceso_ventana.daemon=True
             subproceso_ventana.start()
-            # subproceso_ventana.run()
             tuberia_galeria.send([parametros])  
      
 
 
-def crear_galeria(lista_tuberias = list[Pipe]):
+def crear_galeria(tuberias, candado):
 
-    # print("[bold yellow]Galeria invocada")
-    principal_tuberias = lambda pagina: principal(pagina, lista_tuberias)
+    principal_tuberias = lambda pagina: pagina_galeria(pagina, tuberias, candado)
     ft.app(target=principal_tuberias)
 
 
 
 if __name__=="__main__":
-    
+
+    #(requerido para los  subprocesos en Windows)
+    freeze_support() # requerido para crear ejecutables en Windows
+
+    # candado para proteger el acceso a archivos
+    candado_recorte = Lock()
     # Pipe (tuberia) para interconectar interfases graficas
     tuberia_galeria, tuberia_ventana = Pipe()
-
     # Pipe (tuberia) para sincronizar la creacion de ventanas
     tuberia_click, tuberia_apertura = Pipe()
 
     tuberias = [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ]
 
-    #(requerido para los  subprocesos en Windows)
-    freeze_support() # requerido para crear ejecutables en Windows
-
     subproceso_solicitud_ventana =  Process(
-        target=apertura_ventana, args=[tuberias ])
+        target=apertura_ventana, args=[tuberias, candado_recorte  ])
     subproceso_solicitud_ventana.start()
 
     subproceso_galeria = Process(
-        target=crear_galeria, args=[tuberias ])
+        target=crear_galeria, args=[tuberias, candado_recorte  ])
     subproceso_galeria.start()
 
     # se espera al cierre de la galeria para forzar el cierre de la ventana 
     subproceso_galeria.join()
     subproceso_solicitud_ventana.terminate()
- 
+

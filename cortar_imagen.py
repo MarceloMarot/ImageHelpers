@@ -5,6 +5,9 @@ import sys
 import numpy as np
 from rich import print as print
 
+from multiprocessing import Lock, freeze_support
+
+
 def nada( a ):
     pass
 
@@ -30,7 +33,7 @@ class ParametrosVentana:
 
 
 class ImagenOpenCV:
-    def __init__(self,nombre_ventana="Ventana Recorte", nombre_trackbar='Escala' ):
+    def __init__(self,nombre_ventana="Ventana Recorte", nombre_trackbar='Escala', candado = None  ):
         self.ruta_imagen_original : str = ""    # valor provisional
         self.ruta_imagen_recorte  : str = ""    # valor provisional
         self.clave : str = "---"
@@ -57,7 +60,7 @@ class ImagenOpenCV:
         self.__imagen_seleccion = None | np.ndarray
 
         self.__nombre_ventana = nombre_ventana
-        self.__nombre_trackbar = nombre_ventana
+        self.__nombre_trackbar = nombre_trackbar
 
         self.BGR_seleccion = (200,0,150)  # magenta
         self.BGR_recorte   = (0,200,200)  # amarillo
@@ -88,16 +91,20 @@ class ImagenOpenCV:
         self.__configurar_ventana()
         self.__crear_trackbar()
 
+        # bloqueo - usado para proteger la lectura y escritura de archivos
+        if candado != None:
+            self.candado_archivos  = candado
+        else:
+            self.candado_archivos = Lock()
+
 
     def copiar_estados(self):
         """Metodo auxiliar para hacer un backup externo de las escalas y las coordenadas guardadas"""
-        # print("[bold green] Valores copiados")
         param = ParametrosVentana()
         param.ruta_origen   = self.ruta_imagen_original    
         param.ruta_recorte  = self.ruta_imagen_recorte
         param.clave         = self.clave 
         param.coordenadas_recorte  = self.__coordenadas_recorte  
-        # param.coordenadas_actuales = self.__coordenadas_actuales 
         param.coordenadas_guardado = self.__coordenadas_guardado 
         param.escala_actual     = self.__escala_actual   
         param.escala_recorte    = self.__escala_recorte   
@@ -203,7 +210,7 @@ class ImagenOpenCV:
 
     def __redimensionar_imagen(self, proporcion ):
         """Esta funcion crea una copia de la imagen de entrada ampliada o reducida en el factor de escala ingresado, al tiempo que respeta sus proporciones."""
-        # print("TIPO:",type(self.__imagen_original))
+  
         if type(self.__imagen_original) == NoneType:
 
             [anchura, altura] = self.dimensiones_original 
@@ -369,7 +376,10 @@ class ImagenOpenCV:
         """Este método relee las imagenes y permite actualizar las rutas de entrada y de salida"""
 
         # lectura desde archivo
+        self.candado_archivos.acquire()
         self.__imagen_original = cv2.imread(self.ruta_imagen_original)
+        self.candado_archivos.release()
+
         self.__configurar_trackbar_escala()
         # # Caso de reapertura de imagenes --> reestablecer escalas        
         if self.__recorte_guardado :
@@ -444,7 +454,11 @@ class ImagenOpenCV:
 
 
     def __guardado_recorte(self):
+        # proteccion del guardado ante otros procesos
+        self.candado_archivos.acquire()
         guardado_correcto = cv2.imwrite(self.ruta_imagen_recorte, self.__imagen_recorte)
+        self.candado_archivos.release()
+
         if guardado_correcto:
             if self.texto_consola: 
                 print("¡Recorte guardado!")
@@ -483,6 +497,9 @@ class ImagenOpenCV:
 # python cortar_imagen.py <ruta_imagen_original> <ruta_imagen_salida>
 # Si faltan parámetros estos se sustituyen por valores predefinidos
 if __name__ == "__main__" :
+
+    #(requerido para los  subprocesos en Windows)
+    freeze_support() # requerido para crear ejecutables en Windows
 
     ## APERTURA IMAGEN
     if len(sys.argv) == 1 :

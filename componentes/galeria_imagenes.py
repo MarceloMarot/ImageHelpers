@@ -3,8 +3,7 @@
 from functools import partial
 from typing import Sequence, TypeVar
 import flet as ft
-
-
+import pathlib
 
 
 
@@ -102,6 +101,9 @@ class Contenedor_Imagen(Contenedor):
     def ruta_imagen(self):
         return  self.content.src
 
+    @ruta_imagen.setter
+    def ruta_imagen(self, valor: str):
+        self.content.src = valor
 
     @property
     def clave(self):
@@ -211,6 +213,18 @@ def imagen_clave(clave: str, imagenes: list[ContImag]):
     """Devuelve el contenedor de imagen con la clave seleccionada"""
     key_imagen = lambda x: clave_imagen_correcta(clave, x)
     objeto_filtrado = filter(key_imagen ,imagenes)
+    return list(objeto_filtrado)[0]
+
+
+def nombre_imagen_correcto(nombre: str, contenedor: ContImag ):
+    """Verifica que el nombre de archivo sea el correcto"""
+    return nombre == pathlib.Path(contenedor.ruta_imagen).name
+
+
+def imagen_nombre(nombre: str, imagenes: list[ContImag]):
+    """Devuelve el contenedor de imagen con el nombre de archivo"""
+    name_imagen = lambda x: nombre_imagen_correcto(nombre, x)
+    objeto_filtrado = filter(name_imagen, imagenes)
     return list(objeto_filtrado)[0]
 
 
