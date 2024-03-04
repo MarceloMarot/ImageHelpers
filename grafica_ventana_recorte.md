@@ -43,14 +43,14 @@ id9((FIN))
 
 F[leer_estados] --> G[apertura_imagenes] 
 
-G[apertura_imagenes]-->K[ventana_imagen]
+G[apertura_imagenes]--> N3[__actualizar_trackbar_escala] -->K[ventana_imagen]
 
 
 
 
 J[__actualizar_proporcion]--> R[__redimensionar_imagen]--> K[ventana_imagen] --> L[funcion_trackbar] -->id8 
 
-M[__marcar_recorte] --> N[__actualizar_trackbar_escala]
+M[__marcar_recorte] --> N2[__actualizar_trackbar_escala]
 N-->O[__calcular_rectangulo] --> IF1{mov puntero}
 IF1 -->|si| K2[ventana_imagen] --> P[funcion_mouse]-->id7
 IF1 -->|no| IF2{click izquierdo}-->|si| Q[copiar_recorte] -->K2[ventana_imagen]--> P[funcion_mouse] -->id7

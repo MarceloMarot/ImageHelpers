@@ -5,7 +5,8 @@ import sys
 import numpy as np
 from rich import print as print
 
-from multiprocessing import Lock, freeze_support
+from  threading import Thread
+from multiprocessing import Lock, freeze_support, Pipe
 
 
 def nada( a ):
@@ -18,10 +19,16 @@ class ParametrosVentana:
         ruta_origen: str = "", 
         ruta_recorte: str = "recorte.jpg",
         clave: str = "---",
+        dimensiones_ventana: list[int] = [768, 768],
+        dimensiones_recorte: list[int] = [512, 512],
+        coordenadas_ventana: list[int] = [0, 0],
         ):
         self.ruta_origen = ruta_origen
         self.ruta_recorte = ruta_recorte
         self.clave = clave
+        self.dimensiones_ventana = dimensiones_ventana
+        self.dimensiones_recorte = dimensiones_recorte
+        self.coordenadas_ventana = coordenadas_ventana
         self.coordenadas_recorte = [0,0,0,0]
         self.coordenadas_actuales = [0,0,0,0]
         self.coordenadas_guardado = [0,0,0,0]     
@@ -71,8 +78,10 @@ class ImagenOpenCV:
         self.__recorte_guardado : bool = False
         self.__recorte_marcado  : bool = False
 
-        self.coordenadas_ventana = [900, 100]
-        self.dimensiones_ventana = [768, 768]
+        # auxiliares
+        self.coordenadas_ventana: list[int] 
+        # self.dimensiones_ventana = [768, 768]
+
         self.texto_consola = True
 
         # teclas para salida del bucle infinito
@@ -87,6 +96,7 @@ class ImagenOpenCV:
         self.funcion_trackbar = nada
 
         parametros = ParametrosVentana()
+        self.__ventana_creada = False
         self.inicializar_valores(parametros)
         self.__configurar_ventana()
         self.__crear_trackbar()
@@ -104,6 +114,11 @@ class ImagenOpenCV:
         param.ruta_origen   = self.ruta_imagen_original    
         param.ruta_recorte  = self.ruta_imagen_recorte
         param.clave         = self.clave 
+
+        param.dimensiones_ventana = self.dimensiones_ventana 
+        param.dimensiones_recorte = self.dimensiones_recorte 
+
+        param.coordenadas_ventana = self.coordenadas_ventana
         param.coordenadas_recorte  = self.__coordenadas_recorte  
         param.coordenadas_guardado = self.__coordenadas_guardado 
         param.escala_actual     = self.__escala_actual   
@@ -120,6 +135,11 @@ class ImagenOpenCV:
         self.ruta_imagen_original   = param.ruta_origen
         self.ruta_imagen_recorte    = param.ruta_recorte
         self.clave                  = param.clave
+
+        self.dimensiones_ventana = param.dimensiones_ventana
+        self.dimensiones_recorte = param.dimensiones_recorte
+
+        self.coordenadas_ventana = param.coordenadas_ventana 
         self.__coordenadas_recorte  = param.coordenadas_recorte
         # self.__coordenadas_actuales = param.coordenadas_actuales
         self.__coordenadas_guardado = param.coordenadas_guardado
@@ -138,6 +158,11 @@ class ImagenOpenCV:
         # self.ruta_imagen_original = param.ruta_origen
         # self.ruta_imagen_recorte = param.ruta_recorte
         # self.clave                  = param.clave
+        self.dimensiones_ventana = param.dimensiones_ventana
+        self.dimensiones_recorte = param.dimensiones_recorte
+
+        self.coordenadas_ventana = param.coordenadas_ventana
+
         self.__coordenadas_recorte   = param.coordenadas_recorte
         self.__coordenadas_actuales = param.coordenadas_actuales
         self.__coordenadas_guardado  = param.coordenadas_guardado    
@@ -410,8 +435,8 @@ class ImagenOpenCV:
     def interfaz_edicion(
         self,  
         parametros: ParametrosVentana,
-        dimensiones_recorte=[512, 512], 
-        dimensiones_ventana=[768, 768], 
+        # dimensiones_recorte=[512, 512], 
+        # dimensiones_ventana=[768, 768], 
         texto_consola=True,
         escape_teclado=True,
         funcion_mouse=nada,
@@ -425,32 +450,54 @@ class ImagenOpenCV:
 
         self.texto_consola = texto_consola
 
-        self.dimensiones_ventana = dimensiones_ventana
-        self.dimensiones_recorte = dimensiones_recorte
 
         self.inicializar_valores(parametros)
         self.leer_estados(parametros)
-        # Conjunto de teclas de escape
-        exito_guardado = False
-        if escape_teclado:
-            teclas_escape = self.teclas_escape 
-        else:
-            teclas_escape = {}
-        tecla = "-"  # Caracter no implementado
-        if texto_consola: print("Teclas implementadas: ", teclas_escape )
-        while tecla not in teclas_escape:
-            # espera en reposo a que se pulse una tecla del teclado
-            # k = cv2.waitKey(0)
-            k = cv2.waitKeyEx(0)
-            if k >= 0:
-                tecla = chr(k)  # Conversion de numero a caracter ASCII
-                if texto_consola: print("Tecla ingresada: ", tecla)
-                # se guarda una copia del recorte si la tecla es correcta
-                if tecla  in self.teclas_guardado:
-                    exito_guardado = self.__guardado_recorte() 
 
-        self.cerrar_ventana()
-        return tecla, exito_guardado
+        global tuberia_1,tuberia_2
+
+        def bucle_teclado():
+
+            # Conjunto de teclas de escape
+            exito_guardado = False
+            if escape_teclado:
+                teclas_escape = self.teclas_escape 
+            else:
+                teclas_escape = {}
+            tecla = "-"  # Caracter no implementado
+            if texto_consola: print("Teclas implementadas: ", teclas_escape )
+            while tecla not in teclas_escape:
+                # espera en reposo a que se pulse una tecla del teclado
+                # k = cv2.waitKey(0)
+                k = cv2.waitKeyEx(0)
+                if k >= 0:
+                    tecla = chr(k)  # Conversion de numero a caracter ASCII
+                    if texto_consola: print("Tecla ingresada: ", tecla)
+                    # se guarda una copia del recorte si la tecla es correcta
+                    if tecla  in self.teclas_guardado:
+                        exito_guardado = self.__guardado_recorte() 
+
+            self.cerrar_ventana()
+            return tecla, exito_guardado
+
+
+        def bucle_espera_parametros():
+            while True:
+                
+                [parametros] = tuberia_2.recv()  
+                self.inicializar_valores(parametros)
+                self.leer_estados(parametros)
+
+
+        if self.__ventana_creada == False:
+            hilo_espera = Thread(target=bucle_espera_parametros)
+            hilo_espera.daemon = True
+            hilo_espera.start()
+            self.__ventana_creada = True
+            bucle_teclado()
+
+
+
 
 
     def __guardado_recorte(self):
@@ -489,7 +536,7 @@ class ImagenOpenCV:
         cv2.destroyAllWindows() # ignora ventanas cerradas
 
 
-
+tuberia_1,tuberia_2 = Pipe()
 
 
 # Rutina de prueba: Apertura de imagenes
@@ -529,9 +576,39 @@ if __name__ == "__main__" :
             print(f"Guardado recorte, codigo {x}")
 
     # estructura con datos de imagen
-    parametros_imagen = ParametrosVentana(ruta_archivo_imagen, ruta_archivo_recorte)
+    parametros_imagen = ParametrosVentana(
+        ruta_archivo_imagen, 
+        ruta_archivo_recorte,
+        dimensiones_recorte=[256, 354],
+        dimensiones_ventana=[512, 512],
+        )
+    
+    ruta_archivo_imagen2 = "1686469590.png"
+    parametros_imagen2 = ParametrosVentana(ruta_archivo_imagen2, ruta_archivo_recorte)
+    
+    # hilo para ventana
+
+    import time
+    def envio_mensajes():
+        
+        demora = 5
+        while demora >= 0:
+            print(f"cuenta atrás: {demora}")
+            time.sleep(1)
+            demora -= 1
+
+        tuberia_1.send([parametros_imagen2])
+
+    hilo_mensajes = Thread(target=envio_mensajes)
+    hilo_mensajes.daemon = True
+    hilo_mensajes.start()
+
     # llamado a la ventana grafica
     ventana.interfaz_edicion( parametros_imagen, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
+    # parametros = ParametrosVentana()
+    # ventana.interfaz_edicion( parametros, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
 
+
+   
     # destruccion de ventanas
-    ventana.cerrar_ventana()
+    # ventana.cerrar_ventana()
