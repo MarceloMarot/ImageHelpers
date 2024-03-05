@@ -659,16 +659,16 @@ if __name__ == "__main__" :
             print(f"cuenta atrás: {demora}")
             demora -= 1
             time.sleep(1)
-        # tuberia_enviar.send([parametros_imagen])
-        ventana.ingresar_parametros(parametros_imagen)
+        # tuberia_enviar.send([parametros_imagen]) # correcto
+        ventana.ingresar_parametros(parametros_imagen) # correcto
         time.sleep(1)
         demora = 3
         while demora >= 0:
             print(f"cuenta atrás: {demora}")
             demora -= 1
             time.sleep(1)
-        # tuberia_enviar.send([parametros_imagen2])
-        ventana.ingresar_parametros(parametros_imagen2)
+        # tuberia_enviar.send([parametros_imagen2]) # correcto
+        ventana.ingresar_parametros(parametros_imagen2) # correcto
 
 
     hilo_mensajes = Thread(target=envio_mensajes)
@@ -678,7 +678,8 @@ if __name__ == "__main__" :
     # hilo y rutina auxiliares para registrar coordenadas del recorte
     def recibir_logs():
         while True:
-            datos = ventana.extraer_parametros()
+            # [datos] = tuberia_recibir.recv() # correcto
+            datos = ventana.extraer_parametros() # correcto
             print("coord. recorte :",datos.coordenadas_recorte)
             # print("dimensiones (imagen ampliada) :",datos.dimensiones_ventana)
 

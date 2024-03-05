@@ -141,48 +141,10 @@ def liberar_memoria():
 
 
 
-# Nuevo proceso: ventana de OpenCV
-def crear_ventana_opencv(tuberias, candado_recorte):
-    
-    [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ] = tuberias
-
-    global ventana_emergente
-    
-    [data] =  tuberia_ventana.recv()
-    parametros = data 
-    
-    # funcion adicional para el mouse --> envio datos
-    def puntero_ventana_emergente( evento ):
-        clave = ventana_emergente.clave
-        if evento==cv2.EVENT_LBUTTONDOWN or evento==cv2.EVENT_RBUTTONDOWN:
-            # envio de datos al proceso principal
-            parametros = ventana_emergente.copiar_estados()
-            clave = ventana_emergente.clave
-            tuberia_ventana.send([clave, parametros])
-
-            # monitoreo uso memoria
-            memory_usage_psutil()
-
-        liberar_memoria()
-
-    ventana_emergente = ImagenOpenCV(candado=candado_recorte)
-    ventana_emergente.interfaz_edicion(
-        parametros,
-        [512,512],[768,768],
-        texto_consola=False, escape_teclado=False, 
-        funcion_mouse=puntero_ventana_emergente,
-        funcion_trackbar=memory_usage_psutil
-        )  #tamaño recorte predefinido
-
-
-# Variable global: requerida para inicializar correctamente la ventana emergente
-subproceso_ventana = None
-
-
 def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
     """Funcion gráfica para crear la galería de Flet"""
     # lista completa de tuberias disponibles
-    [tuberia_galeria, tuberia_ventana, tuberia_click, extremo_apertura ] = tuberias 
+    [tuberia_datos_recorte , tuberia_apertura_ventana ] = tuberias 
 
     ancho_pagina = 900
     altura_pagina = 800
@@ -285,7 +247,6 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
             galeria.update()
 
 
-
     # Clase para manejar dialogos de archivo y de carpeta
     dialogo_directorio_origen   = ft.FilePicker(on_result = resultado_directorio_origen )
     dialogo_directorio_destino   = ft.FilePicker(on_result = resultado_directorio_destino )
@@ -296,12 +257,11 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
         ])
 
 
-    def recepcion_datos_ventana(tuberia):
-        # global galeria
+    def recepcion_datos_ventana(tuberia_datos_recorte):
         while True:
             # se espera a recibir data emitida por los eventos del mouse
-            [clave, parametros] = tuberia.recv()
-            imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
+            [parametros] = tuberia_datos_recorte[1].recv()
+            imagen_seleccionada = imagen_clave(parametros.clave, imagenes_galeria)
 
             imagen_seleccionada: ContenedorRecortes
             parametros: ParametrosVentana
@@ -309,23 +269,21 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
             imagen_seleccionada.parametros = parametros
 
             if parametros.coordenadas_guardado != [0,0,0,0] :
-
+                # marcado de propiedades y actualizacion grafica
                 imagen_seleccionada.guardada = True
-                imagen_seleccionada.marcada = False
-
+                imagen_seleccionada.marcada = False 
                 imagen_seleccionada.update()
-
+                # 
                 candado_recorte.acquire()
                 imagen_seleccionada.ruta_imagen = parametros.ruta_recorte
                 candado_recorte.release()
-
+                # actualizacion grafica
                 imagen_seleccionada.update()
 
 
             if parametros.coordenadas_recorte != [0,0,0,0] and parametros.coordenadas_recorte != parametros.coordenadas_guardado :
 
                 imagen_seleccionada.marcada = True
-                # imagen_seleccionada.ruta_imagen = parametros.ruta_recorte
                 imagen_seleccionada.update()
 
             # actualizacion de bordes
@@ -342,13 +300,12 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
         clave = contenedor.clave
         imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
         parametros = imagen_seleccionada.parametros
-
-        tuberia_click.send([parametros])
+        tuberia_apertura_ventana[1].send([parametros])
 
 
     # hilo perpetuo para recibir datos de la seleccion del recorte
     hilo_recepcion_datos = Thread(
-        target=recepcion_datos_ventana, args=[tuberia_galeria,])
+        target=recepcion_datos_ventana, args=[tuberia_datos_recorte,])
     hilo_recepcion_datos.start()
 
     # (NO USADO AUN) manejador del teclado
@@ -376,35 +333,29 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
 
 
 
-def apertura_ventana( tuberias, candado_recorte ):
+def apertura_ventana_opencv( tuberias, candado_recorte ):
+    """Esta rutina llama a la ventana de edicion hecha en OpenCV. Se ejecuta en un subproceso."""
 
-    [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ] = tuberias
- 
-    global subproceso_ventana
+    [tuberia_datos_recorte , tuberia_apertura_ventana ] = tuberias 
 
-    while True:
-        # se espera hasta que se pida una nueva apertura
-        [parametros] = tuberia_apertura.recv()
-        # caso primera seleccion: crear ventana desde cero
-        if subproceso_ventana==None:
-            subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberias, candado_recorte,))
-            subproceso_ventana.daemon=True
-            subproceso_ventana.start()
+    ventana_emergente = ImagenOpenCV(
+        candado = candado_recorte,
+        canal_recepcion = tuberia_apertura_ventana,
+        canal_transmision = tuberia_datos_recorte,
+        )
 
-            tuberia_galeria.send([parametros])  
-
-        # caso contrario: destruir ventana y recrearla desde cero
-        elif subproceso_ventana.is_alive():
-            subproceso_ventana.terminate()
-            subproceso_ventana = Process(target=crear_ventana_opencv, args=(tuberias, candado_recorte,))
-            subproceso_ventana.daemon=True
-            subproceso_ventana.start()
-            tuberia_galeria.send([parametros])  
+    # llamado a la ventana grafica (bucle condicional, se sale por teclado)
+    ventana_emergente.interfaz_edicion( 
+        texto_consola = False, 
+        escape_teclado = False, 
+        )    # Tamaño predefinido 
      
 
 
 def crear_galeria(tuberias, candado):
-
+    """Esta funcion auxiliar permite llamar a la pagina de FLET .
+    Al mismo tiempo le adjunta como argumentos los pipes y locks necesarios para que funcionw el sistema.
+    Se ejecuta en un subproceso."""
     principal_tuberias = lambda pagina: pagina_galeria(pagina, tuberias, candado)
     ft.app(target=principal_tuberias)
 
@@ -418,19 +369,22 @@ if __name__=="__main__":
     # candado para proteger el acceso a archivos
     candado_recorte = Lock()
     # Pipe (tuberia) para interconectar interfases graficas
-    tuberia_galeria, tuberia_ventana = Pipe()
+    extremo_interno, extremo_externo = Pipe()
+    tuberia_datos_recorte = [extremo_interno, extremo_externo]
     # Pipe (tuberia) para sincronizar la creacion de ventanas
-    tuberia_click, tuberia_apertura = Pipe()
+    extremo_interno, extremo_externo = Pipe()
+    tuberia_apertura_ventana = [extremo_interno, extremo_externo]
 
-    tuberias = [tuberia_galeria, tuberia_ventana, tuberia_click, tuberia_apertura ]
-
-    subproceso_solicitud_ventana =  Process(
-        target=apertura_ventana, args=[tuberias, candado_recorte  ])
-    subproceso_solicitud_ventana.start()
+    tuberias = [tuberia_datos_recorte , tuberia_apertura_ventana ]
 
     subproceso_galeria = Process(
         target=crear_galeria, args=[tuberias, candado_recorte  ])
     subproceso_galeria.start()
+    
+    subproceso_solicitud_ventana =  Process(
+        target=apertura_ventana_opencv, args=[tuberias, candado_recorte  ])
+    subproceso_solicitud_ventana.start()
+
 
     # se espera al cierre de la galeria para forzar el cierre de la ventana 
     subproceso_galeria.join()
