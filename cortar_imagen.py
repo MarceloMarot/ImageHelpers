@@ -47,7 +47,8 @@ class ImagenOpenCV:
         nombre_ventana="Ventana Recorte", 
         nombre_trackbar='Escala', 
         candado = None,
-        canal: list | None = None   # tuberia (pipe)
+        canal_recepcion: list | None = None,   # tuberia (pipe)
+        canal_transmision: list | None = None,   # tuberia (pipe)
         ):
         self.ruta_imagen_original : str = ""    # valor provisional
         self.ruta_imagen_recorte  : str = ""    # valor provisional
@@ -96,7 +97,7 @@ class ImagenOpenCV:
 
         # teclas para salida del bucle infinito
         self.teclas_escape = {"a" , "s", "d" ," " }  
-        # teclas para guardado
+        # teclas para guardado de imagen desde teclado
         self.teclas_guardado = {"s"}  
 
         self.brillo_ventana: int = 100
@@ -117,30 +118,57 @@ class ImagenOpenCV:
         else:
             self.candado_archivos = Lock()
 
-        # tuberia (pipe) para comunicacion
-        if canal != None:
-            self.__canal_recepcion = canal[0]
-            self.__canal_envio = canal[1]
+        # tuberia (pipe) para recibir parametros de imagenes
+        if canal_recepcion != None:
+            self.__extremo_recepcion_interno = canal_recepcion[0]
+            self.__extremo_recepcion_externo = canal_recepcion[1]
         else:
             extremo_interno, extremo_externo = Pipe()
-            self.__canal_recepcion = extremo_interno
-            self.__canal_envio = extremo_externo 
+            self.__extremo_recepcion_interno = extremo_interno
+            self.__extremo_recepcion_externo = extremo_externo 
+
+        # tuberia (pipe) para enviar parametros de imagenes
+        if canal_transmision != None:
+            self.__extremo_transmision_interno = canal_transmision[0]
+            self.__extremo_transmision_externo = canal_transmision[1]
+        else:
+            extremo_interno, extremo_externo = Pipe()
+            self.__extremo_transmision_interno = extremo_interno
+            self.__extremo_transmision_externo = extremo_externo 
 
 
     @property
-    def canal_envio(self):
+    def canal_recepcion(self):
         """Esta property permite acceder al pipe interno para enviar los parametros de la imagen a la ventana
         Uso: 
         ventana = ImagenOpenCV( ...)
-        tuberia_envio = canal
-        tuberia_envio.send([ parametros_imagen ])
+        tuberia_enviar = canal_recepcion
+        tuberia_enviar.send([ parametros_imagen ])
         """
-        return self.__canal_envio
+        return self.__extremo_recepcion_externo
 
-# git commit -m "cortar_imagen: hilos integrados y mejora de interfaz"
-    def enviar_parametros(self, parametros: ParametrosVentana):
+    
+    def ingresar_parametros(self, parametros: ParametrosVentana):
         """Este metodo permite enviar los parametros de imagen a la ventana desde otro hilo del proceso actual."""
-        self.__canal_envio.send([parametros])
+        self.__extremo_recepcion_externo.send([parametros])
+
+
+    @property
+    def canal_transmision(self):
+        """Esta property permite acceder al pipe interno para enviar los parametros de la imagen a la ventana
+        Uso: 
+        ventana = ImagenOpenCV( ...)
+        tuberia_recibir = canal_tranmsision
+        [ parametros_imagen ] = tuberia_recibir.recv()
+        """
+        return self.__extremo_transmision_externo
+
+
+    def extraer_parametros(self):
+        """Este metodo permite recibir los parametros del recorte de imagen desde otro hilo del proceso actual."""
+        [parametros] = self.__extremo_transmision_externo.recv()
+        return parametros
+
 
 
     def copiar_estados(self):
@@ -214,13 +242,19 @@ class ImagenOpenCV:
 
     def __crear_trackbar(self):
         # creacion de la barra de escala
-        cv2.createTrackbar(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_actual , self.__escala_maxima , self.__actualizar_proporcion) 
+        cv2.createTrackbar(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_actual , self.__escala_maxima , self.actualizar_proporcion) 
  
 
-    def __actualizar_proporcion(self, x):
-        """Este manejador actualiza el tamaño de imagen y su ventana gráfica con los cambios de la barra deslizante."""
-        porcentaje = cv2.getTrackbarPos(self.__nombre_trackbar, self.__nombre_ventana)
+    def actualizar_proporcion(self, porcentaje: int):
+        """Esta funcion / manejador actualiza el tamaño de imagen y su ventana gráfica con los cambios de la barra deslizante."""
+        # porcentaje = cv2.getTrackbarPos(self.__nombre_trackbar, self.__nombre_ventana) # innecesario
+        
         self.__escala_actual = int(porcentaje)
+
+        # Forzar posicion de la barra de escala
+        # (si fue llamada por su handler no cambia nada)
+        self.__actualizar_trackbar_escala()  
+
         proporcion = porcentaje / 100
         self.__redimensionar_imagen(proporcion)
         # descarta la representacion de la actual posicion del mouse
@@ -228,7 +262,7 @@ class ImagenOpenCV:
         # actualizacion grafica
         self.ventana_imagen()
         #funcionalidad opcional
-        self.funcion_trackbar(x)
+        self.funcion_trackbar(porcentaje)
 
 
     def __marcar_recorte(self, evento,x_mouse,y_mouse,flags,param):
@@ -474,8 +508,8 @@ class ImagenOpenCV:
         funcion_mouse=nada,
         funcion_trackbar=nada,
         ):
-        """Funcion para abrir la ventana de edición. La ventana se cierra presionando alguna de las teclas indicadas."""
-
+        """Funcion para abrir la ventana de edición. La ventana se cierra presionando alguna de las teclas indicadas.
+        Debe ser llamada desde el thread principal para funcionar correctamente."""
         self.funcion_mouse = funcion_mouse
         self.funcion_trackbar = funcion_trackbar
         self.texto_consola = texto_consola
@@ -509,7 +543,7 @@ class ImagenOpenCV:
         def bucle_espera_parametros():
             while True:
                 
-                [parametros] = self.__canal_recepcion.recv()  
+                [parametros] = self.__extremo_recepcion_interno.recv()  
                 self.inicializar_valores(parametros)
                 self.leer_estados(parametros)
 
@@ -551,7 +585,9 @@ class ImagenOpenCV:
             self.__escala_guardado = self.__escala_actual
             guardado_correcto = self.__guardado_recorte()   # creacion archivo
             self.__recorte_guardado = guardado_correcto
-
+        # envio de datos al exterior por tuberia
+        parametros = self.copiar_estados()
+        self.__extremo_transmision_interno.send([parametros])
         # retorno con indicacion del guardado
         return guardado_correcto
 
@@ -590,7 +626,8 @@ if __name__ == "__main__" :
     ## PROCESAMIENTO
     ventana = ImagenOpenCV()
     # uso pipeline interno
-    tuberia_envio = ventana.canal_envio
+    tuberia_enviar = ventana.canal_recepcion
+    tuberia_recibir = ventana.canal_transmision
 
     def mouse(x):
         if x==cv2.EVENT_LBUTTONDOWN:
@@ -614,32 +651,41 @@ if __name__ == "__main__" :
         ruta_archivo_recorte
         )
     
-    # hilo para ventana
-
+    # hilo y rutina auxiliares para actualizar imagen
     import time
     def envio_mensajes():
-        demora = 3
+        demora = 1
         while demora >= 0:
             print(f"cuenta atrás: {demora}")
             demora -= 1
             time.sleep(1)
-        # tuberia_envio.send([parametros_imagen])
-        ventana.enviar_parametros(parametros_imagen)
+        # tuberia_enviar.send([parametros_imagen])
+        ventana.ingresar_parametros(parametros_imagen)
         time.sleep(1)
         demora = 3
         while demora >= 0:
             print(f"cuenta atrás: {demora}")
             demora -= 1
             time.sleep(1)
-
-        # tuberia_envio.send([parametros_imagen2])
-        ventana.enviar_parametros(parametros_imagen2)
-
+        # tuberia_enviar.send([parametros_imagen2])
+        ventana.ingresar_parametros(parametros_imagen2)
 
 
     hilo_mensajes = Thread(target=envio_mensajes)
     hilo_mensajes.daemon = True
     hilo_mensajes.start()
+
+    # hilo y rutina auxiliares para registrar coordenadas del recorte
+    def recibir_logs():
+        while True:
+            datos = ventana.extraer_parametros()
+            print("coord. recorte :",datos.coordenadas_recorte)
+            # print("dimensiones (imagen ampliada) :",datos.dimensiones_ventana)
+
+
+    hilo_logs = Thread(target=recibir_logs)
+    hilo_logs.daemon = True
+    hilo_logs.start()
 
     # llamado a la ventana grafica (bucle condicional, se sale por teclado)
     ventana.interfaz_edicion( texto_consola=True, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido

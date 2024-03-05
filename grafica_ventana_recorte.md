@@ -48,7 +48,7 @@ G[apertura_imagenes]--> N3[__actualizar_trackbar_escala] -->K[ventana_imagen]
 
 
 
-J[__actualizar_proporcion]--> R[__redimensionar_imagen]--> K[ventana_imagen] --> L[funcion_trackbar] -->id8 
+J[actualizar_proporcion]--> N4[__actualizar_trackbar_escala] -->R[__redimensionar_imagen]--> K[ventana_imagen] --> L[funcion_trackbar] -->id8 
 
 M[__marcar_recorte] --> N2[__actualizar_trackbar_escala]
 N-->O[__calcular_rectangulo] --> IF1{mov puntero}
