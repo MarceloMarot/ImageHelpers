@@ -23,6 +23,8 @@ class ParametrosVentana:
         dimensiones_recorte: list[int] = [512, 512],
         coordenadas_ventana: list[int] = [0, 0],
         ):
+        """Este objeto a pasar todos los parametros de interes para realizar los recortes de imagen.
+        Por defecto se elije un tamaño de recorte de 512 x 512, que es el exigido por Stable Diffusion"""
         self.ruta_origen = ruta_origen
         self.ruta_recorte = ruta_recorte
         self.clave = clave
@@ -40,7 +42,13 @@ class ParametrosVentana:
 
 
 class ImagenOpenCV:
-    def __init__(self,nombre_ventana="Ventana Recorte", nombre_trackbar='Escala', candado = None  ):
+    def __init__(
+        self,
+        nombre_ventana="Ventana Recorte", 
+        nombre_trackbar='Escala', 
+        candado = None,
+        canal: list | None = None   # tuberia (pipe)
+        ):
         self.ruta_imagen_original : str = ""    # valor provisional
         self.ruta_imagen_recorte  : str = ""    # valor provisional
         self.clave : str = "---"
@@ -58,8 +66,10 @@ class ImagenOpenCV:
         self.__x_mouse : int = 0
         self.__y_mouse : int = 0
 
-        self.dimensiones_recorte = [256, 256]
-        self.dimensiones_original = [512, 512]
+        # self.dimensiones_recorte = [256, 256]
+        # self.dimensiones_original = [512, 512]
+        self.dimensiones_recorte: list[int]
+        self.dimensiones_original : list[int]
 
         self.__imagen_original = None | np.ndarray
         self.__imagen_escalada = None | np.ndarray
@@ -106,6 +116,31 @@ class ImagenOpenCV:
             self.candado_archivos  = candado
         else:
             self.candado_archivos = Lock()
+
+        # tuberia (pipe) para comunicacion
+        if canal != None:
+            self.__canal_recepcion = canal[0]
+            self.__canal_envio = canal[1]
+        else:
+            extremo_interno, extremo_externo = Pipe()
+            self.__canal_recepcion = extremo_interno
+            self.__canal_envio = extremo_externo 
+
+
+    @property
+    def canal_envio(self):
+        """Esta property permite acceder al pipe interno para enviar los parametros de la imagen a la ventana
+        Uso: 
+        ventana = ImagenOpenCV( ...)
+        tuberia_envio = canal
+        tuberia_envio.send([ parametros_imagen ])
+        """
+        return self.__canal_envio
+
+# git commit -m "cortar_imagen: hilos integrados y mejora de interfaz"
+    def enviar_parametros(self, parametros: ParametrosVentana):
+        """Este metodo permite enviar los parametros de imagen a la ventana desde otro hilo del proceso actual."""
+        self.__canal_envio.send([parametros])
 
 
     def copiar_estados(self):
@@ -434,30 +469,20 @@ class ImagenOpenCV:
 
     def interfaz_edicion(
         self,  
-        parametros: ParametrosVentana,
-        # dimensiones_recorte=[512, 512], 
-        # dimensiones_ventana=[768, 768], 
-        texto_consola=True,
-        escape_teclado=True,
+        texto_consola=False,
+        escape_teclado=False,
         funcion_mouse=nada,
         funcion_trackbar=nada,
         ):
-        """Funcion para abrir la ventana de edición. La ventana se cierra presionando alguna de las teclas indicadas. 
-        Por defecto se elije un tamaño de recorte de 512 x 512, que es el exigido por Stable Diffusion"""
+        """Funcion para abrir la ventana de edición. La ventana se cierra presionando alguna de las teclas indicadas."""
 
         self.funcion_mouse = funcion_mouse
         self.funcion_trackbar = funcion_trackbar
-
         self.texto_consola = texto_consola
 
-
-        self.inicializar_valores(parametros)
-        self.leer_estados(parametros)
-
-        global tuberia_1,tuberia_2
-
         def bucle_teclado():
-
+            """Bucle para mantener abeirto el objeto de ventana.
+            Debe ser llamado desde el thread principal para funcionar correctamente."""
             # Conjunto de teclas de escape
             exito_guardado = False
             if escape_teclado:
@@ -484,7 +509,7 @@ class ImagenOpenCV:
         def bucle_espera_parametros():
             while True:
                 
-                [parametros] = tuberia_2.recv()  
+                [parametros] = self.__canal_recepcion.recv()  
                 self.inicializar_valores(parametros)
                 self.leer_estados(parametros)
 
@@ -494,7 +519,7 @@ class ImagenOpenCV:
             hilo_espera.daemon = True
             hilo_espera.start()
             self.__ventana_creada = True
-            bucle_teclado()
+            bucle_teclado() #bucle condicional
 
 
 
@@ -536,8 +561,6 @@ class ImagenOpenCV:
         cv2.destroyAllWindows() # ignora ventanas cerradas
 
 
-tuberia_1,tuberia_2 = Pipe()
-
 
 # Rutina de prueba: Apertura de imagenes
 # Uso:
@@ -566,6 +589,8 @@ if __name__ == "__main__" :
 
     ## PROCESAMIENTO
     ventana = ImagenOpenCV()
+    # uso pipeline interno
+    tuberia_envio = ventana.canal_envio
 
     def mouse(x):
         if x==cv2.EVENT_LBUTTONDOWN:
@@ -584,31 +609,40 @@ if __name__ == "__main__" :
         )
     
     ruta_archivo_imagen2 = "1686469590.png"
-    parametros_imagen2 = ParametrosVentana(ruta_archivo_imagen2, ruta_archivo_recorte)
+    parametros_imagen2 = ParametrosVentana(
+        ruta_archivo_imagen2, 
+        ruta_archivo_recorte
+        )
     
     # hilo para ventana
 
     import time
     def envio_mensajes():
-        
-        demora = 5
+        demora = 3
         while demora >= 0:
             print(f"cuenta atrás: {demora}")
-            time.sleep(1)
             demora -= 1
+            time.sleep(1)
+        # tuberia_envio.send([parametros_imagen])
+        ventana.enviar_parametros(parametros_imagen)
+        time.sleep(1)
+        demora = 3
+        while demora >= 0:
+            print(f"cuenta atrás: {demora}")
+            demora -= 1
+            time.sleep(1)
 
-        tuberia_1.send([parametros_imagen2])
+        # tuberia_envio.send([parametros_imagen2])
+        ventana.enviar_parametros(parametros_imagen2)
+
+
 
     hilo_mensajes = Thread(target=envio_mensajes)
     hilo_mensajes.daemon = True
     hilo_mensajes.start()
 
-    # llamado a la ventana grafica
-    ventana.interfaz_edicion( parametros_imagen, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
-    # parametros = ParametrosVentana()
-    # ventana.interfaz_edicion( parametros, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
+    # llamado a la ventana grafica (bucle condicional, se sale por teclado)
+    ventana.interfaz_edicion( texto_consola=True, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
 
-
-   
     # destruccion de ventanas
     # ventana.cerrar_ventana()
