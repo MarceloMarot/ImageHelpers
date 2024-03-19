@@ -3,6 +3,8 @@ from sistema_archivos.clasificar_archivos import Data_Archivo, clasificar_archiv
 from sistema_archivos.mover_archivos import Mover_Archivo
 from sistema_archivos.listar_extensiones import listar_extensiones
 
+from componentes.anillo_reporte import AnilloReporte
+
 import i18n 
 import flet as ft
 import time
@@ -37,11 +39,9 @@ def main(page: ft.Page):
 
     ############### DIMENSIONES DISEÑO ####################
 
-
     # dimensiones de referencia para el diseño de la app
     ancho_filas = 500
     altura_columnas =  800
-
 
     ################# FUNCIONES ############################
 
@@ -70,19 +70,16 @@ def main(page: ft.Page):
 
     def buscar_archivos_extension(e):
 
-        # Mensaje de notificacion inicial
-        texto = i18n.t('filemover.search_progress_text')
-
         ruta    = str(ruta_directorio_origen.value) 
         ext     = "*" + str(extensiones.value) 
 
-        reporte.value = f"Buscando archivos {ext}..."
-        reporte.update()
+        caja_reporte.texto_reporte( 
+            renglon2= f"Buscando archivos {ext}..."
+            )
 
         # indicador busqueda animada
-        anillo_progreso.value = None
-        anillo_progreso.color = ft.colors.GREEN_800
-        anillo_progreso.update()
+        caja_reporte.valor_anillo = None
+        caja_reporte.color_anillo = ft.colors.GREEN_800
 
         inicio  = time.time()
 
@@ -98,56 +95,32 @@ def main(page: ft.Page):
 
         fin  = time.time()
 
-        texto = i18n.t('filemover.search_finish_text',
-            source_path = ruta_directorio_origen.value,
-            extensions = extensiones.value,
-            n_files = numero_archivos_origen,
-            size = espacio_archivos_origen,
-            n_no_readable = archivos_origen_ilegibles, 
-            time = f'{(fin-inicio):.3}'
-        )
-
-        # habilitacion del boton "Mover"
-        # if len(archivos_origen) > 0 :
-        #     boton_carpeta_destino.disabled = False
-        #     boton_carpeta_destino.update()
-
         # habilitacion del boton de busqueda de extensiones
         boton_busqueda_extensiones.disabled = False
         boton_busqueda_extensiones.update()
-        # page.update()
 
         # indicador busqueda completada 
-        anillo_progreso.value = 1
-        anillo_progreso.update()
+        caja_reporte.valor_anillo = 1
 
         # muestra de resultados
-        reporte.value = f"""Extension {ext}
-        Archivos encontrados : {numero_archivos_origen}
-        Espacio en disco : {espacio_archivos_origen:.4} MB
-        Archivos ilegibles : {archivos_origen_ilegibles}
-        Tiempo busqueda : {fin-inicio:.5} segundos"""
-        reporte.update()
+        caja_reporte.texto_reporte( 
+            f"Extension {ext}",
+            f"Archivos encontrados : {numero_archivos_origen}",
+            f"Espacio en disco : {espacio_archivos_origen:.4} MB",
+            f"Archivos ilegibles : {archivos_origen_ilegibles}",
+            f"Tiempo busqueda : {fin-inicio:.5} segundos"
+            )
  
-
-
-
-
-
 
     def buscar_extensiones_directorio(e):
 
-        # Mensaje de notificacion inicial
-        texto = i18n.t('filemover.ext_search_text')
-        # reporte.value=texto
-        # reporte.update()
-
         # indicador busqueda animado
-        anillo_progreso.value = None
-        anillo_progreso.color = ft.colors.AMBER_800
-        anillo_progreso.update()
-        reporte.value = "Buscando extensiones..."
-        reporte.update()
+        caja_reporte.valor_anillo = None
+        caja_reporte.color_anillo = ft.colors.AMBER_800
+
+        caja_reporte.texto_reporte(
+            renglon2 = "Buscando extensiones..."
+            )
 
         inicio  = time.time()
 
@@ -167,43 +140,21 @@ def main(page: ft.Page):
         numero_extensiones = len(lista_extensiones)
         fin = time.time()
 
-        # mensaje resultados
-        texto = i18n.t('filemover.ext_finish_text',
-            path=ruta_directorio_origen.value,
-            n_ext = numero_extensiones,
-            time = f'{(fin-inicio):.3}'
-            )
-
-        # muestra de resultados
-        # reporte.value=texto
-        # reporte.update()
-
         # actualizacion grafica
         extensiones.update()
-        # page.update()
         # indicador busqueda completada 
-        anillo_progreso.value = 1
-        anillo_progreso.update()
-        # reporte.value = "Extensiones actualizadas"
-        reporte.value = f""" Extensiones encontradas : {numero_extensiones}
+        caja_reporte.valor_anillo = 1
 
-        Lista extensiones actualizada
-
-        Tiempo busqueda : {fin-inicio:.5} segundos"""
-        reporte.update()
-
+        caja_reporte.texto_reporte( 
+            f"Extensiones encontradas : {numero_extensiones}", 
+            "",
+            "Lista extensiones actualizada",
+            "",
+            f"Tiempo busqueda : {fin-inicio:.5} segundos"
+            )
 
 
     def mover_archivos(e):
-
-        # Mensaje de notificacion inicial
-        texto = i18n.t('filemover.move_progress_text')
-        # reporte_destino.value=texto
-        # reporte_destino.update()
-
-
-        # fechar_anio = bool(checkbox_anio.value)
-        # fechar_mes  = bool(checkbox_mes.value)
 
         if grupo_radio.value == "1":
             fechar_anio = True
@@ -222,20 +173,17 @@ def main(page: ft.Page):
         ext     = "*" + str(extensiones.value) 
 
         # indicador busqueda completada 
-        anillo_progreso.value = None
-        anillo_progreso.color = ft.colors.RED_800
-        anillo_progreso.update()
+        caja_reporte.valor_anillo = None
+        caja_reporte.color_anillo = ft.colors.RED_800
+        caja_reporte.anillo_progreso.update()
 
-        reporte.value = f"Moviendo archivos {ext}..."
-        reporte.update()
-
+        caja_reporte.texto_reporte(
+            renglon3= f"Moviendo archivos {ext}..."
+            )
         inicio  = time.time()
-
         # se repite la búsqueda de archivos
         archivos_origen , ilegibles = clasificar_archivos(ruta , ext, patron)
-
         total = len(archivos_origen)
-   
         for archivo in archivos_origen:
             retorno = Mover_Archivo(archivo, str(ruta_directorio_destino.value), fechar_anio, fechar_mes)
             if retorno:
@@ -245,29 +193,17 @@ def main(page: ft.Page):
 
         fin = time.time()
 
-
-        texto = i18n.t('filemover.move_finish_text',
-            source_path = ruta_directorio_origen.value ,
-            target_path = ruta_directorio_destino.value,
-            ext = extensiones.value,
-            total = total,
-            moved = movidos,
-            repeated = repetidos,
-            time = f'{(fin-inicio):.3}' 
-        )
-        # reporte_destino.value = texto
-        # reporte_destino.update()
-        # page.update()
         # indicador busqueda completada 
-        anillo_progreso.value = 1
-        anillo_progreso.update()
+        caja_reporte.valor_anillo = 1
+        caja_reporte.anillo_progreso.update()
         # reporte.value = "Extensiones actualizadas"
-        reporte.value = f"""Archivos {ext} movidos 
-        Archivos totales: {total}
-        Movidos: {movidos}
-        Repetidos: {repetidos}
-        Tiempo : {fin-inicio:.5} segundos"""
-        reporte.update()
+        caja_reporte.texto_reporte(
+            f"Archivos {ext} movidos",
+            f"Archivos totales: {total}",
+            f"Movidos: {movidos}",
+            f"Repetidos: {repetidos}",
+            f"Tiempo : {fin-inicio:.5} segundos",
+            )
 
 
     def agregar_opciones(lista_opciones: list ):
@@ -286,16 +222,15 @@ def main(page: ft.Page):
             nuevo = ft.dropdown.Option(extension)
             extensiones.options.append(nuevo)
 
-        texto = i18n.t('filemover.ext_reset_text')
-
         # muestra de resultados
         # indicador busqueda completada 
-        anillo_progreso.value = 1
-        anillo_progreso.color = ft.colors.GREY_300
-        anillo_progreso.update()
+        caja_reporte.valor_anillo = 1
+        caja_reporte.color_anillo = ft.colors.GREY_300
+        caja_reporte.anillo_progreso.update()
 
-        reporte.value = f"Lista extensiones reestablecidas"
-        reporte.update()
+        caja_reporte.texto_reporte(
+            renglon2 = f"Lista extensiones reestablecida"
+            )
 
         extensiones.update()
 
@@ -324,7 +259,6 @@ def main(page: ft.Page):
     def cambio_opcion(e):
         habilitar_controles()
         extensiones.update()
-        # page.update()
 
 
     ####################### COMPONENTES  GRAFICOS ##############################3
@@ -409,10 +343,9 @@ def main(page: ft.Page):
         color = ft.colors.WHITE,
     )
 
-
     boton_restablecer_extensiones = ft.ElevatedButton(
     # boton_restablecer_extensiones = ft.IconButton(
-        # text="Restablecer Extensiones",,
+        # text="Restablecer Extensiones",
         text = i18n.t('filemover.ext_reset_button'),
         icon=ft.icons.RESTORE ,
         on_click=restablecer_opciones,
@@ -435,16 +368,6 @@ def main(page: ft.Page):
         color = ft.colors.WHITE,
     )
 
-    # checkboxes 
-    checkbox_anio = ft.Checkbox(
-        label=i18n.t('filemover.check_year'), 
-        value=True  
-        )
-    checkbox_mes  = ft.Checkbox(
-        label=i18n.t('filemover.check_month'), 
-        value=False 
-        )
-
     grupo_radio = ft.RadioGroup(content=ft.Row([
         ft.Radio(value="0", label="(No ordenar)"),
         ft.Radio(value="1", label=i18n.t('filemover.check_year')),
@@ -452,17 +375,6 @@ def main(page: ft.Page):
         ],
         width = ancho_filas
         ))
-
-    # indicadores progreso
-    dimensiones_anillo = 100
-    anillo_progreso = ft.ProgressRing(
-        width = dimensiones_anillo, 
-        height = dimensiones_anillo, 
-        stroke_width = 10 ,
-        color=ft.colors.GREY_300,
-        value = 1,          # valor inicial
-        # value = None,          # tiempo indefinido
-        )
 
     # Cajas de texto
     ruta_directorio_origen  = ft.Text(
@@ -475,25 +387,7 @@ def main(page: ft.Page):
         weight=ft.FontWeight.BOLD
         ) 
 
-    reporte = ft.Text(
-        value="", 
-        height=100, 
-        width= ancho_filas - dimensiones_anillo*1.5, 
-        weight=ft.FontWeight.BOLD,
-        text_align=ft.TextAlign.START,
-        )
-
-
-    # texto_titulo = ft.Text(
-    #     # value="Movedor de Archivos", 
-    #     value = i18n.t('filemover.title_text'),
-    #     size=30,
-    #     height=50, 
-    #     width=ancho_filas*2, 
-    #     weight=ft.FontWeight.BOLD,
-    #     text_align=ft.TextAlign.CENTER,
-    #     )
-
+    caja_reporte = AnilloReporte()
 
 
     #################### MAQUETADO ######################3
@@ -530,12 +424,12 @@ def main(page: ft.Page):
             ),
         ft.Divider(),
         ft.Row(
-            # controls = [ checkbox_anio, checkbox_mes ],
             controls = [ grupo_radio ],
             expand=False,
             width = ancho_filas,
-            # alignment= ft.MainAxisAlignment.CENTER, 
-            alignment= ft.MainAxisAlignment.SPACE_BETWEEN, 
+            alignment= ft.MainAxisAlignment.CENTER, 
+            # alignment= ft.MainAxisAlignment.SPACE_BETWEEN,
+            # alignment= ft.MainAxisAlignment.SPACE_EVENLY,  
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
         ft.Divider(),
@@ -551,14 +445,8 @@ def main(page: ft.Page):
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
         ft.Divider(),
-        ft.Row(
-            controls = [ anillo_progreso, reporte],
-            expand = False,
-            width = ancho_filas, 
-            height= anillo_progreso.height,
-            alignment= ft.MainAxisAlignment.CENTER, 
-            # vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
+
+        caja_reporte,
         # ft.Divider(),
     ]
 
@@ -573,6 +461,8 @@ def main(page: ft.Page):
         height = altura_columnas,
         width  = ancho_filas + 100,
         scroll=ft.ScrollMode.AUTO,
+        alignment = ft.MainAxisAlignment.CENTER,
+        horizontal_alignment = ft.CrossAxisAlignment.CENTER,
     )
 
     fila_final = ft.Row(
@@ -586,32 +476,10 @@ def main(page: ft.Page):
         dialogo_directorio_origen, dialogo_directorio_destino
         ])
 
-    # page.add(texto_titulo)
     page.add(fila_final)
 
 
     ##################### MENSAJES DE INICIO ###########################
-
-    texto = i18n.t('filemover.search_tutorial_text',
-        search_dir = boton_carpeta_origen.text,
-        search_files = boton_busqueda_archivos.text,
-        search_ext = boton_busqueda_extensiones.text,
-        reset_ext = boton_restablecer_extensiones.text    
-    )
-
-    # muestra de resultados
-    # reporte.value=texto
-    # reporte.update()
-
-    texto = i18n.t('filemover.move_tutorial_text',
-        search_dir = boton_carpeta_origen.text, 
-        target_dir = boton_carpeta_destino.text,
-        move_files = boton_mover_archivos.text    
-    )
-
-    # muestra de resultados
-    # reporte_destino.value=texto
-    # reporte_destino.update()
 
 
     ################# DIMENSIONES DE VENTANA ###########################
@@ -621,9 +489,9 @@ def main(page: ft.Page):
     # Propiedades pagina 
     page.title = i18n.t('filemover.window_name')
     page.window_width       = ancho_pagina
-    # page.window_max_width   = ancho_pagina
+    page.window_max_width   = ancho_pagina
     page.window_min_width   = ancho_pagina
-    page.window_height = altura_columnas + 100
+    page.window_height = altura_columnas + 50
     page.window_maximizable=False
     page.window_minimizable=False
     page.window_maximized=False
@@ -632,8 +500,8 @@ def main(page: ft.Page):
 
 
 ################## EJECUCION ###################
-
-ft.app(target=main)
+if __name__ == "__main__":
+    ft.app(target=main)
 
 
 
