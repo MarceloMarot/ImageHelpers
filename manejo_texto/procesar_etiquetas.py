@@ -1,11 +1,12 @@
 from rich import print 
 import pathlib 
 
-
-# Clase auxiliar para manejar y clasificar etiquetas
-# 'ruta' es el nombre de cualquier archivo a describir
-# las etiquetas se guardan/leen de un archivo de igual nombre pero con extension '.txt'
 class Etiquetas:
+    """
+    Clase auxiliar para manejar y clasificar etiquetas
+    'ruta' es el nombre de cualquier archivo a describir
+    las etiquetas se guardan/leen de un archivo de igual nombre pero con extension '.txt' 
+    """
     # def __init__(self, tags: list, grupo: list, ruta: str):	
     def __init__(self, ruta: str, tags=[], grupo=[] ):	
         self.tags   = tags	    # lista etiquetas
@@ -23,14 +24,15 @@ class Etiquetas:
 
     #lectura desde disco
     def leer_archivo(self):
+        """Lee las etiquetas desde archivo de texto."""
         renglones_listas = lectura_archivo(self.ruta)
-        self.data = filtrado_etiquetas(renglones_listas)
+        self.data = separar_etiquetas(renglones_listas)
         self.tags  = list( self.data.keys()   )
         self.grupo = list( self.data.values() )
 
     # escritura en disco
     def guardar(self, etiquetas= []):
-        # conversion de lista de etiquetas a texto (añade comas y respeta saltos de renglón)
+        """Conversion de lista de etiquetas a texto (añade comas y respeta saltos de renglón)"""
         texto = etiquetas2texto(etiquetas)
         # guardado, actualizacion del objeto e indicacion de exito
         guardado_exitoso = guardar_archivo(self.ruta, texto)
@@ -42,21 +44,17 @@ class Etiquetas:
 
 #FUNCIONES
 
-# Conversion de lista de etiquetas a texto
-# una etiqueta por indice de la lista
-# Separacion por comas
 def etiquetas2texto(lista_renglones: list):
+    """Hace la conversion de lista de etiquetas a texto.
+    Asigna una etiqueta por indice de la lista y las separa poor comas."""
     texto = ""
     for renglon in  lista_renglones:
         texto += str(renglon) + ", "
     return texto
 
 
-
-
-
-# Guardado en archivo (modo SOBREESCRITURA)
 def guardar_archivo(ruta: str, texto:str):
+    """ Funcion de guardado en archivo (modo SOBREESCRITURA)"""
     # print(ruta)
     path = pathlib.Path(ruta).with_suffix('.txt')
     try:
@@ -67,9 +65,8 @@ def guardar_archivo(ruta: str, texto:str):
         return False        
 
 
-#lectura de un archivo de texto 
-#devuelve una lista de los renglones leidos
 def lectura_archivo(entrada: str): 
+    """Funcion de lectura de un archivo de texto. Devuelve una lista de los renglones leidos"""
     path = pathlib.Path(entrada).with_suffix('.txt')
     try:
         with open(path,"r") as archivo:
@@ -79,11 +76,12 @@ def lectura_archivo(entrada: str):
         return []   # lista vacía si hay error
 
 
-
-# Funcion que separa etiquetas en base a comas y puntos aparte
-# Descarta etiquetas repetidas
-# Asigna numero de grupo alos tags en base al  primer renglon de aparicion
-def filtrado_etiquetas(lista_entrada: list):
+def separar_etiquetas(lista_entrada: list):
+    """
+    Funcion que separa etiquetas en base a comas y puntos aparte. 
+    Descarta etiquetas repetidas.
+    Asigna numero de grupo a los tags en base al primer renglon de aparicion
+    """
     # diccionario auxiliar para contener los datos
     dicc_etiquetas = {}
     # conjunto auxiliar: se filtrarán las etiquetas repetidas 
