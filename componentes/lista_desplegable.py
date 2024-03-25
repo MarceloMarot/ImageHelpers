@@ -21,7 +21,7 @@ def extraer_numeros(texto_entrada: str)->list[int]:
     return numeros 
 
 
-def convertir_dimensiones_opencv(texto_entrada: str)-> tuple[int,...]|None:
+def convertir_dimensiones_opencv(texto_entrada: str)-> tuple[int, int, int]|None:
     """Convierte el texto en una tupla numerica con las dimensiones de imagen.
     El orden es : altura, base, nº canales.
     Si hay algun error se devuelve None."""
@@ -39,18 +39,31 @@ def convertir_dimensiones_opencv(texto_entrada: str)-> tuple[int,...]|None:
 
 def crear_lista_desplegable( opciones: tuple | list, ancho = 150, alto = 50):
     """Esta función crea el componente gráfico con las opciones seleccinadas"""
-    opciones_desplegables = []
-    for opcion in opciones:
-        valor = opcion
-        opciones_desplegables.append( ft.dropdown.Option(valor) )
+    # opciones_desplegables = []
+    # for opcion in opciones:
+    #     valor = opcion
+    #     opciones_desplegables.append( ft.dropdown.Option(valor) )
 
     lista_desplegable = ft.Dropdown(
         width=ancho,
         height=alto,
         # text_size=12,
-        options = opciones_desplegables,
+        # options = opciones_desplegables,
     )
+    # asignacion de opciones internas
+    opciones_lista_desplegable(lista_desplegable, opciones)
+
     return lista_desplegable
+
+
+def opciones_lista_desplegable(componente: ft.Dropdown, opciones: tuple | list):
+    opciones_desplegables = []
+    for opcion in opciones:
+        valor = opcion
+        opciones_desplegables.append( ft.dropdown.Option(valor) )
+
+    # asignacion lista
+    componente.options = opciones_desplegables
 
 
 
