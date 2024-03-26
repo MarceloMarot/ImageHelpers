@@ -143,6 +143,13 @@ class FilasBotonesEtiquetas(ft.Column):
         self.controls = self.__filas_botones
         self.update()
 
+    def deshabilitar_botones(self, valor: bool):
+        for boton in self.__botones_grupo:
+            boton.disabled = valor
+
+        for boton in self.botones_etiquetas:
+            boton.disabled = valor
+
     def setear_salida(self, ruta: str):
         """Carga el archivo de etiquetas de salida y actualiza el etiquetador grafico"""
         self.etiquetas = Etiquetas(ruta) 
@@ -379,8 +386,11 @@ class EtiquetadorBotones(ft.Column):
             self.__boton_nada     .disabled = False
             self.__boton_todos    .disabled = False
             self.__boton_guardar  .disabled = False
-            for boton in self.__filas_botones.botones_etiquetas:
-                boton.disabled = False
+            # for boton in self.__filas_botones.botones_etiquetas:
+            #     boton.disabled = False
+            # for boton in self.__filas_botones.__botones_grupo:
+            #     boton.disabled = False
+            self.__filas_botones.deshabilitar_botones(False)
             # flag de estado
             self.__habilitado = True
         else: 
@@ -388,8 +398,11 @@ class EtiquetadorBotones(ft.Column):
             self.__boton_nada     .disabled = True
             self.__boton_todos    .disabled = True
             self.__boton_guardar  .disabled = True
-            for boton in self.__filas_botones.botones_etiquetas:
-                boton.disabled = True
+            # for boton in self.__filas_botones.botones_etiquetas:
+            #     boton.disabled = True
+            # for boton in self.__filas_botones.__botones_grupo:
+            #     boton.disabled = True
+            self.__filas_botones.deshabilitar_botones(True)
             # flag de estado
             self.__habilitado = False
 
