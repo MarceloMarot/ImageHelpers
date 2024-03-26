@@ -734,14 +734,19 @@ def main(pagina: ft.Page):
                 # ft.Text(f"'{tag}' : {conteo_etiquetas[tag]} ")
                 ft.Row([
                     boton,
-                    ft.Text(f"{conteo_etiquetas[tag]}"),
-                    ]
+                    ft.Text(f"Aparece {conteo_etiquetas[tag]} veces"),
+                    ],
+                    width=300,
+                    alignment=ft.MainAxisAlignment.SPACE_EVENLY,
                 )
             )
         tab_estadisticas.content = ft.Column(
             controls=filas_conteo,
             height=altura_tab_etiquetado,
             scroll=ft.ScrollMode.AUTO,
+            wrap=True,
+            # width=1200,
+            # expand=True
         ) 
         tab_estadisticas.update()
 
