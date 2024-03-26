@@ -13,7 +13,7 @@ import gc
 from multiprocessing import Process, Pipe, freeze_support, Lock
 
 
-from cortar_imagen import ImagenOpenCV , ParametrosVentana
+from manejo_imagenes.cortar_imagen import ImagenOpenCV , ParametrosVentana
 from componentes.galeria_imagenes import ContImag, Galeria, Contenedor_Imagen, imagen_clave, imagen_nombre
 from sistema_archivos.buscar_extension import buscar_imagenes
 from componentes.estilos_contenedores import estilos_galeria,estilos_seleccion

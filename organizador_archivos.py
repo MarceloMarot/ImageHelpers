@@ -31,7 +31,8 @@ def main(page: ft.Page):
     ############## COFIGURACION  TRADUCCIONES ############# 
 
     # directorio con traducciones
-    i18n.load_path.append('local/')
+    # i18n.load_path.append('local/')
+    i18n.load_path.append('traducciones/')
     # opciones de idioma
     i18n.set('locale', 'es')   # eleccion: español
     # i18n.set('locale', 'en')   # eleccion: inglés
