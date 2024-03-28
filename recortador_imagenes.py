@@ -31,7 +31,11 @@ class ContenedorRecortes( Contenedor_Imagen):
         self.guardada = False
         self.defectuosa = False
         # datos de la ventana emergente
-        self.parametros = ParametrosVentana(ruta_origen=ruta, clave=clave)
+        self.parametros = ParametrosVentana(
+            ruta_origen=ruta, 
+            clave=clave,
+            coordenadas_ventana=[1000, 0],
+            )
 
 
     def ruta_recorte(self, ruta_directorio: str):
@@ -168,7 +172,6 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
     )
 
     boton_carpeta_destino = ft.ElevatedButton(
-
         text = "Carpeta recortes",
         icon=ft.icons.FOLDER_OPEN,
         ## manejador: leer sólo directorios
@@ -342,12 +345,13 @@ def apertura_ventana_opencv( tuberias, candado_recorte ):
         candado = candado_recorte,
         canal_recepcion = tuberia_apertura_ventana,
         canal_transmision = tuberia_datos_recorte,
-        )
-
+        )    
+    
     # llamado a la ventana grafica (bucle condicional, se sale por teclado)
     ventana_emergente.interfaz_edicion( 
         texto_consola = False, 
-        escape_teclado = False, 
+        escape_teclado = True, 
+        # escape_teclado = False, 
         )    # Tamaño predefinido 
      
 
@@ -380,7 +384,7 @@ if __name__=="__main__":
     subproceso_galeria = Process(
         target=crear_galeria, args=[tuberias, candado_recorte  ])
     subproceso_galeria.start()
-    
+
     subproceso_solicitud_ventana =  Process(
         target=apertura_ventana_opencv, args=[tuberias, candado_recorte  ])
     subproceso_solicitud_ventana.start()

@@ -56,19 +56,15 @@ class ImagenOpenCV:
         self.__coordenadas_recorte: list[int]
         self.__coordenadas_actuales: list[int]
         self.__coordenadas_guardado: list[int]
-
         # porcentajes de ampliacion entre grafica y archivo
         self.__escala_minima: int  
         self.__escala_maxima: int 
         self.__escala_actual: int 
         self.__escala_recorte : int 
         self.__escala_guardado: int 
-
         self.__x_mouse : int = 0
         self.__y_mouse : int = 0
 
-        # self.dimensiones_recorte = [256, 256]
-        # self.dimensiones_original = [512, 512]
         self.dimensiones_recorte: list[int]
         self.dimensiones_original : list[int]
 
@@ -84,17 +80,13 @@ class ImagenOpenCV:
         self.BGR_recorte   = (0,200,200)  # amarillo
         self.BGR_guardado  = (100,150,0)  # verde oscuro
         self.BGR_error     = (0,50,200)  # vermellon
-
         # flags de estado 
         self.__recorte_guardado : bool = False
         self.__recorte_marcado  : bool = False
-
         # auxiliares
         self.coordenadas_ventana: list[int] 
         # self.dimensiones_ventana = [768, 768]
-
         self.texto_consola = True
-
         # teclas para salida del bucle infinito
         self.teclas_escape = {"a" , "s", "d" ," " }  
         # teclas para guardado de imagen desde teclado
@@ -108,16 +100,18 @@ class ImagenOpenCV:
 
         parametros = ParametrosVentana()
         self.__ventana_creada = False
-        self.inicializar_valores(parametros)
-        self.__configurar_ventana()
-        self.__crear_trackbar()
+        self.leer_estados(parametros)
 
+        cv2.namedWindow(self.__nombre_ventana, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_NORMAL )
+        cv2.resizeWindow(self.__nombre_ventana, self.dimensiones_ventana[0] , self.dimensiones_ventana[1]) 
+        cv2.moveWindow( self.__nombre_ventana, self.coordenadas_ventana[0], self.coordenadas_ventana[1])
+        cv2.setMouseCallback(self.__nombre_ventana, self.__marcar_recorte)
+        cv2.createTrackbar(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_actual , self.__escala_maxima , self.actualizar_proporcion)
         # bloqueo - usado para proteger la lectura y escritura de archivos
         if candado != None:
             self.candado_archivos  = candado
         else:
             self.candado_archivos = Lock()
-
         # tuberia (pipe) para recibir parametros de imagenes
         if canal_recepcion != None:
             self.__extremo_recepcion_interno = canal_recepcion[0]
@@ -126,7 +120,6 @@ class ImagenOpenCV:
             extremo_interno, extremo_externo = Pipe()
             self.__extremo_recepcion_interno = extremo_interno
             self.__extremo_recepcion_externo = extremo_externo 
-
         # tuberia (pipe) para enviar parametros de imagenes
         if canal_transmision != None:
             self.__extremo_transmision_interno = canal_transmision[0]
@@ -170,18 +163,15 @@ class ImagenOpenCV:
         return parametros
 
 
-
     def copiar_estados(self):
         """Metodo auxiliar para hacer un backup externo de las escalas y las coordenadas guardadas"""
         param = ParametrosVentana()
         param.ruta_origen   = self.ruta_imagen_original    
         param.ruta_recorte  = self.ruta_imagen_recorte
         param.clave         = self.clave 
-
-        param.dimensiones_ventana = self.dimensiones_ventana 
+        param.dimensiones_ventana = self.dimensiones_ventana            # deberia ser generico para todas las ventanas
         param.dimensiones_recorte = self.dimensiones_recorte 
-
-        param.coordenadas_ventana = self.coordenadas_ventana
+        param.coordenadas_ventana = self.coordenadas_ventana            # deberia ser generico para todas las imagenes
         param.coordenadas_recorte  = self.__coordenadas_recorte  
         param.coordenadas_guardado = self.__coordenadas_guardado 
         param.escala_actual     = self.__escala_actual   
@@ -195,13 +185,15 @@ class ImagenOpenCV:
     def leer_estados(self, param: ParametrosVentana):
         """Metodo auxiliar para recupera los valores de las últimas escalas y coordenadas asignadas.
         También actualiza la imagen"""
+        #inicializacion valores
+        self.__escala_minima = 33     
+        self.__escala_maxima = 200    
+        # ingreso de valores externos 
         self.ruta_imagen_original   = param.ruta_origen
         self.ruta_imagen_recorte    = param.ruta_recorte
         self.clave                  = param.clave
-
         self.dimensiones_ventana = param.dimensiones_ventana
         self.dimensiones_recorte = param.dimensiones_recorte
-
         self.coordenadas_ventana = param.coordenadas_ventana 
         self.__coordenadas_recorte  = param.coordenadas_recorte
         # self.__coordenadas_actuales = param.coordenadas_actuales
@@ -211,52 +203,76 @@ class ImagenOpenCV:
         self.__escala_guardado  = param.escala_guardado
         self.__recorte_guardado = param.recorte_guardado
         self.__recorte_marcado  = param.recorte_marcado
-
-        # self.parametros = param
-        self.apertura_imagenes()
-
-
-    def inicializar_valores(self, param: ParametrosVentana ):
-        """inicializa los parametros con los valores predefinidos"""
-        # self.ruta_imagen_original = param.ruta_origen
-        # self.ruta_imagen_recorte = param.ruta_recorte
-        # self.clave                  = param.clave
-        self.dimensiones_ventana = param.dimensiones_ventana
-        self.dimensiones_recorte = param.dimensiones_recorte
-
-        self.coordenadas_ventana = param.coordenadas_ventana
-
-        self.__coordenadas_recorte   = param.coordenadas_recorte
-        self.__coordenadas_actuales = param.coordenadas_actuales
-        self.__coordenadas_guardado  = param.coordenadas_guardado    
-        self.__escala_actual    = param.escala_actual
-        self.__escala_recorte   = param.escala_recorte
-        self.__escala_guardado  = param. escala_guardado
-        self.__recorte_guardado = param.recorte_guardado
-        self.__recorte_marcado  = param.recorte_marcado
-
-        self.__escala_minima = 33     
-        self.__escala_maxima = 200     
+        # creacion recorte vacio para prevenir errores de apertura 
         self.__recorte_vacio()
 
 
-    def __crear_trackbar(self):
-        # creacion de la barra de escala
-        cv2.createTrackbar(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_actual , self.__escala_maxima , self.actualizar_proporcion) 
- 
+    def apertura_imagenes(self):
+        """Este método relee las imagenes y permite actualizar las rutas de entrada y de salida"""
+        # lectura desde archivo
+        self.candado_archivos.acquire()
+        self.__imagen_original = cv2.imread(self.ruta_imagen_original)
+        self.candado_archivos.release()
+        # configuracion del trackbar de escala
+        # se verifica que el recorte se pueda hacer
+        ancho_imagen    = self.__imagen_original.shape[1]
+        alto_imagen     = self.__imagen_original.shape[0]
+        ancho_recorte = self.dimensiones_recorte[0]
+        alto_recorte = self.dimensiones_recorte[1]
+        if self.texto_consola == True: 
+            print(f'Dimensiones de la imagen original  : base {ancho_imagen}, altura {alto_imagen}')
+            print(f'Dimensiones de la imagen recortada : base {ancho_recorte}, altura {alto_recorte}')
+        #se calcula la escala minima que puede tener la imagen de modo de permitir el recorte
+        if alto_imagen / alto_recorte > ancho_imagen / ancho_recorte : proporcion =  ancho_recorte / ancho_imagen 
+        else : proporcion =  alto_recorte / alto_imagen 
+        # se acomodan los niveles de escalado posbiles
+        self.__escala_minima = int( proporcion * 100 ) #porcentaje minimo de escalado (normalmente es menor al 100%)
+        self.__escala_minima += 1  # excedente del 1% para prevencion de imagenes demasiado chicas
+        # Si la imagen es demasiado chica se acomoda el cursor y se advierte
+        if proporcion > 1:
+            self.__escala_actual = self.__escala_minima 
+            if self.texto_consola == True: print("WARNING: imagen original muy pequeña") 
+        # Relación fija entre escala mínima y máxima
+        self.__escala_maxima = self.__escala_minima * 6
+        # actualizacion grafica
+        self.__actualizar_trackbar_escala()
+
+        # Caso de reapertura de imagenes --> reestablecer escalas        
+        if self.__recorte_guardado :
+            self.__escala_actual = self.__escala_guardado
+        elif self.__recorte_marcado :
+            self.__escala_actual = self.__escala_recorte
+        self.__actualizar_trackbar_escala()
+        # redimensionar imagen
+        porcentaje = cv2.getTrackbarPos(self.__nombre_trackbar, self.__nombre_ventana)
+        # actualizacion imagen
+        self.actualizar_proporcion(porcentaje)
+
 
     def actualizar_proporcion(self, porcentaje: int):
         """Esta funcion / manejador actualiza el tamaño de imagen y su ventana gráfica con los cambios de la barra deslizante."""
         # porcentaje = cv2.getTrackbarPos(self.__nombre_trackbar, self.__nombre_ventana) # innecesario
-        
         self.__escala_actual = int(porcentaje)
-
         # Forzar posicion de la barra de escala
         # (si fue llamada por su handler no cambia nada)
         self.__actualizar_trackbar_escala()  
-
         proporcion = porcentaje / 100
-        self.__redimensionar_imagen(proporcion)
+        # redimensionar imagen
+        if type(self.__imagen_original) == NoneType:
+            [anchura, altura] = self.dimensiones_original 
+            self.dimensiones_escalada = self.dimensiones_original 
+            # Imagen vacia
+            self.__imagen_escalada = np.zeros((altura, altura,3), np.uint8)
+        else:
+            anchura = self.__imagen_original.shape[1] 
+            altura  = self.__imagen_original.shape[0] 
+            self.dimensiones_original = [anchura, altura]
+            # Prevencion de errores por entrada de numeros flotantes
+            anchura = int( anchura * proporcion )
+            altura  = int( altura * proporcion  )
+            self.dimensiones_escalada = [anchura, altura]
+            # Se usa la interpolacion más lenta pero de mejor calidad
+            self.__imagen_escalada = cv2.resize(self.__imagen_original, self.dimensiones_escalada , interpolation = cv2.INTER_LANCZOS4) 
         # descarta la representacion de la actual posicion del mouse
         self.__coordenadas_actuales = [0,0,0,0]
         # actualizacion grafica
@@ -266,16 +282,17 @@ class ImagenOpenCV:
 
 
     def __marcar_recorte(self, evento,x_mouse,y_mouse,flags,param):
-        """Este handler recibe los eventos del mouse y se encarga de marcar el recorte y guardarlo de ser requerido. """
+        """Este handler recibe los eventos del mouse y se encarga de marcar el recorte y guardarlo de ser requerido. 
         #en esta funcion se usan solo los primeros tres parametros:
         # - evento del mouse
         # - posicion x del mouse
         # - posicion y del mouse
+        """
         # guardado de la posicion del cursor en la ventana
         self.__x_mouse = x_mouse
         self.__y_mouse = y_mouse
         # reestablecimiento de escala
-        self.__actualizar_trackbar_escala()
+        # self.__actualizar_trackbar_escala()
         # dibujar rectangulos
         self.__calcular_rectangulo( )
         # evento movimiento cursor --> actualizar seleccion
@@ -302,41 +319,13 @@ class ImagenOpenCV:
             self.funcion_mouse(evento)
 
 
-    def __redimensionar_imagen(self, proporcion ):
-        """Esta funcion crea una copia de la imagen de entrada ampliada o reducida en el factor de escala ingresado, al tiempo que respeta sus proporciones."""
-  
-        if type(self.__imagen_original) == NoneType:
-
-            [anchura, altura] = self.dimensiones_original 
-            self.dimensiones_escalada = self.dimensiones_original 
-            # Imagen vacia
-            self.__imagen_escalada = np.zeros((altura, altura,3), np.uint8)
-
-        else:
-            anchura = self.__imagen_original.shape[1] 
-            altura  = self.__imagen_original.shape[0] 
-            self.dimensiones_original = [anchura, altura]
-
-            # Prevencion de errores por entrada de numeros flotantes
-            anchura = int( anchura * proporcion )
-            altura  = int( altura * proporcion  )
-            self.dimensiones_escalada = [anchura, altura]
-
-            # Se usa la interpolacion más lenta pero de mejor calidad
-            self.__imagen_escalada = cv2.resize(self.__imagen_original, self.dimensiones_escalada , interpolation = cv2.INTER_LANCZOS4) 
-
-
     def ventana_imagen(self, error=False):
         """función grafica: actualiza la ventana de imagen y le dibuja un rectángulo encima con las coordenadas indicadas"""
         # marcado del rectangulo sobre una copia de la imagen para no dañar la original
-
         brillo = self.brillo_ventana
         contraste = self.contraste_ventana 
-
         # copia de salida con brillo y contraste cambiados
         copia = cv2.convertScaleAbs(self.__imagen_escalada, alpha=contraste, beta=brillo)
-
-
         # Regiones seleccionadas : brillo original
         if self.__coordenadas_actuales != [0,0,0,0]:
             coordenadas_rectangulo = self.__coordenadas_actuales
@@ -353,7 +342,6 @@ class ImagenOpenCV:
             (xi,yi) = coordenadas_rectangulo[0:2]
             (xf,yf) = coordenadas_rectangulo[2:4]
             copia[yi:yf, xi:xf] = self.__imagen_escalada[yi:yf, xi:xf]
-            
         # Rectángulos color
         if self.__coordenadas_actuales != [0,0,0,0]:
             coordenadas_rectangulo = self.__coordenadas_actuales
@@ -373,14 +361,12 @@ class ImagenOpenCV:
             (xi,yi) = coordenadas_rectangulo[0:2]
             (xf,yf) = coordenadas_rectangulo[2:4]
             cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
-
         # si se indica el error de entrada se recuadra toda la imagen
         if error:
             color_rectangulo = self.BGR_error
             (xi,yi) = (0, 0)
             (yf,xf,_) = copia.shape
             cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_8 )
-
         # actualizacion grafica
         cv2.imshow(self.__nombre_ventana, copia) 
 
@@ -419,71 +405,10 @@ class ImagenOpenCV:
         return [recorte_imagen , coordenadas]
 
 
-    def __configurar_ventana(self):
-        cv2.namedWindow(self.__nombre_ventana, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_NORMAL )
-        ancho_ventana = self.dimensiones_ventana[0]
-        alto_ventana  = self.dimensiones_ventana[1]
-        cv2.resizeWindow(self.__nombre_ventana, ancho_ventana , alto_ventana ) 
-        b = self.coordenadas_ventana[0]
-        h = self.coordenadas_ventana[1]
-        cv2.moveWindow(self.__nombre_ventana, b, h)
-        cv2.setMouseCallback(self.__nombre_ventana, self.__marcar_recorte) 
-
-
-    def __configurar_trackbar_escala(self):
-
-        # se verifica que el recorte se pueda hacer
-        ancho_imagen    = self.__imagen_original.shape[1]
-        alto_imagen     = self.__imagen_original.shape[0]
-
-        ancho_recorte = self.dimensiones_recorte[0]
-        alto_recorte = self.dimensiones_recorte[1]
-
-        if self.texto_consola == True: 
-            print(f'Dimensiones de la imagen original  : base {ancho_imagen}, altura {alto_imagen}')
-            print(f'Dimensiones de la imagen recortada : base {ancho_recorte}, altura {alto_recorte}')
-        #se calcula la escala minima que puede tener la imagen de modo de permitir el recorte
-        if alto_imagen / alto_recorte > ancho_imagen / ancho_recorte : proporcion =  ancho_recorte / ancho_imagen 
-        else : proporcion =  alto_recorte / alto_imagen 
-        # se acomodan los niveles de escalado posbiles
-        self.__escala_minima = int( proporcion * 100 ) #porcentaje minimo de escalado (normalmente es menor al 100%)
-        self.__escala_minima += 1  # excedente del 1% para prevencion de imagenes demasiado chicas
-
-        # Si la imagen es demasiado chica se acomoda el cursor y se advierte
-        if proporcion > 1:
-            self.__escala_actual = self.__escala_minima 
-            if self.texto_consola == True: print("WARNING: imagen original muy pequeña") 
-
-        # Relación fija entre escala mínima y máxima
-        self.__escala_maxima = self.__escala_minima * 6
-        # actualizacion grafica
-        self.__actualizar_trackbar_escala()
-
-
     def __actualizar_trackbar_escala(self):
         cv2.setTrackbarPos(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_actual) 
         cv2.setTrackbarMin(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_minima) 
         cv2.setTrackbarMax(self.__nombre_trackbar, self.__nombre_ventana, self.__escala_maxima) 
-
-
-    def apertura_imagenes(self):
-        """Este método relee las imagenes y permite actualizar las rutas de entrada y de salida"""
-
-        # lectura desde archivo
-        self.candado_archivos.acquire()
-        self.__imagen_original = cv2.imread(self.ruta_imagen_original)
-        self.candado_archivos.release()
-
-        self.__configurar_trackbar_escala()
-        # # Caso de reapertura de imagenes --> reestablecer escalas        
-        if self.__recorte_guardado :
-            self.__escala_actual = self.__escala_guardado
-        elif self.__recorte_marcado :
-            self.__escala_actual = self.__escala_recorte
-        self.__actualizar_trackbar_escala()
-        self.__redimensionar_imagen(self.__escala_actual/100 )
-        # actualizacion imagen
-        self.ventana_imagen()
 
 
     def __recorte_vacio(self, dimensiones: list[int]|None = None):
@@ -536,27 +461,25 @@ class ImagenOpenCV:
                     if tecla  in self.teclas_guardado:
                         exito_guardado = self.__guardado_recorte() 
 
-            self.cerrar_ventana()
+            # self.cerrar_ventana()
+            cv2.destroyWindow(self.__nombre_ventana)
             return tecla, exito_guardado
 
-
         def bucle_espera_parametros():
+            """Rutina de recepcion de datos"""
             while True:
-                
                 [parametros] = self.__extremo_recepcion_interno.recv()  
-                self.inicializar_valores(parametros)
                 self.leer_estados(parametros)
+                self.apertura_imagenes()
 
-
+        # Creacion del subhilo para la rutina de espera y apertura del bucle infinito
         if self.__ventana_creada == False:
             hilo_espera = Thread(target=bucle_espera_parametros)
             hilo_espera.daemon = True
             hilo_espera.start()
             self.__ventana_creada = True
             bucle_teclado() #bucle condicional
-
-
-
+            # cv2.waitKey(0)
 
 
     def __guardado_recorte(self):
@@ -590,11 +513,6 @@ class ImagenOpenCV:
         self.__extremo_transmision_interno.send([parametros])
         # retorno con indicacion del guardado
         return guardado_correcto
-
-
-    def cerrar_ventana(self):
-        # cv2.destroyWindow(self.__nombre_ventana) # la ventana debe estar abierta
-        cv2.destroyAllWindows() # ignora ventanas cerradas
 
 
 
