@@ -31,6 +31,7 @@ class ParametrosVentana:
         self.dimensiones_ventana = dimensiones_ventana
         self.dimensiones_recorte = dimensiones_recorte
         self.coordenadas_ventana = coordenadas_ventana
+        self.dimensiones_original = [0,0]   # solo anchura y altura
         self.coordenadas_recorte = [0,0,0,0]
         self.coordenadas_actuales = [0,0,0,0]
         self.coordenadas_guardado = [0,0,0,0]     
@@ -103,6 +104,8 @@ class ImagenOpenCV:
         self.leer_estados(parametros)
 
         cv2.namedWindow(self.__nombre_ventana, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO | cv2.WINDOW_GUI_NORMAL )
+        self.dimensiones_ventana = [100,100]
+        self.coordenadas_ventana = [2000, 500]
         cv2.resizeWindow(self.__nombre_ventana, self.dimensiones_ventana[0] , self.dimensiones_ventana[1]) 
         cv2.moveWindow( self.__nombre_ventana, self.coordenadas_ventana[0], self.coordenadas_ventana[1])
         cv2.setMouseCallback(self.__nombre_ventana, self.__marcar_recorte)
@@ -169,9 +172,10 @@ class ImagenOpenCV:
         param.ruta_origen   = self.ruta_imagen_original    
         param.ruta_recorte  = self.ruta_imagen_recorte
         param.clave         = self.clave 
-        param.dimensiones_ventana = self.dimensiones_ventana            # deberia ser generico para todas las ventanas
+        param.dimensiones_ventana = self.dimensiones_ventana           
         param.dimensiones_recorte = self.dimensiones_recorte 
-        param.coordenadas_ventana = self.coordenadas_ventana            # deberia ser generico para todas las imagenes
+        param.coordenadas_ventana = self.coordenadas_ventana 
+        param.dimensiones_original = self.dimensiones_original           
         param.coordenadas_recorte  = self.__coordenadas_recorte  
         param.coordenadas_guardado = self.__coordenadas_guardado 
         param.escala_actual     = self.__escala_actual   
@@ -195,6 +199,7 @@ class ImagenOpenCV:
         self.dimensiones_ventana = param.dimensiones_ventana
         self.dimensiones_recorte = param.dimensiones_recorte
         self.coordenadas_ventana = param.coordenadas_ventana 
+        self.dimensiones_original = param.dimensiones_original 
         self.__coordenadas_recorte  = param.coordenadas_recorte
         # self.__coordenadas_actuales = param.coordenadas_actuales
         self.__coordenadas_guardado = param.coordenadas_guardado
@@ -246,6 +251,8 @@ class ImagenOpenCV:
         # redimensionar imagen
         porcentaje = cv2.getTrackbarPos(self.__nombre_trackbar, self.__nombre_ventana)
         # actualizacion imagen
+        cv2.moveWindow( self.__nombre_ventana, self.coordenadas_ventana[0], self.coordenadas_ventana[1])
+        cv2.resizeWindow(self.__nombre_ventana, self.dimensiones_ventana )
         self.actualizar_proporcion(porcentaje)
 
 
@@ -450,6 +457,7 @@ class ImagenOpenCV:
                 teclas_escape = {}
             tecla = "-"  # Caracter no implementado
             if texto_consola: print("Teclas implementadas: ", teclas_escape )
+            # self.ventana_imagen()
             while tecla not in teclas_escape:
                 # espera en reposo a que se pulse una tecla del teclado
                 # k = cv2.waitKey(0)
@@ -460,9 +468,11 @@ class ImagenOpenCV:
                     # se guarda una copia del recorte si la tecla es correcta
                     if tecla  in self.teclas_guardado:
                         exito_guardado = self.__guardado_recorte() 
+                        # reapertura imagen
+                # self.ventana_imagen()
 
             # self.cerrar_ventana()
-            cv2.destroyWindow(self.__nombre_ventana)
+            # cv2.destroyWindow(self.__nombre_ventana)
             return tecla, exito_guardado
 
         def bucle_espera_parametros():
@@ -470,6 +480,8 @@ class ImagenOpenCV:
             while True:
                 [parametros] = self.__extremo_recepcion_interno.recv()  
                 self.leer_estados(parametros)
+                # print(parametros.dimensiones_ventana)
+                # cv2.resizeWindow(self.__nombre_ventana, 400, 400)
                 self.apertura_imagenes()
 
         # Creacion del subhilo para la rutina de espera y apertura del bucle infinito
@@ -563,33 +575,25 @@ if __name__ == "__main__" :
         dimensiones_ventana=[512, 512],
         )
     
-    ruta_archivo_imagen2 = "1686469590.png"
-    parametros_imagen2 = ParametrosVentana(
-        ruta_archivo_imagen2, 
-        ruta_archivo_recorte
-        )
     
     # hilo y rutina auxiliares para actualizar imagen
     import time
-    def envio_mensajes():
-        demora = 1
-        while demora >= 0:
-            print(f"cuenta atrás: {demora}")
-            demora -= 1
-            time.sleep(1)
+    def envio_imagen():
+        """Envia data de la imagen a mostrar"""
         # tuberia_enviar.send([parametros_imagen]) # correcto
-        ventana.ingresar_parametros(parametros_imagen) # correcto
-        time.sleep(1)
+        ventana.ingresar_parametros(parametros_imagen) # correcto)
         demora = 3
         while demora >= 0:
             print(f"cuenta atrás: {demora}")
             demora -= 1
             time.sleep(1)
-        # tuberia_enviar.send([parametros_imagen2]) # correcto
-        ventana.ingresar_parametros(parametros_imagen2) # correcto
+        # marcar un recorte
+        parametros_imagen.coordenadas_recorte = [100,100,300,400]
+        # tuberia_enviar.send([parametros_imagen]) # correcto
+        ventana.ingresar_parametros(parametros_imagen) # correcto
 
 
-    hilo_mensajes = Thread(target=envio_mensajes)
+    hilo_mensajes = Thread(target=envio_imagen)
     hilo_mensajes.daemon = True
     hilo_mensajes.start()
 
@@ -609,5 +613,3 @@ if __name__ == "__main__" :
     # llamado a la ventana grafica (bucle condicional, se sale por teclado)
     ventana.interfaz_edicion( texto_consola=True, escape_teclado=True, funcion_mouse=mouse)    # Tamaño predefinido
 
-    # destruccion de ventanas
-    # ventana.cerrar_ventana()

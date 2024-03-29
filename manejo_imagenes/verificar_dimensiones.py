@@ -16,7 +16,8 @@ def dimensiones_imagen(ruta: str):
         return 
     else:
         dimensiones = imagen.shape
-        return dimensiones
+        del imagen
+        return list(dimensiones)
 
 
 if __name__=="__main__":
@@ -28,7 +29,8 @@ if __name__=="__main__":
 
         dimensiones = dimensiones_imagen(ruta)
         if dimensiones != None:
-            base, altura, canales = list(dimensiones)
+            altura, base, canales = dimensiones
+            # base, altura, canales = list(dimensiones)
             print(f"Dimensiones: {base} X {altura} X {canales}")
         else: 
             print("Error de apertura")
