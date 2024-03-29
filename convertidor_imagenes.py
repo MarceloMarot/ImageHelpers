@@ -6,35 +6,22 @@ import cv2
 import os 
 import pathlib
 
-from sistema_archivos.clasificar_archivos import Data_Archivo, clasificar_archivos, patron_camara
-# from sistema_archivos.mover_archivos import Mover_Archivo
 from sistema_archivos.listar_extensiones import listar_extensiones
-from sistema_archivos.buscar_extension import buscar_extension, buscar_imagenes
-
+from sistema_archivos.buscar_extension import buscar_extension
 from componentes.anillo_reporte import AnilloReporte
-
 
 
 def convertir_imagen(ruta_origen: str, ruta_destino: str):
     guardado_exitoso = False
 
-    if not cv2.haveImageReader(ruta_origen):
-        return guardado_exitoso 
-
-    if not cv2.haveImageWriter(ruta_destino):
-        return guardado_exitoso
-
-    img = cv2.imread(ruta_origen)
-
     #prevencion de sobreescritura
     if os.path.exists(ruta_destino):
         return False
 
-    # if img != None:
+    img = cv2.imread(ruta_origen)
     guardado_exitoso = cv2.imwrite(ruta_destino, img)
     del img
     return guardado_exitoso
-
 
 
 # lista de extensiones habituales
@@ -44,7 +31,6 @@ extensiones_predeterminadas = [
     ".webp",
     ".png",
     ".bmp",
-    # ".gif",
 ]
 
 
@@ -72,7 +58,6 @@ def main(page: ft.Page):
         anillo_reporte.update()
 
         inicio = time.time()
-
         extensiones_disponibles = listar_extensiones(e.path)
         extensiones_filtradas = []
         for extensiones in  extensiones_predeterminadas:
@@ -81,7 +66,6 @@ def main(page: ft.Page):
 
         extensiones_entrada.options = agregar_opciones(extensiones_filtradas )
         extensiones_entrada.update()
-
         fin = time.time()
 
         numero_extensiones = len(extensiones_filtradas)
@@ -93,12 +77,7 @@ def main(page: ft.Page):
             f"Tiempo busqueda : {fin-inicio:.5} segundos"
             )
         anillo_reporte.update()
-
         habilitar_controles()
-
-
-
-
 
 
     def resultado_directorio_destino(e: ft.FilePickerResultEvent):
@@ -122,7 +101,6 @@ def main(page: ft.Page):
 
     def convertir_imagenes(e):
 
-
         directorio_origen = str(ruta_directorio_origen.value)
         directorio_destino = str(ruta_directorio_destino.value)
         # extension entrada
@@ -135,8 +113,7 @@ def main(page: ft.Page):
         anillo_reporte.update()
 
         inicio = time.time()
-        lista_imagenes = buscar_extension(directorio_origen, "*"+extension)
-
+        lista_imagenes_entrada = buscar_extension(directorio_origen, "*"+extension)
         # Paso 2: conversion uno a uno de las imagenes
         anillo_reporte.valor_anillo = 0
         anillo_reporte.color_anillo = ft.colors.RED_800
@@ -146,37 +123,35 @@ def main(page: ft.Page):
         anillo_reporte.update()
 
         extension = str(extensiones_salida.value)
-        total = len(lista_imagenes)
+        lista_imagenes_salida = buscar_extension(directorio_destino, "*"+extension)
+        total = len(lista_imagenes_entrada)
         convertidos = 0
         repetidos = 0
-
         i = 0
-        for ruta_imagen in lista_imagenes:
-
+        for ruta_imagen in lista_imagenes_entrada:
+            guardado = False
             ruta_relativa = pathlib.Path(ruta_imagen).relative_to(directorio_origen)
             ruta_relativa = str(ruta_relativa) 
             ruta_destino = pathlib.Path(directorio_destino , ruta_relativa)
             subdirectorio = ruta_destino.parent
             ruta_destino = str(ruta_destino.with_suffix(extension))
+            if ruta_destino not in lista_imagenes_salida:
+                # se crea el subdirectorio si no existe
+                subdirectorio.mkdir(parents=True,exist_ok=True)
+                guardado = convertir_imagen(ruta_imagen, ruta_destino)
 
-            # se crea el subdirectorio si no existe
-            subdirectorio.mkdir(parents=True,exist_ok=True)
-
-            guardado = convertir_imagen(ruta_imagen, ruta_destino)
-            if guardado==True:
+            if guardado == True:
                 convertidos += 1
             else:
                 repetidos += 1
 
             i += 1
             anillo_reporte.valor_anillo = i/total
-
             anillo_reporte.texto_reporte(
                 renglon2 = f"Convirtiendo imágenes...",
                 renglon4 = f"Imagen {i+1} de {total}"
                 )
             anillo_reporte.update()
-
 
         fin = time.time()
 
@@ -375,7 +350,7 @@ def main(page: ft.Page):
     # texto_titulo.width = ancho_pagina
     # tema_pagina(page)
     # Propiedades pagina 
-    page.title = "Conversor Imagenes"
+    page.title = "Convertidor Imagenes"
     page.window_width       = ancho_pagina
     # page.window_max_width   = ancho_pagina
     page.window_min_width   = ancho_pagina
