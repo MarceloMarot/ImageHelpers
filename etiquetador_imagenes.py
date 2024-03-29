@@ -16,6 +16,18 @@ from sistema_archivos.buscar_extension import buscar_imagenes
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 
+# reasignacion de dimensiones para las imagenes de galeria
+estilos_galeria["predefinido"]. width   = 128
+estilos_galeria["predefinido"]. height  = 128
+estilos_galeria["guardado"].    width   = 128
+estilos_galeria["guardado"].    height  = 128
+estilos_galeria["modificado"].  width   = 128
+estilos_galeria["modificado"].  height  = 128
+estilos_galeria["erroneo"].     width   = 128
+estilos_galeria["erroneo"].     height  = 128
+
+
+
 def nada( e ):
     pass
 
@@ -116,7 +128,6 @@ class MenuEtiquetado( MenuNavegacion):
         contenedor_imagen = self.imagenes[indice]
         # seleccion de estilo segun jerarquia
         actualizar_estilo_estado( [contenedor_imagen], self.estilos)
-        # self.actualizar_estilo_estado( )  # FIX
 
 
     def cargar_imagenes(self, imagenes: list[Contenedor]):
@@ -124,7 +135,7 @@ class MenuEtiquetado( MenuNavegacion):
         # self.__contenedores_imagen 
         # actualizar_estilo_estado( self.__contenedores_imagen , self.estilos)
         actualizar_estilo_estado( imagenes, self.estilos)
-        # self.actualizar_estilo_estado( )  # FIX
+
 
  
 
@@ -149,8 +160,7 @@ class GaleriaEtiquetado( Galeria):
         cuadricula=True):
         super().cargar_imagenes(imagenes, cuadricula)
         self.imagenes = imagenes
-        # actualizar_estilo_estado( imagenes, self.estilos)  # FIX
-        self.actualizar_estilos( )  # FIX
+        self.actualizar_estilos( )  
 
 
     def actualizar_estilos(self):
@@ -228,6 +238,7 @@ def filtrar_etiquetas(
         return imagenes_filtradas
 
 
+
 dimensiones_elegidas = None
 imagenes_galeria = []
 imagenes_etiquetadas = []
@@ -235,6 +246,15 @@ imagenes_etiquetadas_backup = []
 imagenes_galeria_backup = []
 
 botones_tags = []
+
+
+tupla_estados = (
+    "todas",
+    "guardadas",
+    "modificadas",
+    "no etiquetadas"
+)
+
 
 
 def main(pagina: ft.Page):
@@ -274,7 +294,9 @@ def main(pagina: ft.Page):
     boton_filtrar_etiquetas.color = ft.colors.WHITE
 
     # lista desplegable para elegir las dimensiones de imagen correctas
-    lista_dimensiones_desplegable = crear_lista_desplegable(tupla_resoluciones)
+    lista_dimensiones_desplegable = crear_lista_desplegable(tupla_resoluciones, ancho=120)
+
+    lista_estados = crear_lista_desplegable(tupla_estados, ancho=120)
 
     # Componentes gráficos
     etiquetador_imagen = EtiquetadorBotones()
@@ -282,7 +304,8 @@ def main(pagina: ft.Page):
     menu_seleccion = MenuEtiquetado( estilos_seleccion)
 
     # textos
-    texto_dimensiones = ft.Text("Dimensiones imagen:")
+    texto_dimensiones = ft.Text("Dimensiones\nimagen:")
+    texto_estados = ft.Text("Estado\netiquetado:")
 
     #############  MAQUETADO ############################
 
@@ -290,10 +313,14 @@ def main(pagina: ft.Page):
     pagina.add(ft.Row([
         boton_carpeta,
         boton_dataset,
-        # ft.VerticalDivider(),
+        ft.VerticalDivider(visible=True, width=20),
         texto_dimensiones,
         lista_dimensiones_desplegable,
         boton_filtrar_dimensiones,
+        ft.VerticalDivider(visible=True, width=20),
+        texto_estados,
+        lista_estados,
+        # ft.VerticalDivider(visible=True, width=20),
         boton_filtrar_etiquetas,
         ]))
 
@@ -369,11 +396,83 @@ def main(pagina: ft.Page):
         return etiquetas_imagen
 
 
-    def verificar_dimensiones_imagenes(e: ft.ControlEvent ):
+    def filtrar_estados(
+        lista_imagenes: list[Contenedor_Etiquetado], 
+        )->list[Contenedor_Etiquetado]:
+        """
+        Devuelve solamente los contenedores con el estado de etiquetado pedido. 
+        """
+        # "todos" | "guardado" | "modificado"
+
+        imagen : Contenedor_Etiquetado
+        estado = lista_estados.value
+
+        imagenes_filtradas = []
+        if estado == "guardadas":
+            for imagen in lista_imagenes: 
+                if imagen.guardada:    
+                    imagenes_filtradas.append(imagen)
+            return imagenes_filtradas
+        elif estado == "modificadas":
+            for imagen in lista_imagenes: 
+                if imagen.etiquetada and not imagen.guardada:   # etiquetadas pero no guardadas  
+                    imagenes_filtradas.append(imagen)
+            return imagenes_filtradas
+        elif estado == "no etiquetadas":
+            for imagen in lista_imagenes: 
+                if not imagen.etiquetada:    
+                    imagenes_filtradas.append(imagen)
+            return imagenes_filtradas
+        else:
+            # no filtrado
+            return lista_imagenes
+
+
+    def filtrar_todos_estados( _ ):
+
+        global imagenes_etiquetadas
+        global imagenes_galeria
+        global imagenes_galeria_estado_backup
+        global imagenes_etiquetadas_estado_backup
+
+        if len(imagenes_etiquetadas) == 0 :
+            print("[bold cyan]Galeria vacía")
+            return
+
+        # restauracion temporal de la lista de imagenes
+        imagenes_galeria = imagenes_galeria_estado_backup 
+        imagenes_etiquetadas = imagenes_etiquetadas_estado_backup
+
+
+        imagenes_etiquetadas = filtrar_estados(imagenes_etiquetadas)
+        imagenes_galeria = filtrar_estados(imagenes_galeria)
+
+        # iniciar pestaña estadisticas - sólo etiquetas de imagenes filtradas
+        estadisticas()
+
+        # Objeto galeria
+        galeria.cargar_imagenes( imagenes_galeria )
+        galeria.update()
+
+        # Objeto seleccion imagen
+        menu_seleccion.indice = 0
+        menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
+        menu_seleccion.cargar_imagen()
+        menu_seleccion.update()
+
+        # actualizacion del etiquetador --> habilita los controles y etiquetas
+        etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
+        etiquetador_imagen.update()
+
+
+
+    def verificar_dimensiones_imagenes( _ ):
 
         # conversion de texto a tupla numerica de dimensiones de imagen elegida
         global dimensiones_elegidas 
         opcion = lista_dimensiones_desplegable.value
+        # print("opcion: ",opcion)      # FIX
+        # print("key:",lista_dimensiones_desplegable.key)        # FIX
         dimensiones_elegidas = convertir_dimensiones_opencv(str(opcion))
         print(f"[bold magenta]Dimensiones imagen requeridas: [bold yellow]{dimensiones_elegidas}")
 
@@ -381,6 +480,11 @@ def main(pagina: ft.Page):
         global imagenes_galeria
         global imagenes_etiquetadas_backup
         global imagenes_galeria_backup
+
+        if len(imagenes_etiquetadas) == 0 :
+            print("[bold cyan]Galeria vacía")
+            return
+
         # restauracion temporal de la lista de imagenes
         imagenes_galeria = imagenes_galeria_backup
         imagenes_etiquetadas = imagenes_etiquetadas_backup
@@ -412,6 +516,9 @@ def main(pagina: ft.Page):
         # actualizacion del etiquetador --> habilita los controles y etiquetas
         etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
         etiquetador_imagen.update()
+        
+        #  Agregado:  filtrar en base al estado de etiquetado
+        filtrar_todos_estados( "" )  # valor entrada arbitrario
 
 
     def actualizar_bordes( e: ft.ControlEvent ):
@@ -473,6 +580,12 @@ def main(pagina: ft.Page):
             imagenes_galeria_resolucion_backup = imagenes_galeria 
             imagenes_etiquetadas_resolucion_backup = imagenes_etiquetadas
 
+            global imagenes_galeria_estado_backup
+            global imagenes_etiquetadas_estado_backup
+            # backup para las listas de imagenes  con estado de etiquetado exigido
+            imagenes_galeria_estado_backup = imagenes_galeria 
+            imagenes_etiquetadas_estado_backup = imagenes_etiquetadas
+
             # habilitacion de filtros
             if len(imagenes_etiquetadas) > 0:
                 lista_dimensiones_desplegable.on_change = verificar_dimensiones_imagenes
@@ -527,11 +640,15 @@ def main(pagina: ft.Page):
             print("[bold red]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
             print("[bold red]Nº imagenes galeria     : ", len(imagenes_galeria))
 
+            # verificacion de dimensiones al abrir
+            verificar_dimensiones_imagenes( "" )  # valor entrada arbitrario
+            # filtrar_todos_estados( "" )  # valor entrada arbitrario
+
 
     # Funcion de apertura de archivo con etiquetas (dataset)
     def resultado_dataset(e: ft.FilePickerResultEvent):
         if e.files:
-            ruta = e.files[0]                   # SOLO UN ARCHIVO DE LISTA ( FIX )
+            ruta = e.files[0]                   
             archivo_dataset = ruta.path
 
             global dataset
@@ -754,7 +871,9 @@ def main(pagina: ft.Page):
     ###########  ASIGNACION HANDLERS #################
 
     # eventos deshabilitados mientras no haya imagenes cargadas
-    lista_dimensiones_desplegable.on_change = nada
+    # lista_dimensiones_desplegable.on_change = nada
+    lista_dimensiones_desplegable.on_change = verificar_dimensiones_imagenes   
+    lista_estados.on_change = filtrar_todos_estados
     boton_filtrar_dimensiones.click_boton = nada
     # inicializacion opciones
     boton_filtrar_dimensiones.estado = False
