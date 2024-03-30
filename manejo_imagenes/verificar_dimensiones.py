@@ -1,7 +1,7 @@
 import cv2 as cv
 
 
-def dimensiones_imagen(ruta: str):
+def dimensiones_imagen(ruta: str)->tuple[int, ...]|None:
     """Devuelve las dimensiones de un archivo de imagen. Orden de parámetros:
     - altura
     - base
@@ -13,11 +13,11 @@ def dimensiones_imagen(ruta: str):
     """
     imagen = cv.imread(ruta)
     if imagen is None:
-        return 
+        return None
     else:
         dimensiones = imagen.shape
         del imagen
-        return list(dimensiones)
+        return tuple(dimensiones)
 
 
 if __name__=="__main__":
