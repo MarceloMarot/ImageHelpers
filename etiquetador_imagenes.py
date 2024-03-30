@@ -271,6 +271,8 @@ imagenes_galeria = []
 imagenes_etiquetadas = []
 imagenes_etiquetadas_backup = []
 imagenes_galeria_backup = []
+imagenes_etiquetadas_filtradas_backup = []
+imagenes_galeria_filtradas_backup = []
 
 botones_tags = []
 
@@ -642,8 +644,34 @@ def main(pagina: ft.Page):
         imagenes_etiquetadas = filtrar_etiquetas(imagenes_etiquetadas, tags)
         imagenes_galeria = filtrar_etiquetas(imagenes_galeria, tags)
         # iniciar pestaña estadisticas - sólo etiquetas de imagenes filtradas
-        estadisticas() # FIX
+        # actualizacion de las etiquetas encontradas
+        # estadisticas() # FIX
         # Actualizacion componentes graficos
+        # Objeto galeria
+        # galeria.cargar_imagenes( imagenes_galeria )
+        # galeria.update()
+        # # Objeto seleccion imagen
+        # menu_seleccion.indice = 0
+        # menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
+        # menu_seleccion.cargar_imagen()
+        # menu_seleccion.update()
+        # # actualizacion del etiquetador --> habilita los controles y etiquetas
+        # etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
+        # etiquetador_imagen.update()
+        # actualizacion de las etiquetas encontradas
+        estadisticas()
+        actualizar_componentes()    # FIX
+        # respaldo para que funcione el filtro de etiquetas
+        global imagenes_etiquetadas_filtradas_backup
+        global imagenes_galeria_filtradas_backup
+        imagenes_etiquetadas_filtradas_backup = imagenes_etiquetadas
+        imagenes_galeria_filtradas_backup = imagenes_galeria
+
+
+
+    def actualizar_componentes():
+        global imagenes_etiquetadas
+        global imagenes_galeria
         # Objeto galeria
         galeria.cargar_imagenes( imagenes_galeria )
         galeria.update()
@@ -655,12 +683,33 @@ def main(pagina: ft.Page):
         # actualizacion del etiquetador --> habilita los controles y etiquetas
         etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
         etiquetador_imagen.update()
-        # actualizacion de las etiquetas encontradas
-        estadisticas()
+
 
 
     def filtrar_todas_etiquetas(_):
-        pass
+        global imagenes_etiquetadas
+        global imagenes_galeria
+        global imagenes_etiquetadas_filtradas_backup
+        global imagenes_galeria_filtradas_backup
+
+        global botones_tags 
+
+        set_etiquetas = set()
+        for boton in botones_tags:
+            if boton.estado==True:
+                set_etiquetas.add(boton.text)
+
+        print(set_etiquetas)
+
+        imagenes_etiquetadas = imagenes_etiquetadas_filtradas_backup
+        imagenes_galeria = imagenes_galeria_filtradas_backup
+
+        if boton_filtrar_etiquetas.estado == True:
+            imagenes_etiquetadas = filtrar_etiquetas(imagenes_etiquetadas, list(set_etiquetas))
+            imagenes_galeria = filtrar_etiquetas(imagenes_galeria, list(set_etiquetas))
+
+        actualizar_componentes()
+
 
 
     # manejador del teclado
@@ -788,8 +837,8 @@ def main(pagina: ft.Page):
     lista_estados.on_change = filtrar_dimensiones_estados
     # boton_filtrar_dimensiones.click_boton = nada
     boton_filtrar_dimensiones.click_boton = filtrar_dimensiones_estados
-    boton_filtrar_etiquetas.click_boton = nada
-    # boton_filtrar_etiquetas.click_boton = filtrar_dimensiones_estados
+    # boton_filtrar_etiquetas.click_boton = nada
+    boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
     # inicializacion opciones
     boton_filtrar_dimensiones.estado = False
     boton_filtrar_etiquetas.estado = False
