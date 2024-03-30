@@ -5,7 +5,7 @@ import flet as ft
 
 from manejo_texto.procesar_etiquetas import Etiquetas 
 
-from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave
+from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave, ContImag
 from componentes.menu_navegacion import  MenuNavegacion
 from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable
 from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria
@@ -62,7 +62,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         return self.__dimensiones
 
 
-    def verificar_imagen(self, dimensiones: tuple[int, int, int] | None):
+    def verificar_imagen(self, dimensiones: tuple[int, int, int] | None)->bool|None:
         """Este método verifica dimensiones de archivo.
         Devuelve 'True' si las dimensiones coinciden.
         """
@@ -78,21 +78,22 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
 
 
     @property
-    def defectuosa(self):
+    def defectuosa(self)->bool:
         return self.__defectuosa
 
 
-    def verificar_etiquetado(self):
+    def verificar_etiquetado(self)->bool:
         """Verifica si hay etiquetas en la imagen, ya sea guardadas o sin guardar """
         self.__etiquetada = True if len(self.tags) > 0 else False
+        return self.__etiquetada
 
 
     @property
-    def etiquetada(self):
+    def etiquetada(self)->bool:
         return self.__etiquetada 
 
 
-    def verificar_guardado(self , tags: list[str] | None):
+    def verificar_guardado(self , tags: list[str] | None = None)->bool:
         """Comprueba si las etiquetas actuales son las mismas que las guardas en archivo de texto"""
         archivado = Etiquetas(self.ruta)
         if tags == None:
@@ -102,15 +103,31 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         # se lee cuantas etiquetas hay en archivo
         etiquetado = True if len(archivado.tags) > 0 else False
         self.__guardada = guardado  and etiquetado     # se descartan no etiquetados
+        return self.__guardada
 
 
     @property
-    def guardada(self):
+    def guardada(self)->bool:
         return self.__guardada 
 
-    @guardada.setter
-    def guardada(self, valor: bool):
-        self.__guardada = valor
+    # @guardada.setter
+    # def guardada(self, valor: bool):
+    #     self.__guardada = valor           # (DA PARA ERRORES)
+
+    def guardar_archivo(self)->bool:
+        """
+        Escribe/rescribe el archivo de etiquetas si éstas no coinciden con las indicadas. 
+        Si 'tags' es 'None' se usan las etiquetas almacenadas en el objeto imagen.
+        """
+        guardado_exitoso = False
+
+        self.verificar_guardado()
+        self.verificar_etiquetado()
+        
+        if (self.guardada == False) and self.etiquetada:
+            guardado_exitoso = self.guardar(self.tags)
+            self.__guardada = guardado_exitoso
+        return guardado_exitoso
 
 
 class MenuEtiquetado( MenuNavegacion):
@@ -154,7 +171,7 @@ class GaleriaEtiquetado( Galeria):
 
 
     def cargar_imagenes(self, 
-        imagenes: list[Contenedor_Etiquetado ], 
+        imagenes: list[ContImag ], 
         cuadricula=True):
         super().cargar_imagenes(imagenes, cuadricula)
         self.imagenes = imagenes
@@ -301,6 +318,7 @@ def main(pagina: ft.Page):
         on_click=lambda _: dialogo_directorio.get_directory_path(
             dialog_title="Elegir carpeta con todas las imágenes"
         ),
+        tooltip="Abre la carpeta con todas las imágenes a etiquetar",
     )
 
     boton_dataset = ft.ElevatedButton(
@@ -310,10 +328,11 @@ def main(pagina: ft.Page):
         color= ft.colors.WHITE,
         ## manejador
         on_click=lambda _: dialogo_dataset.pick_files(
-            dialog_title= "Elegir archivo TXT con todas las etiquetas",
+            dialog_title= "Elegir archivo de dataset (formato .txt)",
             allowed_extensions=["txt"],
             allow_multiple=False,
-        )
+        ),
+        tooltip="Elige el archivo TXT con todas las etiquetas\n(cada renglon de archivo representa un 'grupo')"
     )
 
     boton_filtrar_dimensiones = BotonBiestable("Filtrar por tamaño", ft.colors.BROWN_100, ft.colors.BROWN_800)
@@ -321,6 +340,13 @@ def main(pagina: ft.Page):
 
     boton_filtrar_etiquetas = BotonBiestable("Filtrar por etiquetas", ft.colors.PURPLE_100, ft.colors.PURPLE_800)
     boton_filtrar_etiquetas.color = ft.colors.WHITE
+
+    boton_guardar = ft.FloatingActionButton(
+        icon=ft.icons.ADD, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todas las etiquetas cambiadas"
+    )
+
+    # boton_guardar.on_click = guardar_cambios
+     
 
     # lista desplegable para elegir las dimensiones de imagen correctas
     lista_dimensiones_desplegable = crear_lista_desplegable(tupla_resoluciones, ancho=120)
@@ -335,6 +361,7 @@ def main(pagina: ft.Page):
     # textos
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
     texto_estados = ft.Text("Estado\netiquetado:")
+
 
     #############  MAQUETADO ############################
 
@@ -400,6 +427,8 @@ def main(pagina: ft.Page):
 
     # Añadido componentes (todos juntos)
     pagina.add(pestanias)
+    # boton para guardar cambios 
+    pagina.floating_action_button = boton_guardar
 
     ############## HANDLERS ##################################
 
@@ -425,7 +454,7 @@ def main(pagina: ft.Page):
         return etiquetas_imagen
 
 
-    def actualizar_bordes( e: ft.ControlEvent ):
+    def actualizar_bordes( e ):
 
         # acceso a elementos globales
         global imagenes_etiquetadas
@@ -525,7 +554,8 @@ def main(pagina: ft.Page):
             print("[bold red]Carga imagenes")
             print("[bold red]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
             print("[bold red]Nº imagenes galeria     : ", len(imagenes_galeria))
-
+            # reporte por snackbar
+            ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_etiquetadas)}")
             # verificacion de dimensiones al abrir
             filtrar_dimensiones_estados("")     # FIX
 
@@ -559,6 +589,8 @@ def main(pagina: ft.Page):
                 )
             print("[bold cyan]Carga dataset")
             print("[bold cyan]Nombre archivo: ", archivo_dataset)
+            # reporte por snackbar
+            ventana_emergente(pagina, f"Archivo de  dataset abierto\nNombre archivo: {archivo_dataset}")
 
 
     # Eventos galeria
@@ -608,9 +640,9 @@ def main(pagina: ft.Page):
         imagenes_galeria = imagenes_galeria_backup
         imagenes_etiquetadas = imagenes_etiquetadas_backup
 
-        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
-            print("[bold cyan]Galeria vacía")
-            return
+        # if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+        #     print("[bold cyan]Galeria vacía")
+        #     return
 
         # conversion de texto a tupla numerica de dimensiones de imagen elegida
         global dimensiones_elegidas 
@@ -633,7 +665,7 @@ def main(pagina: ft.Page):
         for imagen in imagenes_galeria:
             imagen.verificar_imagen(dimensiones_elegidas)
 
-        # Filtrado en base a las etiquetas seleccionadas
+        # busqueda de etiquetas presentes en imagenes
         global botones_tags 
         tags = []
         if boton_filtrar_etiquetas.estado == True:
@@ -641,32 +673,58 @@ def main(pagina: ft.Page):
                 if boton.estado: 
                     tags.append(boton.text)
 
-        imagenes_etiquetadas = filtrar_etiquetas(imagenes_etiquetadas, tags)
-        imagenes_galeria = filtrar_etiquetas(imagenes_galeria, tags)
-        # iniciar pestaña estadisticas - sólo etiquetas de imagenes filtradas
-        # actualizacion de las etiquetas encontradas
-        # estadisticas() # FIX
-        # Actualizacion componentes graficos
-        # Objeto galeria
-        # galeria.cargar_imagenes( imagenes_galeria )
-        # galeria.update()
-        # # Objeto seleccion imagen
-        # menu_seleccion.indice = 0
-        # menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
-        # menu_seleccion.cargar_imagen()
-        # menu_seleccion.update()
-        # # actualizacion del etiquetador --> habilita los controles y etiquetas
-        # etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
-        # etiquetador_imagen.update()
+        # reporte por snackbar
+        ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(imagenes_etiquetadas)} imagenes seleccionadas.")
         # actualizacion de las etiquetas encontradas
         estadisticas()
-        actualizar_componentes()    # FIX
+
         # respaldo para que funcione el filtro de etiquetas
         global imagenes_etiquetadas_filtradas_backup
         global imagenes_galeria_filtradas_backup
         imagenes_etiquetadas_filtradas_backup = imagenes_etiquetadas
         imagenes_galeria_filtradas_backup = imagenes_galeria
 
+        actualizar_componentes()    # FIX
+
+        # proteccion inutil
+        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+            print("[bold cyan]Galeria vacía")
+            return
+
+
+
+        
+
+
+
+    def guardar_cambios(e):
+        global imagenes_etiquetadas
+        global imagenes_galeria
+
+        imagen: Contenedor_Etiquetado
+        i = 0
+        for imagen in imagenes_etiquetadas:
+            guardado = imagen.guardar_archivo()
+            # clave = imagen.content.key 
+            # print(f"{clave} : {guardado}")
+            if guardado :
+                i += 1 
+
+        for imagen in imagenes_galeria:
+            imagen.verificar_guardado()
+
+        # actualizacion grafica
+        # galeria.actualizar_estilos()
+        # menu_seleccion.cargar_imagen()
+        # reporte por snackbar
+        ventana_emergente(pagina,f"¡Etiquetas guardadas! - {i} archivos modificados")
+        actualizar_componentes()    # FIX
+
+
+    def ventana_emergente(pagina:ft.Page, texto: str):
+        pagina.show_snack_bar(
+            ft.SnackBar(ft.Text(texto), open=True)
+        )
 
 
     def actualizar_componentes():
@@ -699,7 +757,7 @@ def main(pagina: ft.Page):
             if boton.estado==True:
                 set_etiquetas.add(boton.text)
 
-        print(set_etiquetas)
+        # print(set_etiquetas)
 
         imagenes_etiquetadas = imagenes_etiquetadas_filtradas_backup
         imagenes_galeria = imagenes_galeria_filtradas_backup
@@ -707,6 +765,14 @@ def main(pagina: ft.Page):
         if boton_filtrar_etiquetas.estado == True:
             imagenes_etiquetadas = filtrar_etiquetas(imagenes_etiquetadas, list(set_etiquetas))
             imagenes_galeria = filtrar_etiquetas(imagenes_galeria, list(set_etiquetas))
+
+        # reporte por snackbar
+        ventana_emergente(pagina, f"Filtrado por etiquetas - {len(imagenes_etiquetadas)} imagenes seleccionadas.")
+
+        # prevencion de problemas por galeria vacia
+        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+            print("[bold cyan]Galeria vacía")
+            return
 
         actualizar_componentes()
 
@@ -857,6 +923,10 @@ def main(pagina: ft.Page):
             dialogo_directorio, dialogo_dataset
         ])
 
+
+    boton_guardar.on_click = guardar_cambios
+
+
     ############## CONFIGURACIONES GRAFICAS ################     
      
     galeria.ancho = 1200
@@ -879,6 +949,13 @@ def main(pagina: ft.Page):
     pagina.window_minimizable = True
     pagina.window_maximized   = False
     pagina.update()
+
+    # reporte de bugs
+    print("[bold red]BUGS CONOCIDOS:")
+    print("[bold red]1 - si la galeria queda vacía los eventos de click se rompen;")
+    print("[bold red]2 - El programa es incapaz de vaciar los archivos de etiquetas. Sólo puede reescribir si hay al menos UNA etiqueta")
+
+
     
 
 

@@ -2,7 +2,7 @@ import flet as ft
 
 
 tupla_resoluciones = (
-    "---------",
+    "todas",
     "512 x 512",
     "512 x 768",
     "768 x 512",
