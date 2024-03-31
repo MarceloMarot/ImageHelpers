@@ -1,11 +1,12 @@
-
+# test:
+# py -m sistema_archivos.imagen_temporal
 import cv2
 import tempfile
 import flet as ft
 import pathlib
 import time
 
-from  archivos_temporales import crear_directorio_temporal
+from . archivos_temporales import crear_directorio_temporal
 
 
 def crear_imagen_temporal(
@@ -18,7 +19,7 @@ def crear_imagen_temporal(
     Por defecto la funcion creada será BMP por tener la conversión más rápida (aunque es el formato mas pesado).   
     """
     # nombre archivo temporal (prefijo)
-    nombre = pathlib.Path(ruta_archivo).stem
+    nombre = pathlib.Path(ruta_archivo_disco).stem
     nombre = str(nombre)
 
     dir = None if directorio_virtual == None else directorio_virtual.name
