@@ -8,21 +8,13 @@ def crear_directorio_temporal(
     """Esta funcion crea una carpeta temporal con nombre. 
     Opcionalmente se puede indicar una carpeta para alojarla (ésta debe ser preexistente).
     """
-    eliminar = False
-    if ruta_relativa == None:
-        directorio_temporal = tempfile.TemporaryDirectory(
+    dir = None if ruta_relativa == None else ruta_relativa.name
+    directorio_temporal = tempfile.TemporaryDirectory(
         prefix = prefijo,
-        delete = eliminar,
+        dir = dir,
+        delete = False,
         ) 
-        return directorio_temporal
-
-    else: 
-        directorio_temporal = tempfile.TemporaryDirectory(
-        prefix = prefijo,
-        dir = ruta_relativa.name,
-        delete = eliminar,
-        ) 
-        return directorio_temporal
+    return directorio_temporal
 
 
 def crear_archivo_temporal(
@@ -32,38 +24,22 @@ def crear_archivo_temporal(
     Opcionalmente se puede indicar un subdirectorio para alojar el archivo (éste debe ser preexistente)
     """
     # Crear un archivo temporal con nombre 
-
-    eliminar = False    # eliminacion habilitada
-    
-    # configuracion recomendada Windows (en POSIX no molesta)
-    # eliminar = True     # eliminacion habilitada
-    eliminar_al_cerrar = False  # permite reapertua
-
-    # prevencion de carga de ruta absoluta
     nombre_archivo = pathlib.Path(ruta_archivo).name
     # extension del archivo temporal
     extension = pathlib.Path(nombre_archivo ).suffix 
     # nombre archivo temporal (prefijo)
-    nombre = pathlib.Path(str(nombre_archivo) ).with_suffix('')
+    nombre = pathlib.Path(ruta_archivo).stem
     nombre = str(nombre)
 
-    # print("ARCH", extension, nombre)
-
-    if directorio_virtual == None:
-        archivo_temporal = tempfile.NamedTemporaryFile( 
-                prefix = nombre,    # parte del nombre de archivo
-                suffix = extension,    # extensión añadida de archivo
-                delete = eliminar,
-                delete_on_close= eliminar_al_cerrar,
-                )
-    else:
-        archivo_temporal = tempfile.NamedTemporaryFile( 
-                prefix = nombre,    # parte del nombre de archivo
-                suffix = extension,    # extensión añadida de archivo
-                dir = directorio_virtual.name,
-                delete = eliminar,
-                delete_on_close= eliminar_al_cerrar,
-                )
+    dir = None if directorio_virtual == None else directorio_virtual.name
+    archivo_temporal = tempfile.NamedTemporaryFile( 
+            prefix = nombre,    # parte del nombre de archivo
+            suffix = extension,    # extensión añadida de archivo
+            dir = dir,
+            # configuracion recomendada Windows (en POSIX no molesta)
+            delete = True,
+            delete_on_close= False,
+            )
     # # apertura archivo en modo lectura binaria
     archivo_disco = open(ruta_archivo, "rb")
     data = archivo_disco.read()
