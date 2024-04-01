@@ -20,7 +20,6 @@ def principal(page: ft.Page):
         global imagen_temporal
 
         inicio = time.time()
-        # barra_brillo = e.control
         brillo = float(barra_brillo.value)
 
         # BRILLO OPENCV
@@ -30,34 +29,21 @@ def principal(page: ft.Page):
         img = cv2.convertScaleAbs(orig, alpha=contraste, beta=brillo)
 
 
-        # imagen.opacity=0.5
-        # imagen.update()
-        # contenedor.opacity=0.5
-        # contenedor.update()
-
         global ruta_archivo, carpeta_temporal
-        # imagen_temporal.close()
         imagen_temporal = crear_imagen_temporal(ruta_archivo, carpeta_temporal)
         cv2.imwrite(imagen_temporal.name, img)
-        # time.sleep(50e-3)
 
         # return
-        imagen.src = imagen_temporal.name   
-
-        # contenedor.opacity=1
-        contenedor.update()
-        # imagen.opacity=1
+        imagen.src = imagen_temporal.name   # BIEN
         imagen.update()
+
+        contenedor.update()
         fin = time.time()
 
         print("archivo temporal: ", imagen_temporal.name)
         print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
 
 
-    # def actualizar_imagen(e):
-    #     global imagen_temporal
-    #     imagen.src = imagen_temporal.name   
-    #     imagen.update()
 
     def coordenadas(e):
         print(f" lx: {e.local_x}, ly: {e.local_y}")
@@ -78,9 +64,8 @@ def principal(page: ft.Page):
         height = 512,
         width  = 512, 
         fit = ft.ImageFit.CONTAIN,
+        gapless_playback = True,        # transicion suave entre imagenes (retiene la version anterior hasta poder cambiar)
         # opacity=0.5,
-        # animate_opacity=
-        # animate_opacity=ft.animation.Animation(1000, ft.AnimationCurve.EASE),
         )
 
     contenedor = ft.Container(
@@ -88,8 +73,6 @@ def principal(page: ft.Page):
         height = 512,
         width  = 512, 
         image_fit = ft.ImageFit.CONTAIN,
-        # opacity=0.5,
-        # animate=ft.animation.Animation(1000, "bounceOut"),
         animate=ft.animation.Animation(1000, ft.AnimationCurve.EASE),
         )
 
@@ -102,12 +85,10 @@ def principal(page: ft.Page):
 
     barra_brillo = ft.Slider(min=-255, max=255, divisions=500,value=0, label="{value}")
     barra_contraste = ft.Slider(min=0, max=300, divisions=300,value=100, label="{value}")
-    # barra_brillo.   on_change_start = cambiar_brillo
-    # barra_contraste.on_change_start = cambiar_brillo
-    # barra_brillo.   on_change = cambiar_brillo
-    # barra_contraste.on_change = cambiar_brillo
-    barra_brillo.   on_change_end = cambiar_brillo
-    barra_contraste.on_change_end = cambiar_brillo
+    barra_brillo.   on_change = cambiar_brillo
+    barra_contraste.on_change = cambiar_brillo
+    # barra_brillo.   on_change_end = cambiar_brillo
+    # barra_contraste.on_change_end = cambiar_brillo
 
     page.add(detector_gesto)
     page.add(barra_brillo)
@@ -131,8 +112,8 @@ def principal(page: ft.Page):
 if __name__ == "__main__":
 
 
-    ruta_archivo = "manejo_imagenes/ejemplo2.jpg"
-    # ruta_archivo = "manejo_imagenes/ejemplo.jpg"
+    # ruta_archivo = "manejo_imagenes/ejemplo2.jpg"
+    ruta_archivo = "manejo_imagenes/ejemplo.jpg"
 
     carpeta_temporal = crear_directorio_temporal("ensayo")
     print("carpeta temporal: ", carpeta_temporal.name)
