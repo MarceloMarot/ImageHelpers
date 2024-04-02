@@ -5,6 +5,7 @@ import tempfile
 import flet as ft
 import pathlib
 import time
+from typing import IO
 
 from . archivos_temporales import crear_directorio_temporal
 
@@ -13,7 +14,7 @@ def crear_imagen_temporal(
     ruta_archivo_disco: str, 
     directorio_virtual: tempfile.TemporaryDirectory | None = None,
     extension: str = ".bmp"
-    ):
+    )-> IO:
     """Esta funcion crea una imagen temporal con la extensión indicada. 
     Opcionalmente se puede alojar en un subdirectorio temporal preexistente.
     Por defecto la funcion creada será BMP por tener la conversión más rápida (aunque es el formato mas pesado).   
