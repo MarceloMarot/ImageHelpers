@@ -46,6 +46,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         self.verificar_guardado(None)
 
 
+
     def buscar_etiqueta(self, etiqueta: str):
         """Este método busca la etiqueta en la imagen y si la encuentra devuelve 'True'."""
         return True if etiqueta in self.tags else False
@@ -357,23 +358,41 @@ def main(pagina: ft.Page):
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
     texto_estados = ft.Text("Estado\netiquetado:")
 
-
     #############  MAQUETADO ############################
 
+    # componentes repartidos en segmentos horizontales
+    fila_controles_apertura =ft.Row(
+        [boton_carpeta, boton_dataset],
+        width = 350,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        wrap = True
+        )
+    fila_controles_dimensiones =ft.Row(
+        [texto_dimensiones, lista_dimensiones_desplegable, boton_filtrar_dimensiones],
+        width = 400,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        wrap = False
+        )
+
+    fila_controles_etiquetas =ft.Row(
+        [texto_estados, lista_estados_desplegable, boton_filtrar_etiquetas],
+        width = 400,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        wrap = False
+        )
+
     # Fila de botones para abrir carpetas y leer archivos
-    pagina.add(ft.Row([
-        boton_carpeta,
-        boton_dataset,
-        ft.VerticalDivider(visible=True, width=20),
-        texto_dimensiones,
-        lista_dimensiones_desplegable,
-        boton_filtrar_dimensiones,
-        ft.VerticalDivider(visible=True, width=20),
-        texto_estados,
-        lista_estados_desplegable,
-        # ft.VerticalDivider(visible=True, width=20),
-        boton_filtrar_etiquetas,
-        ]))
+    pagina.add(
+        ft.Row([
+            fila_controles_apertura,
+            fila_controles_dimensiones,
+            # fila_controles_estados,
+            fila_controles_etiquetas
+            ],
+            wrap=True,
+            alignment=ft.MainAxisAlignment.END,
+            )
+        )
 
     #pestaña de galeria
     tab_galeria = ft.Tab(
@@ -396,16 +415,12 @@ def main(pagina: ft.Page):
         text="Etiquetado",
         content=fila_etiquetado_navegacion,
     )
-    tab_estadisticas = ft.Tab(
-        text="Estadisticas",
-        content= ft.Column(
-            controls = [],
-            spacing = 10, 
-            height = altura_tab_etiquetado,
-            width = 800,
-            scroll=ft.ScrollMode.AUTO,
+
+    drawer_estadisticas = ft.NavigationDrawer(
+        # on_dismiss=end_drawer_dismissed,
+        controls = [],
         )
-    )
+    pagina.end_drawer = drawer_estadisticas
 
     # organizacion en pestañas
     pestanias = ft.Tabs(
@@ -414,7 +429,7 @@ def main(pagina: ft.Page):
         tabs=[
             tab_galeria   ,
             tab_etiquetado,
-            tab_estadisticas,
+            # tab_estadisticas,
         ],
         expand=1,
         # disabled=True,        # deshabilita controles internos, no las pestañas en si
@@ -507,18 +522,13 @@ def main(pagina: ft.Page):
         lista_estados = [tupla_estados[0]] # opcion "No filtrar" agregada
         set_estados = set("todas")
 
-        # tupla_estados = ( "todas", "guardadas", "modificadas", "no etiquetadas" )
-
         for imagen in imagenes_etiquetadas:
             if imagen.guardada:
                 set_estados.add("guardadas")
-                print(f"{imagen.content.key} : 'guardadas'")
             elif imagen.etiquetada:
                 set_estados.add("modificadas")
-                print(f"{imagen.content.key} : 'modificadas'")
             else:
                 set_estados.add("no etiquetadas")
-                print(f"{imagen.content.key} : 'no etiquetadas'")  
 
         for estado in tupla_estados:
             # resolucion_conv = convertir_dimensiones_opencv(str(resolucion))
@@ -553,7 +563,7 @@ def main(pagina: ft.Page):
             actualizar_lista_dimensiones()
             actualizar_lista_estados()      
 
-            # iniciar pestaña estadisticas - todas las etiquetas
+            # iniciar lista emergente - todas las etiquetas usadas
             estadisticas()
 
             # Objeto galeria
@@ -580,10 +590,6 @@ def main(pagina: ft.Page):
             menu_seleccion.habilitado = True
             menu_seleccion.update()
 
-            # reporte por consola
-            print("[bold red]Carga imagenes")
-            print("[bold red]Nº imagenes etiquetadas : ", len(imagenes_etiquetadas))
-            print("[bold red]Nº imagenes galeria     : ", len(imagenes_galeria))
             # reporte por snackbar
             ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_etiquetadas)}")
             # verificacion de dimensiones al abrir
@@ -617,8 +623,6 @@ def main(pagina: ft.Page):
                 actualizar_bordes,
                 actualizar_bordes
                 )
-            print("[bold cyan]Carga dataset")
-            print("[bold cyan]Nombre archivo: ", archivo_dataset)
             # reporte por snackbar
             ventana_emergente(pagina, f"Archivo de  dataset abierto\nNombre archivo: {archivo_dataset}")
 
@@ -671,11 +675,15 @@ def main(pagina: ft.Page):
         imagenes_galeria = imagenes_galeria_backup
         imagenes_etiquetadas = imagenes_etiquetadas_backup
 
+        # prevencion de problemas por galeria vacia 
+        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+            ventana_emergente(pagina, "Galeria vacía")
+            return
+
         # conversion de texto a tupla numerica de dimensiones de imagen elegida
         global dimensiones_elegidas 
         opcion = lista_dimensiones_desplegable.value
         dimensiones_elegidas = convertir_dimensiones_opencv(str(opcion))
-        print(f"[bold magenta]Dimensiones imagen requeridas: [bold yellow]{dimensiones_elegidas}")
 
         # Filtrado en base a las dimensiones de imagen
         dimensiones = dimensiones_elegidas if boton_filtrar_dimensiones.estado else None
@@ -719,6 +727,10 @@ def main(pagina: ft.Page):
         global imagenes_etiquetadas
         global imagenes_galeria
 
+        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+            ventana_emergente(pagina,f"Galería vacía - sin cambios")
+            return
+
         imagen: Contenedor_Etiquetado
         i = 0
         for imagen in imagenes_etiquetadas:
@@ -740,7 +752,7 @@ def main(pagina: ft.Page):
 
     def ventana_emergente(pagina:ft.Page, texto: str):
         pagina.show_snack_bar(
-            ft.SnackBar(ft.Text(texto), open=True)
+            ft.SnackBar(ft.Text(texto), open=True, show_close_icon=True)
         )
 
 
@@ -767,18 +779,16 @@ def main(pagina: ft.Page):
             # actualizar listas desplegable no accionada
             if e.control == lista_estados_desplegable:
                 actualizar_lista_dimensiones()
-                print("accionado: lista estados")
             elif e.control == lista_dimensiones_desplegable:
                 actualizar_lista_estados()      
-                print("accionado: lista dimensiones")
             else:
                 actualizar_lista_dimensiones()
                 actualizar_lista_estados()      
-                print("accionado: otros")
 
 
     def filtrar_todas_etiquetas( e: ft.ControlEvent | None ):
         """Selecciona las imagenes con al menos una de las etiquetas activadas en la pestaña de estadisticas."""
+        
         global imagenes_etiquetadas
         global imagenes_galeria
         global imagenes_etiquetadas_filtradas_backup
@@ -788,25 +798,36 @@ def main(pagina: ft.Page):
 
         set_etiquetas = set()
         for boton in botones_tags:
-            if boton.estado==True:
+            if boton.estado == True:
                 set_etiquetas.add(boton.text)
-
-        # print(set_etiquetas)
 
         imagenes_etiquetadas = imagenes_etiquetadas_filtradas_backup
         imagenes_galeria = imagenes_galeria_filtradas_backup
+
+        # prevencion de problemas por galeria vacia 
+        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+            ventana_emergente(pagina, "Galeria vacía")
+            boton_filtrar_dimensiones.estado = False
+            boton_filtrar_dimensiones.update()
+            # print("galeria  vacia")
+            return
 
         if boton_filtrar_etiquetas.estado == True:
             imagenes_etiquetadas = filtrar_etiquetas(imagenes_etiquetadas, list(set_etiquetas))
             imagenes_galeria = filtrar_etiquetas(imagenes_galeria, list(set_etiquetas))
 
         # reporte por snackbar
-        ventana_emergente(pagina, f"Filtrado por etiquetas - {len(imagenes_etiquetadas)} imagenes seleccionadas.")
-
-        # prevencion de problemas por galeria vacia # FIX
-        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
-            print("[bold cyan]Galeria vacía")
-            return
+        if boton_filtrar_etiquetas.estado:
+            renglon1 = f"Filtrado por etiquetas habilitado"
+            renglon2 = f" - {len(set_etiquetas)} de {len(botones_tags)} etiquetas seleccionadas;"
+            renglon3 = f" - {len(imagenes_etiquetadas)}  de {len(imagenes_etiquetadas_filtradas_backup)} imagenes seleccionadas."
+            ventana_emergente(pagina, 
+                f"{renglon1}\n{renglon2}\n{renglon3}")
+            # drawer_estadisticas
+            pagina.show_end_drawer(drawer_estadisticas) # apertura barra lateral
+        else:
+            ventana_emergente(pagina, 
+                f"Filtrado por etiquetas deshabilitado.")
 
         actualizar_componentes(e)
 
@@ -877,6 +898,15 @@ def main(pagina: ft.Page):
         tab_etiquetado.update()
 
 
+    def reset_tags_filtros(e):
+        """Restaura todos los botones de filtrado."""
+        global botones_tags 
+        if len(botones_tags)>0:
+            for boton in botones_tags:
+                boton.estado = False
+            filtrar_todas_etiquetas(e)
+
+
     def estadisticas():
         """Detecta todas las etiquetas usadas en las imagenes y cuenta cuantas repeticiones tiene cada una."""
         global imagenes_etiquetadas
@@ -895,16 +925,34 @@ def main(pagina: ft.Page):
             for tag in imagen.tags:
                 conteo_etiquetas[tag] = 0
 
-        # conteo 
+        # conteo de repeticiones para cada etiqueta
         for imagen in imagenes_etiquetadas:
             for tag in imagen.tags:
                 conteo_etiquetas[tag] += 1
 
-        filas_conteo = []
+        boton_reset_tags = ft.ElevatedButton(
+            text = "Borrar tags",
+            bgcolor = ft.colors.PURPLE_800,
+            color = ft.colors.WHITE,
+            width = 200,
+            on_click = reset_tags_filtros,
+            )
+        
+        filas_conteo = [                
+            ft.Row(
+                [ boton_reset_tags],
+                width=300,
+                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                ),
+            # ft.Divider(height=15, thickness=5) ,   
+            ft.Divider(height=7, thickness=1) , 
+            ft.Divider(height=7, thickness=1)  
+            ]
         global botones_tags 
         botones_tags = []
         for tag in conteo_etiquetas.keys():
-            boton = BotonBiestable(f"{tag}",color_true=ft.colors.BLUE_800)  
+            boton = BotonBiestable(f"{tag}",color_true=ft.colors.BLUE_800)
+            boton.width = 150  
             boton.click_boton = filtrar_todas_etiquetas
             botones_tags.append(boton)
             filas_conteo.append(
@@ -915,30 +963,18 @@ def main(pagina: ft.Page):
                     ],
                     width=300,
                     alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                    )
                 )
-            )
-        tab_estadisticas.content = ft.Column(
-            controls=filas_conteo,
-            height=altura_tab_etiquetado,
-            scroll=ft.ScrollMode.AUTO,
-            wrap=True,
-            # width=1200,
-            # expand=True
-        ) 
-        tab_estadisticas.update()
+            filas_conteo.append(ft.Divider(height=7, thickness=1)  )
+        drawer_estadisticas.controls = filas_conteo
 
 
     ###########  ASIGNACION HANDLERS #################
 
-
     # eventos deshabilitados mientras no haya imagenes cargadas
-    # lista_dimensiones_desplegable.on_change = nada
-    lista_dimensiones_desplegable.on_change = filtrar_dimensiones_estados  
-    # lista_dimensiones_desplegable.on_change = verificar_dimensiones_imagenes   
+    lista_dimensiones_desplegable.on_change = filtrar_dimensiones_estados    
     lista_estados_desplegable.on_change = filtrar_dimensiones_estados
-    # boton_filtrar_dimensiones.click_boton = nada
     boton_filtrar_dimensiones.click_boton = filtrar_dimensiones_estados
-    # boton_filtrar_etiquetas.click_boton = nada
     boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
     # inicializacion opciones
     boton_filtrar_dimensiones.estado = False
@@ -961,7 +997,6 @@ def main(pagina: ft.Page):
 
     boton_guardar.on_click = guardar_cambios
 
-
     ############## CONFIGURACIONES GRAFICAS ################     
      
     galeria.ancho = 1200
@@ -978,8 +1013,12 @@ def main(pagina: ft.Page):
 
     # Propiedades pagina 
     pagina.title = "Etiquetador Imágenes"
-    pagina.window_width  = 1500
+    # pagina.window_width  = 1500
+    pagina.window_width  = 1300
+    pagina.window_min_width = 1300
     pagina.window_height = 900
+    # pagina.theme_mode = ft.ThemeMode.DARK
+    pagina.theme_mode = ft.ThemeMode.LIGHT
     pagina.window_maximizable = True
     pagina.window_minimizable = True
     pagina.window_maximized   = False
