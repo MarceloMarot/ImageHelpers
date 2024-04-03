@@ -3,13 +3,13 @@
 
 import cv2
 import numpy as np
-import tempfile
+# import tempfile
 import flet as ft
 import pathlib
 import time
 
 from typing import IO
-from copy import deepcopy
+# from copy import deepcopy
 
 from sistema_archivos.archivos_temporales import  crear_directorio_temporal
 from sistema_archivos.imagen_temporal import crear_imagen_temporal
@@ -31,6 +31,8 @@ class ImagenTemporal:
         self.__escala_guardado: int 
         self.__x_mouse : int = 0
         self.__y_mouse : int = 0
+        self.__xr_mouse : float = 0
+        self.__yr_mouse : float = 0
 
         # self.dimensiones_original   : list[int]
         # self.dimensiones_original   : list[int]
@@ -75,13 +77,26 @@ class ImagenTemporal:
     def y_mouse(self):
         return self.__y_mouse
 
-    @x_mouse.setter
-    def x_mouse(self,  valor: int|float):
-        self.__x_mouse = int(valor)
+    @property
+    def xr_mouse(self):
+        return self.__xr_mouse
 
-    @y_mouse.setter
-    def y_mouse(self, valor: int|float):
-        self.__y_mouse = int(valor)
+    @property
+    def yr_mouse(self):
+        return self.__yr_mouse 
+
+    @xr_mouse.setter
+    def xr_mouse(self,  valor: float):
+        self.__xr_mouse = int(valor)
+        (h, b , c) = self.dimensiones_escalada()
+        self.__x_mouse  = int(valor*b)
+
+    @yr_mouse.setter
+    def yr_mouse(self, valor: float):
+        self.__yr_mouse = int(valor)
+        (h, b , c) = self.dimensiones_escalada()
+        self.__y_mouse  = int(valor*h)
+
 
     @property
     def ruta_original(self) -> str:
@@ -305,6 +320,11 @@ def principal(page: ft.Page):
 
     def coordenadas(e):
         # print(f" lx: {e.local_x}, ly: {e.local_y}")
+
+        # [altura, base, _ ] = imagen_temporal.dimensiones_escalada()
+
+
+        # coordenadas relativas al contenedor
         base   = int(contenedor.width)
         altura = int(contenedor.height)
         # confinamiento de las coordenadas obtenidas
@@ -313,12 +333,17 @@ def principal(page: ft.Page):
         x = 0 if x <= 0 else x
         y = 0 if y <= 0 else y
 
+        # print("A",x,y)
+        x = x / base
+        y = y / altura
+        # print("B",x,y)
+
 
         proporcion = barra_escala.value / 100
 
+        imagen_temporal.xr_mouse = x * proporcion
+        imagen_temporal.yr_mouse = y * proporcion
 
-        imagen_temporal.x_mouse = x * proporcion
-        imagen_temporal.y_mouse = y * proporcion
 
         # print("coordenadas:",x,y)
         inicio = time.time()
@@ -326,6 +351,7 @@ def principal(page: ft.Page):
         imagen_temporal.marcado_seleccion()
         fin = time.time()
         print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
+
 
 
 
@@ -345,14 +371,16 @@ def principal(page: ft.Page):
         valor = e.control.value
         # print(valor)
         imagen_temporal.ampliar(valor)
-        # imagen.src = imagen_temporal.ruta_recorte
-        # imagen.update()
+        imagen.src = imagen_temporal.ruta_recorte
+        imagen.update()
 
 
 
     def coordenadas_relativas(e):
         base   = int(contenedor.width)
         altura = int(contenedor.height)
+
+
         # confinamiento de las coordenadas obtenidas
         x = e.local_x if e.local_x < base else base
         y = e.local_y if e.local_y < altura else altura
@@ -387,25 +415,26 @@ def principal(page: ft.Page):
     detector_gesto = ft.GestureDetector(
         content= contenedor,
         # on_pan_start=coordenadas,
-        on_pan_update=coordenadas,
+        # on_pan_update=coordenadas,
+        on_hover=coordenadas,
         # on_pan_start=coordenadas,
         # on_pan_update=coordenadas_relativas,
         # on_pan_end=fin_seleccion,
         )   
 
     barra_escala = ft.Slider(min=30, max=330, divisions=300,value=100, label="{value}")
-    barra_brillo = ft.Slider(min=-255, max=255, divisions=500,value=0, label="{value}")
-    barra_contraste = ft.Slider(min=0, max=300, divisions=300,value=100, label="{value}")
-    barra_brillo.   on_change = cambiar_brillo
-    barra_contraste.on_change = cambiar_brillo
+    # barra_brillo = ft.Slider(min=-255, max=255, divisions=500,value=0, label="{value}")
+    # barra_contraste = ft.Slider(min=0, max=300, divisions=300,value=100, label="{value}")
+    # barra_brillo.   on_change = cambiar_brillo
+    # barra_contraste.on_change = cambiar_brillo
     barra_escala.on_change = escalar
     # barra_brillo.   on_change_end = cambiar_brillo
     # barra_contraste.on_change_end = cambiar_brillo
 
-    page.add(barra_escala)
     page.add(detector_gesto)
-    page.add(barra_brillo)
-    page.add(barra_contraste)
+    page.add(barra_escala)
+    # page.add(barra_brillo)
+    # page.add(barra_contraste)
     page.window_height = 700
     page.window_width  = 600
 
@@ -425,8 +454,8 @@ def principal(page: ft.Page):
 if __name__ == "__main__":
 
 
-    # ruta_archivo = "manejo_imagenes/ejemplo2.jpg"
-    ruta_archivo = "manejo_imagenes/ejemplo.jpg"
+    ruta_archivo = "manejo_imagenes/ejemplo2.jpg"
+    # ruta_archivo = "manejo_imagenes/ejemplo.jpg"
 
     # inicio = time.time()
     imagen_temporal = ImagenTemporal("ensayus_")
