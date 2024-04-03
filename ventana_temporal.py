@@ -17,32 +17,34 @@ from sistema_archivos.imagen_temporal import crear_imagen_temporal
 
 class ImagenTemporal:
     def __init__( self, nombre_directorio="recortador" ):
-        self.ruta_imagen_original : str = ""    # valor provisional
-        self.ruta_imagen_recorte  : str = ""    # valor provisional
+        # self.ruta_imagen_original : str = ""    # valor provisional
+        # self.ruta_imagen_recorte  : str = ""    # valor provisional
         self.clave : str = "---"
-        self.__coordenadas_recorte: list[int]
-        self.__coordenadas_actuales: list[int]
-        self.__coordenadas_guardado: list[int]
+        # self.__coordenadas_recorte: list[int]
+        self.__coordenadas_recorte_actuales:    list[int]
+        self.__coordenadas_recorte_relativas:   list[float]
+        # self.__coordenadas_guardado: list[int]
         # porcentajes de ampliacion entre grafica y archivo
-        self.__escala_minima: int  
-        self.__escala_maxima: int 
-        self.__escala_actual: int 
-        self.__escala_recorte : int 
-        self.__escala_guardado: int 
-        self.__x_mouse : int = 0
-        self.__y_mouse : int = 0
-        self.__xr_mouse : float = 0
-        self.__yr_mouse : float = 0
+        # self.__escala_minima: int  
+        # self.__escala_maxima: int 
+        # self.__escala_actual: int 
+        # self.__escala_recorte : int 
+        # self.__escala_guardado: int 
+        # self.__x_mouse : int = 0
+        # self.__y_mouse : int = 0
+        # self.__xr_mouse : float = 0
+        # self.__yr_mouse : float = 0
 
-        # self.dimensiones_original   : list[int]
-        # self.dimensiones_original   : list[int]
-        # self.dimensiones_recorte    : list[int]
-        # self.dimensiones_original   : list[int]
+        self.__xy_relativo  = [0, 0]
+        self.__xy_original  = [0, 0]
+        self.__xy_escalada  = [0, 0]
+        self.__xy_seleccion = [0, 0]
 
         self.__imagen_original = None | np.ndarray
         self.__imagen_escalada = None | np.ndarray
         self.__imagen_recorte = None | np.ndarray
         self.__imagen_seleccion = None | np.ndarray
+        self.__imagen_miniatura = None | np.ndarray
 
 
         self.BGR_seleccion = (200,0,150)  # magenta
@@ -69,35 +71,38 @@ class ImagenTemporal:
         self.temporal_seleccion  : IO
 
 
+    #COORDENADAS
     @property
-    def x_mouse(self):
-        return self.__x_mouse
-
-    @property
-    def y_mouse(self):
-        return self.__y_mouse
+    def xy_original(self):
+        return self.__xy_original
 
     @property
-    def xr_mouse(self):
-        return self.__xr_mouse
+    def xy_escalada(self):
+        return self.__xy_escalada
 
     @property
-    def yr_mouse(self):
-        return self.__yr_mouse 
+    def xy_seleccion(self):
+        return self.__xy_seleccion
 
-    @xr_mouse.setter
-    def xr_mouse(self,  valor: float):
-        self.__xr_mouse = int(valor)
-        (h, b , c) = self.dimensiones_escalada()
-        self.__x_mouse  = int(valor*b)
+    @property
+    def xy_relativo(self):
+        return self.__xy_relativo
 
-    @yr_mouse.setter
-    def yr_mouse(self, valor: float):
-        self.__yr_mouse = int(valor)
-        (h, b , c) = self.dimensiones_escalada()
-        self.__y_mouse  = int(valor*h)
+    @xy_relativo.setter
+    def xy_relativo(self, xy: list[float]):
+        """Asigna coordenadas a todas las imagenes"""
+        # coordenadas relativas
+        [x, y] = xy
+        self.__xy_relativo = xy
+        # actualizacion solidaria de las coordenadas de todas las imagenes
+        (b, h) = self.dimensiones_original
+        self.__xy_original = [int(b*x), int(h*y)]
+        (b, h) = self.dimensiones_escalada
+        self.__xy_escalada = [int(b*x), int(h*y)]
+        (b, h) = self.dimensiones_seleccion
+        self.__xy_seleccion = [int(b*x), int(h*y)]
 
-
+    # DIMENSIONES
     @property
     def ruta_original(self) -> str:
         return self.temporal_original.name
@@ -114,13 +119,13 @@ class ImagenTemporal:
     def ruta_seleccion(self) -> str:
         return self.temporal_seleccion.name
 
+    @property
+    def ruta_miniatura(self) -> str:
+        return self.temporal_miniatura.name
+
     def cerrar(self):
         """Elimina la carpeta temporal y sus archivos internos"""
         self.carpeta_temporal.cleanup()
-
-
-
-
 
 
     def abrir_imagen(self,ruta_archivo: str ):
@@ -128,33 +133,49 @@ class ImagenTemporal:
         # copia temporal desde archivo fisico
         self.temporal_original = crear_imagen_temporal(ruta_archivo, self.carpeta_temporal)
         # copias hechas desde el archivo temporal
-        self.temporal_escalada = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        self.temporal_recorte  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        # self.temporal_seleccion  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        self.temporal_seleccion  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        self.temporal_escalada  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        self.temporal_recorte   = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        self.temporal_miniatura = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        self.temporal_seleccion = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
         # # objetos matriciales de OpenCV representando las imagenes    
         self.__imagen_original  = cv2.imread(self.ruta_original)
         self.__imagen_escalada  = cv2.imread(self.ruta_original)
         self.__imagen_recorte   = cv2.imread(self.ruta_original)
+        self.__imagen_miniatura = cv2.imread(self.ruta_original)
         self.__imagen_seleccion = cv2.imread(self.ruta_original)
-        self.__escala_actual = 100
+        # self.__escala_actual = 100
 
+    @property
     def dimensiones_original(self):
-        return self.__imagen_original.shape 
+        (h, b, _) = self.__imagen_original.shape 
+        return [b, h]
 
+    @property
     def dimensiones_escalada(self):
-        return self.__imagen_escalada.shape 
+        (h, b, _) = self.__imagen_escalada.shape 
+        return [b, h]
 
+    @property
     def dimensiones_recorte(self):
-        return self.__imagen_recorte.shape  
+        (h, b, _) = self.__imagen_recorte.shape  
+        return [b, h]
 
+    @property
+    def dimensiones_miniatura(self):
+        (h, b, _) = self.__imagen_miniatura.shape  
+        return [b, h]
+
+    @property
     def dimensiones_seleccion(self):
-        return self.__imagen_seleccion.shape  
+        (h, b, _) = self.__imagen_seleccion.shape
+        return [b, h]
 
 
     def ampliar(self, escala: int|None = None):
-        """Crea una copia ampliada de la imagen de entrada."""
-        [altura, base, _] = self.__imagen_original.shape
+        """Crea una copia ampliada de la imagen de entrada en base al porcentaje indicado."""
+        # [altura, base, _] = self.__imagen_original.shape
+
+        [altura, base] = self.dimensiones_original
         if escala == None:
             proporcion = self.__escala_actual/100
         else:
@@ -175,11 +196,6 @@ class ImagenTemporal:
         cv2.imwrite(self.ruta_escalada, self.__imagen_escalada)
         # print(self.dimensiones_escalada())
 
-        # QUITAR (FIX)
-        # self.calcular_recorte([512,512])
-
-
-
 
     def cambiar_brillo(self, brillo, contraste):
         # orig = cv2.imread(imagen_temporal_original.name)
@@ -195,15 +211,17 @@ class ImagenTemporal:
         # lectura de dimensiones
         [base_recorte, altura_recorte] = dimensiones_recorte
         # [base_recorte, altura_recorte] = self.dimensiones_recorte
-        imagen = self.__imagen_escalada
-        x_max = imagen.shape[1]
-        y_max = imagen.shape[0]
+        [x_max, y_max] = self.dimensiones_escalada
+        [x, y]= self.xy_escalada
+        # print("escalada",x,y)
         #Se previenen errores por recortes mayores a la imagen de origen
         if base_recorte > x_max : base_recorte = x_max
         if altura_recorte > y_max : altura_recorte  = y_max  
         # El puntero del mouse quedará centrado dentro del rectángulo
-        xi = self.__x_mouse - base_recorte // 2
-        yi = self.__y_mouse - altura_recorte // 2
+        xi = x - base_recorte // 2
+        yi = y - altura_recorte // 2
+        # xi = self.__x_mouse - base_recorte // 2
+        # yi = self.__y_mouse - altura_recorte // 2
         # Se confina al rectángulo adentro de la imagen
         xi = 0 if xi < 0 else xi 
         yi = 0 if yi < 0 else yi 
@@ -216,18 +234,25 @@ class ImagenTemporal:
             yf = y_max 
             yi = y_max - altura_recorte
         # creacion del recorte de imagen
-        recorte_imagen = imagen[yi:yf, xi:xf]
+        self.__imagen_recorte  = self.__imagen_escalada[yi:yf, xi:xf]
+        # recorte_imagen = imagen[yi:yf, xi:xf]
         #retorno del recorte y sus coordenadas en una lista
         coordenadas = [xi, yi, xf, yf]
-        self.__coordenadas_actuales = coordenadas
-        self.__imagen_recorte = recorte_imagen 
+        self.__coordenadas_recorte_actuales = coordenadas
+
+        print(self.__coordenadas_recorte_actuales )
+
+        self.__coordenadas_recorte_relativas = [xi/x_max, y/y_max, xf/x_max, yf/y_max]
+        print(self.__coordenadas_recorte_relativas )
+
+        # self.__imagen_recorte = recorte_imagen 
         # archivo sustituto   
         if pathlib.Path(self.ruta_recorte).exists():
             self.temporal_recorte.close()
         self.temporal_recorte  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
         cv2.imwrite(self.ruta_recorte, self.__imagen_recorte)
         # retorno resultado (opcional)
-        return [recorte_imagen , coordenadas]
+        # return [self.__imagen_recorte  , coordenadas]
 
 
     def marcado_seleccion(self, error=False):
@@ -236,13 +261,44 @@ class ImagenTemporal:
         brillo = self.brillo_ventana
         contraste = self.contraste_ventana 
         # copia de salida con brillo y contraste cambiados
-        copia = cv2.convertScaleAbs(self.__imagen_escalada, alpha=contraste, beta=brillo)
-        # Regiones seleccionadas : brillo original
-        if self.__coordenadas_actuales != [0,0,0,0]:
-            coordenadas_rectangulo = self.__coordenadas_actuales
+        copia = cv2.convertScaleAbs(self.__imagen_miniatura, alpha=contraste, beta=brillo)
+        
+        [b, h] = self.dimensiones_miniatura
+
+        # coordenadas = self.__coordenadas_recorte_actuales
+
+        # [xi, yi, xf, yf] = coordenadas
+
+        [xif, yif, xff, yff] = self.__coordenadas_recorte_relativas  
+        # print([xif, yif, xff, yff])
+        
+        coordenadas =  [int(xif*b), int(yif*h), int(xff*b), int(yff*h)]
+
+        # Rectángulos color
+        if coordenadas != [0,0,0,0]:
+            coordenadas_rectangulo = coordenadas
+            color_rectangulo = self.BGR_seleccion 
             (xi,yi) = coordenadas_rectangulo[0:2]
             (xf,yf) = coordenadas_rectangulo[2:4]
-            copia[yi:yf, xi:xf] = self.__imagen_escalada[yi:yf, xi:xf]
+            # ¶ectangulo color
+            cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
+            # region brillo original
+            copia[yi:yf, xi:xf] = self.__imagen_miniatura[yi:yf, xi:xf]
+
+        # print(coordenadas)
+        # print("imagen:      ",self.dimensiones_miniatura)
+        # print("seleccion:   ",self.dimensiones_seleccion)
+
+
+        # Regiones seleccionadas : brillo original
+        # if self.__coordenadas_recorte_actuales != [0,0,0,0]:
+        #     coordenadas_rectangulo = self.__coordenadas_recorte_actuales
+
+        #     # FIX IT
+
+        #     (xi,yi) = coordenadas_rectangulo[0:2]
+        #     (xf,yf) = coordenadas_rectangulo[2:4]
+        #     copia[yi:yf, xi:xf] = self.__imagen_miniatura[yi:yf, xi:xf]
         # if self.__coordenadas_recorte != [0,0,0,0]:
         #     coordenadas_rectangulo = self.__coordenadas_recorte
         #     (xi,yi) = coordenadas_rectangulo[0:2]
@@ -254,12 +310,12 @@ class ImagenTemporal:
         #     (xf,yf) = coordenadas_rectangulo[2:4]
         #     copia[yi:yf, xi:xf] = self.__imagen_escalada[yi:yf, xi:xf]
         # Rectángulos color
-        if self.__coordenadas_actuales != [0,0,0,0]:
-            coordenadas_rectangulo = self.__coordenadas_actuales
-            color_rectangulo = self.BGR_seleccion 
-            (xi,yi) = coordenadas_rectangulo[0:2]
-            (xf,yf) = coordenadas_rectangulo[2:4]
-            cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
+        # if self.__coordenadas_recorte_actuales != [0,0,0,0]:
+        #     coordenadas_rectangulo = self.__coordenadas_recorte_actuales
+        #     color_rectangulo = self.BGR_seleccion 
+        #     (xi,yi) = coordenadas_rectangulo[0:2]
+        #     (xf,yf) = coordenadas_rectangulo[2:4]
+        #     cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
         # if self.__coordenadas_recorte != [0,0,0,0]:
         #     coordenadas_rectangulo = self.__coordenadas_recorte
         #     color_rectangulo = self.BGR_recorte if  self.__escala_actual== self.__escala_recorte else self.BGR_error 
@@ -273,11 +329,11 @@ class ImagenTemporal:
         #     (xf,yf) = coordenadas_rectangulo[2:4]
         #     cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
         # si se indica el error de entrada se recuadra toda la imagen
-        if error:
-            color_rectangulo = self.BGR_error
-            (xi,yi) = (0, 0)
-            (yf,xf,_) = copia.shape
-            cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_8 )
+        # if error:
+        #     color_rectangulo = self.BGR_error
+        #     (xi,yi) = (0, 0)
+        #     (yf,xf,_) = copia.shape
+        #     cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_8 )
         # actualizacion grafica
         # cv2.imshow(self.__nombre_ventana, copia) 
         self.__imagen_seleccion = copia
@@ -289,7 +345,48 @@ class ImagenTemporal:
 
 
 
+    def calcular_dimensiones(self, proporcion: float, base_max: int = 512 , altura_max: int = 512):
+        """Esta funcion calcula las dimensiones para """
+        # lectura de parametros entrada
+        p = proporcion
+        (b, h) = imagen_temporal.dimensiones_original
+        # limitacion de dimensiones maximas
+        if base_max < int(b*p):
+            p = base_max / b 
+        if altura_max < int(h*p):
+            p = altura_max / h 
+        # print("dimensiones entrada:", b, h)
+        # print("dimensiones finales:", b*p, h*p)
+        base = int(h * p)
+        altura = int(b * p)
+        escala = float(p)
+        return [base, altura, escala]
 
+
+
+    def crear_miniatura(self, base: int, altura: int):
+        """Crea la imagen miniatura que servira de referencia a la imagen de seleccion."""
+        # [altura, base] = self.dimensiones_original
+        # if escala == None:
+        #     proporcion = self.__escala_actual/100
+        # else:
+        #     self.__escala_actual = escala
+        #     proporcion = escala/100
+        # altura = int(altura * proporcion)
+        # base = int(base * proporcion)
+        # print(base, altura)
+        dimensiones = ( altura, base)
+        self.__imagen_miniatura = cv2.resize(
+            self.__imagen_original, 
+            dsize=dimensiones, 
+            interpolation = cv2.INTER_LANCZOS4
+            ) 
+        # archivo sustituto   
+        if pathlib.Path(self.ruta_escalada).exists():
+            self.temporal_miniatura.close()
+        self.temporal_miniatura = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        cv2.imwrite(self.ruta_miniatura, self.__imagen_miniatura)
+        # print("miniatura creada, ", self.dimensiones_miniatura)
 
 
 
@@ -318,55 +415,36 @@ def principal(page: ft.Page):
         fin = time.time()
         print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
 
+
     def coordenadas(e):
-        # print(f" lx: {e.local_x}, ly: {e.local_y}")
-
-        # [altura, base, _ ] = imagen_temporal.dimensiones_escalada()
-
-
         # coordenadas relativas al contenedor
         base   = int(contenedor.width)
         altura = int(contenedor.height)
+
         # confinamiento de las coordenadas obtenidas
         x = e.local_x if e.local_x < base else base
         y = e.local_y if e.local_y < altura else altura
         x = 0 if x <= 0 else x
         y = 0 if y <= 0 else y
-
-        # print("A",x,y)
+        # conversion a valor relativo
         x = x / base
         y = y / altura
-        # print("B",x,y)
-
-
-        proporcion = barra_escala.value / 100
-
-        imagen_temporal.xr_mouse = x * proporcion
-        imagen_temporal.yr_mouse = y * proporcion
-
-
+        # imagen_temporal.xr_mouse = x 
+        # imagen_temporal.yr_mouse = y 
+        imagen_temporal.xy_relativo = [x, y]
         # print("coordenadas:",x,y)
-        inicio = time.time()
+        # inicio = time.time()
         imagen_temporal.calcular_recorte([256,256])
+        [b, h ,p] = imagen_temporal.calcular_dimensiones(1, base, altura)
+        imagen_temporal.crear_miniatura(b, h)
+        # print( "proporcion:", p)
         imagen_temporal.marcado_seleccion()
-        fin = time.time()
-        print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
-
-
-
-
+        # fin = time.time()
+        # print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
         imagen.src = imagen_temporal.ruta_seleccion
         imagen.update()
 
  
-
-
-
-
-    def fin_seleccion(e):
-        contenedor.update()
-        imagen.update()
-
     def escalar(e):
         valor = e.control.value
         # print(valor)
@@ -375,68 +453,76 @@ def principal(page: ft.Page):
         imagen.update()
 
 
+    def dimensiones( proporcion: float, base_max: int = 512 , altura_max: int = 512):
+        # lectura de parametros entrada
+        p = proporcion
+        (b, h) = imagen_temporal.dimensiones_original
+        # limitacion de dimensiones maximas
+        if base_max < int(b*p):
+            p = base_max / b 
+        if altura_max < int(h*p):
+            p = altura_max / h 
+        # print("dimensiones entrada:", b, h)
+        # print("dimensiones finales:", b*p, h*p)
+        # correcion
+        imagen.height = int(h * p)
+        imagen.width = int(b * p)
+        imagen.update()
+        contenedor.height = int(h * p)
+        contenedor.width = int(b * p)
+        contenedor.update()
+        detector_gestos.height = int(h * p)
+        detector_gestos.width = int(b * p)
+        detector_gestos.update()
 
-    def coordenadas_relativas(e):
-        base   = int(contenedor.width)
-        altura = int(contenedor.height)
 
 
-        # confinamiento de las coordenadas obtenidas
-        x = e.local_x if e.local_x < base else base
-        y = e.local_y if e.local_y < altura else altura
-        x = 0 if x <= 0 else x
-        y = 0 if y <= 0 else y
-        # conversion al valor relativo
-        xr = x / base
-        yr = y / altura
-        # print(f" x: {x}, y: {y}")
-        # print(f" xr: {xr}, yr: {yr}")
-        return [xr, yr]
 
 
     # Componentes graficos
-
     imagen = ft.Image(
         src = imagen_temporal.ruta_seleccion,
-        height = 512,
-        width  = 512, 
+        # height = 512,
+        # width  = 512, 
         fit = ft.ImageFit.CONTAIN,
         gapless_playback = True,        # transicion suave entre imagenes (retiene la version anterior hasta poder cambiar)
         )
 
     contenedor = ft.Container(
         content = imagen,
-        height = 512,
-        width  = 512, 
+        # height = 512,
+        # width  = 512, 
+        padding=0,
         image_fit = ft.ImageFit.CONTAIN,
         animate=ft.animation.Animation(1000, ft.AnimationCurve.EASE),
         )
 
-    detector_gesto = ft.GestureDetector(
+
+
+    detector_gestos = ft.GestureDetector(
+        # height = 512,
+        # width  = 512,
         content= contenedor,
         # on_pan_start=coordenadas,
         # on_pan_update=coordenadas,
-        on_hover=coordenadas,
-        # on_pan_start=coordenadas,
-        # on_pan_update=coordenadas_relativas,
         # on_pan_end=fin_seleccion,
+        on_hover=coordenadas,
         )   
 
-    barra_escala = ft.Slider(min=30, max=330, divisions=300,value=100, label="{value}")
-    # barra_brillo = ft.Slider(min=-255, max=255, divisions=500,value=0, label="{value}")
-    # barra_contraste = ft.Slider(min=0, max=300, divisions=300,value=100, label="{value}")
-    # barra_brillo.   on_change = cambiar_brillo
-    # barra_contraste.on_change = cambiar_brillo
-    barra_escala.on_change = escalar
-    # barra_brillo.   on_change_end = cambiar_brillo
-    # barra_contraste.on_change_end = cambiar_brillo
 
-    page.add(detector_gesto)
-    page.add(barra_escala)
+
+    # barra_escala = ft.Slider(min=30, max=330, divisions=300,value=100, label="{value}")
+    # barra_escala.on_change = escalar
+
+    page.add(detector_gestos)
+    # page.add(barra_escala)
+
+    dimensiones(0.5)
+
     # page.add(barra_brillo)
     # page.add(barra_contraste)
-    page.window_height = 700
-    page.window_width  = 600
+    # page.window_height = 700
+    # page.window_width  = 600
 
     page.theme_mode = ft.ThemeMode.DARK
 
