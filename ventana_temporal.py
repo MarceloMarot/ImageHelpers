@@ -23,34 +23,13 @@ class DataRecorte():
         # self.dimensiones: list[int]
 
 
-
-
 class ImagenTemporal:
     def __init__( self, nombre_directorio="recortador" ):
-        # self.ruta_imagen_original : str = ""    # valor provisional
-        # self.ruta_imagen_recorte  : str = ""    # valor provisional
         self.clave : str = "---"
-        # self.__coordenadas_recorte: list[int]
-        # self.__coordenadas_recorte_actuales:    list[int]
-        # self.__coordenadas_recorte_relativas:   list[float]
 
         self.data_actual = DataRecorte()
         self.data_marcado = DataRecorte()
         self.data_guardado = DataRecorte()
-
-
-        # self.__coordenadas_recorte_marcado: list[int]
-        # self.__coordenadas_guardado: list[int]
-        # porcentajes de ampliacion entre grafica y archivo
-        # self.__escala_minima: int  
-        # self.__escala_maxima: int 
-        # self.__escala_actual: int 
-        # self.__escala_recorte : int 
-        # self.__escala_guardado: int 
-        # self.__x_mouse : int = 0
-        # self.__y_mouse : int = 0
-        # self.__xr_mouse : float = 0
-        # self.__yr_mouse : float = 0
 
         self.__xy_relativo  = [0, 0]
         self.__xy_original  = [0, 0]
@@ -72,13 +51,9 @@ class ImagenTemporal:
         self.__recorte_guardado : bool = False
         self.__recorte_marcado  : bool = False
         # auxiliares
-        # self.coordenadas_ventana: list[int] 
 
         self.brillo_ventana: int = 100
         self.contraste_ventana: float = 0.5 
-
-        # self.dimensiones_ventana = [100,100]
-        # self.coordenadas_ventana = [2000, 500]
 
         self.carpeta_temporal = crear_directorio_temporal(nombre_directorio)
 
@@ -190,7 +165,7 @@ class ImagenTemporal:
 
     def ampliar(self, escala: int|None = None):
         """Crea una copia ampliada de la imagen de entrada en base al porcentaje indicado."""
-        [altura, base] = self.dimensiones_original
+        [base, altura] = self.dimensiones_original
         if escala == None:
             proporcion = self.__escala_actual/100
         else:
@@ -198,6 +173,7 @@ class ImagenTemporal:
             proporcion = escala/100
         altura = int(altura * proporcion)
         base = int(base * proporcion)
+        # print(f"dimensiones ampliacion: [{base}, {altura}], escala: {escala}")
         self.__imagen_escalada = cv2.resize(
             self.__imagen_original, 
             dsize=[base, altura], 
@@ -272,9 +248,7 @@ class ImagenTemporal:
         self.data_marcado.coordenadas_absolutas = [0, 0, 0, 0]
         self.data_marcado.coordenadas_relativas = [0, 0, 0, 0]
         self.data_marcado.escala                = self.data_actual.escala
-
         [xi, yi, xf, yf] = self.data_guardado.coordenadas_absolutas
-
         self.__imagen_recorte  = self.__imagen_escalada[yi:yf, xi:xf]
         # archivo sustituto   
         if pathlib.Path(self.ruta_recorte).exists():
@@ -357,7 +331,7 @@ class ImagenTemporal:
         """Crea la imagen miniatura que servira de referencia a la imagen de seleccion."""
         # lectura de parametros entrada
         p = proporcion
-        (b, h) = imagen_temporal.dimensiones_original
+        (b, h) = self.dimensiones_original
         # limitacion de dimensiones maximas
         if base_max < int(b*p):
             p = base_max / b 
@@ -399,40 +373,35 @@ def principal(page: ft.Page):
         x = x / base
         y = y / altura
         imagen_temporal.xy_relativo = [x, y]
-        imagen_temporal.calcular_recorte([256,256])
+        imagen_temporal.calcular_recorte([400, 200])
+        # imagen_temporal.calcular_recorte([256,256])
         imagen_temporal.crear_miniatura(1, base, altura)
         imagen_temporal.marcado_seleccion()
         imagen.src = imagen_temporal.ruta_seleccion
         imagen.update()
 
 
+
     def click_izquierdo(e):
-        # print("izquierdo presionado")
         imagen_temporal.hacer_recorte_marcado()
         imagen_miniatura.src = imagen_temporal.ruta_recorte
         imagen_miniatura.update()
+        print(f"dimensiones marcado: {imagen_temporal.dimensiones_recorte}")
 
 
     def click_derecho(e):
-        # print("derecho presionado")
         imagen_temporal.hacer_recorte_guardado()
         imagen_miniatura.src = imagen_temporal.ruta_recorte
         imagen_miniatura.update()
+        print(f"dimensiones guardado: {imagen_temporal.dimensiones_recorte}")
  
 
     def escalar(e):
         valor = e.control.value
-        # print(valor)
-        imagen_temporal.ampliar(valor)
-        # imagen.src = imagen_temporal.ruta_recorte
-        # imagen.update()
-        # contenedor.update()
-        # detector_gestos.update()
+        imagen_temporal.ampliar(int(valor))
 
 
-
-
-    def dimensiones( proporcion: float, base_max: int = 512 , altura_max: int = 512):
+    def dimensiones_graficas( proporcion: float, base_max: int = 512 , altura_max: int = 512):
         # lectura de parametros entrada
         p = proporcion
         (b, h) = imagen_temporal.dimensiones_original
@@ -441,11 +410,7 @@ def principal(page: ft.Page):
             p = base_max / b 
         if altura_max < int(h*p):
             p = altura_max / h 
-        # print("dimensiones entrada:", b, h)
-        # print("dimensiones finales:", b*p, h*p)
 
-        # imagen_temporal.ampliar(int(p*100) ) #FIX
-        # correcion
         imagen.height = int(h * p)
         imagen.width = int(b * p)
         imagen.update()
@@ -501,7 +466,7 @@ def principal(page: ft.Page):
         min=30, 
         max=330, 
         divisions=300,
-        value=30, 
+        value=100, 
         label="{value}", 
         width=512
         )
@@ -516,20 +481,15 @@ def principal(page: ft.Page):
     )
 
 
-    # page.add(detector_gestos)
     page.add(fila)
     page.add(barra_escala)
-
-    dimensiones(0.5)
-
-    # page.add(barra_brillo)
-    # page.add(barra_contraste)
+    dimensiones_graficas(0.5)
     page.window_height = 700
     page.window_width  = 1000
 
     page.theme_mode = ft.ThemeMode.DARK
-
     page.update()
+    # print(imagen_temporal.dimensiones_escalada)
 
 
 
