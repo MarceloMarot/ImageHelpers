@@ -15,6 +15,10 @@ from sistema_archivos.archivos_temporales import  crear_directorio_temporal
 from sistema_archivos.imagen_temporal import crear_imagen_temporal
 
 
+def nada(x):
+    pass
+
+
 class DataRecorte():
     def __init__( self ):
         self.coordenadas_absolutas: list[int] = [0,0,0,0]
@@ -48,8 +52,8 @@ class ImagenTemporal:
         self.BGR_guardado  = (100,150,0)  # verde oscuro
         self.BGR_error     = (0,50,200)  # vermellon
         # flags de estado 
-        self.__recorte_guardado : bool = False
-        self.__recorte_marcado  : bool = False
+        # self.__recorte_guardado : bool = False
+        # self.__recorte_marcado  : bool = False
         # auxiliares
 
         self.brillo_ventana: int = 100
@@ -339,7 +343,7 @@ class ImagenTemporal:
             p = altura_max / h 
         base = int(h * p)
         altura = int(b * p)
-        escala = float(p)
+        # escala = float(p)
 
         dimensiones = ( altura, base)
         self.__imagen_miniatura = cv2.resize(
@@ -355,15 +359,37 @@ class ImagenTemporal:
 
 
 
-def principal(page: ft.Page):
+class SelectorRecorte(ft.GestureDetector):
+    def __init__(self):
+        # Componentes graficos
+        self.imagen = ft.Image(
+            # src = imagen_temporal.ruta_seleccion,
+            fit = ft.ImageFit.CONTAIN,
+            gapless_playback = True,        # transicion suave entre imagenes (retiene la version anterior hasta poder cambiar)
+            )
+        self.contenedor = ft.Container(
+            content = self.imagen,
+            padding=0,
+            image_fit = ft.ImageFit.CONTAIN,
+            # animate=ft.animation.Animation(1000, ft.AnimationCurve.EASE),
+            )
+        super().__init__(
+            content = self.contenedor,
+            on_tap  = self.click_izquierdo,
+            on_secondary_tap = self.click_derecho,
+            on_hover = self.coordenadas,
+            hover_interval = 50  # retardo minimo entre eventos 
+            ) 
+        self.dimensiones_recorte = [256, 256]  
+        self.temporal : ImagenTemporal  
+        self.funcion_click_izquierdo    = nada
+        self.funcion_click_derecho      = nada
 
-    global imagen_temporal
 
-    def coordenadas(e):
+    def coordenadas(self, e):
         # coordenadas relativas al contenedor
-        base   = int(contenedor.width)
-        altura = int(contenedor.height)
-
+        base   = int(self.contenedor.width)
+        altura = int(self.contenedor.height)
         # confinamiento de las coordenadas obtenidas
         x = e.local_x if e.local_x < base else base
         y = e.local_y if e.local_y < altura else altura
@@ -372,25 +398,60 @@ def principal(page: ft.Page):
         # conversion a valor relativo
         x = x / base
         y = y / altura
-        imagen_temporal.xy_relativo = [x, y]
-        imagen_temporal.calcular_recorte([400, 200])
+        self.temporal.xy_relativo = [x, y]
+        self.temporal.calcular_recorte(self.dimensiones_recorte)
         # imagen_temporal.calcular_recorte([256,256])
-        imagen_temporal.crear_miniatura(1, base, altura)
-        imagen_temporal.marcado_seleccion()
-        imagen.src = imagen_temporal.ruta_seleccion
-        imagen.update()
+        self.temporal.crear_miniatura(1, base, altura)
+        self.temporal.marcado_seleccion()
+        self.imagen.src = self.temporal.ruta_seleccion
+        self.imagen.update()
 
 
+    def click_izquierdo(self, e: ft.ControlEvent):
+        self.temporal.hacer_recorte_marcado()
+        self.funcion_click_izquierdo(e)
+
+
+    def click_derecho(self, e: ft.ControlEvent):
+        self.temporal.hacer_recorte_guardado()
+        self.funcion_click_derecho(e)
+
+
+    def dimensiones_graficas(self, proporcion: float, base_max: int = 512 , altura_max: int = 512):
+        # lectura de parametros entrada
+        p = proporcion
+        (b, h) = self.temporal.dimensiones_original
+        # limitacion de dimensiones maximas
+        if base_max < int(b*p):
+            p = base_max / b 
+        if altura_max < int(h*p):
+            p = altura_max / h 
+        self.imagen.height = int(h * p)
+        self.imagen.width = int(b * p)
+        self.contenedor.height = int(h * p)
+        self.contenedor.width = int(b * p)
+        self.height = int(h * p)
+        self.width = int(b * p)
+        self.update()
+
+
+    def asignar(self, temporal: ImagenTemporal):
+        self.temporal   = temporal
+        self.imagen.src = temporal.ruta_miniatura
+
+
+
+def principal(page: ft.Page):
 
     def click_izquierdo(e):
-        imagen_temporal.hacer_recorte_marcado()
+        # imagen_temporal.hacer_recorte_marcado()
         imagen_miniatura.src = imagen_temporal.ruta_recorte
         imagen_miniatura.update()
         print(f"dimensiones marcado: {imagen_temporal.dimensiones_recorte}")
 
 
     def click_derecho(e):
-        imagen_temporal.hacer_recorte_guardado()
+        # imagen_temporal.hacer_recorte_guardado()
         imagen_miniatura.src = imagen_temporal.ruta_recorte
         imagen_miniatura.update()
         print(f"dimensiones guardado: {imagen_temporal.dimensiones_recorte}")
@@ -400,67 +461,35 @@ def principal(page: ft.Page):
         valor = e.control.value
         imagen_temporal.ampliar(int(valor))
 
+    
+    def cierre_programa(e):
+        if e.data == "close":
+            print("cerrando")
+            imagen_temporal.cerrar()
+            print("cierre de archivos temporales")
+            time.sleep(1)
+            print("fin espera")
 
-    def dimensiones_graficas( proporcion: float, base_max: int = 512 , altura_max: int = 512):
-        # lectura de parametros entrada
-        p = proporcion
-        (b, h) = imagen_temporal.dimensiones_original
-        # limitacion de dimensiones maximas
-        if base_max < int(b*p):
-            p = base_max / b 
-        if altura_max < int(h*p):
-            p = altura_max / h 
-
-        imagen.height = int(h * p)
-        imagen.width = int(b * p)
-        imagen.update()
-        contenedor.height = int(h * p)
-        contenedor.width = int(b * p)
-        contenedor.update()
-        detector_gestos.height = int(h * p)
-        detector_gestos.width = int(b * p)
-        detector_gestos.update()
-
+    global imagen_temporal
+    imagen_temporal = ImagenTemporal("ensayus_")
+    imagen_temporal.abrir_imagen(ruta_archivo)
 
     imagen_miniatura = ft.Image(
-        height=256,
-        width=256,
+        height  = 256,
+        width   = 256,
         src = imagen_temporal.ruta_recorte,
         fit = ft.ImageFit.CONTAIN,
         gapless_playback = True,        # transicion suave entre imagenes (retiene la version anterior hasta poder cambiar)
         )
 
     contenedor_miniatura = ft.Container(
-        height=256,
-        width=256,
+        height = 256,
+        width  = 256,
         content = imagen_miniatura,
         padding=0,
         image_fit = ft.ImageFit.CONTAIN,
         # animate=ft.animation.Animation(1000, ft.AnimationCurve.EASE),
         )
-
-    # Componentes graficos
-    imagen = ft.Image(
-        src = imagen_temporal.ruta_seleccion,
-        fit = ft.ImageFit.CONTAIN,
-        gapless_playback = True,        # transicion suave entre imagenes (retiene la version anterior hasta poder cambiar)
-        )
-
-    contenedor = ft.Container(
-        content = imagen,
-        padding=0,
-        image_fit = ft.ImageFit.CONTAIN,
-        # animate=ft.animation.Animation(1000, ft.AnimationCurve.EASE),
-        )
-
-
-    detector_gestos = ft.GestureDetector(
-        content= contenedor,
-        on_tap=click_izquierdo,
-        on_secondary_tap=click_derecho,
-        on_hover=coordenadas,
-        hover_interval=50,  # retardo minimo entre eventos 
-        )   
 
     barra_escala = ft.Slider(
         min=30, 
@@ -473,23 +502,36 @@ def principal(page: ft.Page):
     barra_escala.on_change = escalar
 
 
+    selector_recorte = SelectorRecorte()
+
     fila = ft.Row(
-        [detector_gestos,
+        # [detector_gestos,
+        [selector_recorte,
         contenedor_miniatura,
         ]
-
     )
-
 
     page.add(fila)
     page.add(barra_escala)
-    dimensiones_graficas(0.5)
+
+    selector_recorte.asignar( imagen_temporal)
+    # selector_recorte.temporal = imagen_temporal
+    # selector_recorte.imagen.src = imagen_temporal.ruta_miniatura
+    selector_recorte.dimensiones_graficas(0.5)
+    selector_recorte.dimensiones_recorte = [512, 512]
+    selector_recorte.funcion_click_izquierdo = click_izquierdo
+    selector_recorte.funcion_click_derecho = click_derecho
+
+    page.on_close = cierre_programa
+    page.on_window_event = cierre_programa
+
+    # dimensiones_graficas(0.5)
     page.window_height = 700
     page.window_width  = 1000
 
     page.theme_mode = ft.ThemeMode.DARK
     page.update()
-    # print(imagen_temporal.dimensiones_escalada)
+
 
 
 
@@ -507,12 +549,13 @@ if __name__ == "__main__":
     # ruta_archivo = "manejo_imagenes/ejemplo.jpg"
 
     # inicio = time.time()
-    imagen_temporal = ImagenTemporal("ensayus_")
-    imagen_temporal.abrir_imagen(ruta_archivo)
+    # imagen_temporal = ImagenTemporal("ensayus_")
+    # imagen_temporal.abrir_imagen(ruta_archivo)
     # fin = time.time()
     # print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
 
     ft.app(target=principal)
 
+    global imagen_temporal
     # elimina la carpeta temporal y sus archivos internos al salir
     imagen_temporal.cerrar()
