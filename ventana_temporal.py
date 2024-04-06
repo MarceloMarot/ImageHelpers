@@ -183,7 +183,7 @@ class ImagenTemporal:
             proporcion = escala/100
         altura = int(altura * proporcion)
         base = int(base * proporcion)
-        print(base, altura)
+        # print(base, altura)
         self.__imagen_escalada = cv2.resize(
             self.__imagen_original, 
             dsize=[base, altura], 
@@ -237,15 +237,13 @@ class ImagenTemporal:
         self.__imagen_recorte  = self.__imagen_escalada[yi:yf, xi:xf]
         # recorte_imagen = imagen[yi:yf, xi:xf]
         #retorno del recorte y sus coordenadas en una lista
-        coordenadas = [xi, yi, xf, yf]
-        self.__coordenadas_recorte_actuales = coordenadas
+        # coordenadas = [xi, yi, xf, yf]
+        # self.__coordenadas_recorte_actuales = coordenadas
+        self.__coordenadas_recorte_actuales = [xi, yi, xf, yf]
 
-        print(self.__coordenadas_recorte_actuales )
 
-        self.__coordenadas_recorte_relativas = [xi/x_max, y/y_max, xf/x_max, yf/y_max]
-        print(self.__coordenadas_recorte_relativas )
-
-        # self.__imagen_recorte = recorte_imagen 
+        self.__coordenadas_recorte_relativas = [xi/x_max, yi/y_max, xf/x_max, yf/y_max]
+        # print(self.__coordenadas_recorte_relativas )
         # archivo sustituto   
         if pathlib.Path(self.ruta_recorte).exists():
             self.temporal_recorte.close()
@@ -265,6 +263,8 @@ class ImagenTemporal:
         
         [b, h] = self.dimensiones_miniatura
 
+        # print(f"miniatura {b} {h}")
+
         # coordenadas = self.__coordenadas_recorte_actuales
 
         # [xi, yi, xf, yf] = coordenadas
@@ -274,16 +274,20 @@ class ImagenTemporal:
         
         coordenadas =  [int(xif*b), int(yif*h), int(xff*b), int(yff*h)]
 
+
+
         # Rectángulos color
         if coordenadas != [0,0,0,0]:
             coordenadas_rectangulo = coordenadas
             color_rectangulo = self.BGR_seleccion 
             (xi,yi) = coordenadas_rectangulo[0:2]
             (xf,yf) = coordenadas_rectangulo[2:4]
-            # ¶ectangulo color
+            # rectangulo color
             cv2.rectangle(copia,(xi,yi),(xf,yf),color_rectangulo ,cv2.LINE_4 )
             # region brillo original
             copia[yi:yf, xi:xf] = self.__imagen_miniatura[yi:yf, xi:xf]
+
+            # print(f"recorte {xf-xi} {yf-yi}")
 
         # print(coordenadas)
         # print("imagen:      ",self.dimensiones_miniatura)
@@ -399,21 +403,36 @@ def principal(page: ft.Page):
 
     global imagen_temporal
 
-    def cambiar_brillo(e):
-        """MERO EJEMPLO --> ES PARA DESCARTE"""
-        global imagen_temporal
-        inicio = time.time()
-        brillo = float(barra_brillo.value)
-        contraste = float(barra_contraste.value/100)
+    # def cambiar_brillo(e):
+    #     """MERO EJEMPLO --> ES PARA DESCARTE"""
+    #     global imagen_temporal
+    #     inicio = time.time()
+    #     brillo = float(barra_brillo.value)
+    #     contraste = float(barra_contraste.value/100)
 
-        # # copia de salida con brillo y contraste cambiados
-        imagen_temporal.cambiar_brillo(brillo, contraste)
-        imagen.src = imagen_temporal.ruta_seleccion
-        imagen.update()
+    #     # # copia de salida con brillo y contraste cambiados
+    #     imagen_temporal.cambiar_brillo(brillo, contraste)
+    #     imagen.src = imagen_temporal.ruta_seleccion
+    #     imagen.update()
 
-        contenedor.update()
-        fin = time.time()
-        print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
+    #     contenedor.update()
+    #     fin = time.time()
+    #     print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
+
+    # def coordenadas_relativas(base, altura):
+    # #     base   = int(contenedor.width)
+    # #     altura = int(contenedor.height)
+
+    #     # confinamiento de las coordenadas obtenidas
+    #     x = e.local_x if e.local_x < base else base
+    #     y = e.local_y if e.local_y < altura else altura
+    #     x = 0 if x <= 0 else x
+    #     y = 0 if y <= 0 else y
+    #     # conversion a valor relativo
+    #     x = x / base
+    #     y = y / altura
+
+
 
 
     def coordenadas(e):
@@ -449,8 +468,12 @@ def principal(page: ft.Page):
         valor = e.control.value
         # print(valor)
         imagen_temporal.ampliar(valor)
-        imagen.src = imagen_temporal.ruta_recorte
-        imagen.update()
+        # imagen.src = imagen_temporal.ruta_recorte
+        # imagen.update()
+        # contenedor.update()
+        # detector_gestos.update()
+
+
 
 
     def dimensiones( proporcion: float, base_max: int = 512 , altura_max: int = 512):
@@ -476,9 +499,6 @@ def principal(page: ft.Page):
         detector_gestos.update()
 
 
-
-
-
     # Componentes graficos
     imagen = ft.Image(
         src = imagen_temporal.ruta_seleccion,
@@ -497,8 +517,6 @@ def principal(page: ft.Page):
         animate=ft.animation.Animation(1000, ft.AnimationCurve.EASE),
         )
 
-
-
     detector_gestos = ft.GestureDetector(
         # height = 512,
         # width  = 512,
@@ -507,22 +525,28 @@ def principal(page: ft.Page):
         # on_pan_update=coordenadas,
         # on_pan_end=fin_seleccion,
         on_hover=coordenadas,
+        hover_interval=50,  # retardo minimo entre eventos 
         )   
 
-
-
-    # barra_escala = ft.Slider(min=30, max=330, divisions=300,value=100, label="{value}")
-    # barra_escala.on_change = escalar
+    barra_escala = ft.Slider(
+        min=30, 
+        max=330, 
+        divisions=300,
+        value=30, 
+        label="{value}", 
+        width=512
+        )
+    barra_escala.on_change = escalar
 
     page.add(detector_gestos)
-    # page.add(barra_escala)
+    page.add(barra_escala)
 
     dimensiones(0.5)
 
     # page.add(barra_brillo)
     # page.add(barra_contraste)
-    # page.window_height = 700
-    # page.window_width  = 600
+    page.window_height = 700
+    page.window_width  = 600
 
     page.theme_mode = ft.ThemeMode.DARK
 
