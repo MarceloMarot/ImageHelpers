@@ -187,18 +187,6 @@ def pagina_galeria(page: ft.Page):
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
 
 
-    barra_zoom = ft.Slider(
-        min=20,
-        value=50, 
-        max=100, 
-        divisions=70, 
-        label="{value}%",
-        disabled = True,
-        width=200,
-        )
-
-    texto_zoom = ft.Text(f"Zoom: {barra_zoom.value:5}%")
-
     barra_escala = ft.Slider(
         min=30, 
         max=330, 
@@ -221,10 +209,10 @@ def pagina_galeria(page: ft.Page):
         barra_escala 
         ],
         width  = 768,
-        height = altura_pagina,
+        # height = altura_pagina,
         expand = True ,
         visible= False,
-        alignment=ft.MainAxisAlignment.CENTER,
+        alignment=ft.MainAxisAlignment.START,
         )
 
     # componentes repartidos en segmentos horizontales
@@ -246,9 +234,7 @@ def pagina_galeria(page: ft.Page):
         # boton_carpeta_origen, boton_carpeta_destino, 
         fila_controles_apertura,
         fila_controles_dimensiones,
-        texto_zoom, barra_zoom 
         ],
-        width=ancho_pagina,
         wrap = True,
         # alignment=ft.MainAxisAlignment.END,
         )
@@ -257,10 +243,8 @@ def pagina_galeria(page: ft.Page):
         [galeria, 
         ft.VerticalDivider(width=6),
         columna_selector],
-        # ],
-        width=ancho_pagina,
-        height = altura_pagina,
         expand = True,
+        vertical_alignment=ft.CrossAxisAlignment.START,
         )
 
 
@@ -367,14 +351,15 @@ def pagina_galeria(page: ft.Page):
         imagen_temporal.abrir_imagen( imagen.ruta_origen)  
 
         selector_recorte.asignar( imagen_temporal)
-        selector_recorte.dimensiones_graficas(1, 768, 768)
 
-        # global dimensiones_recorte
-        # selector_recorte.dimensiones_recorte = dimensiones_recorte
-        # selector_recorte.dimensiones_recorte = [512, 512]
+        # redimensionado del selector de recortes
+        ancho_pagina = int(page.window_width)
+        ancho_selector = int(ancho_pagina/2)
+        selector_recorte.dimensiones_graficas(1, ancho_selector, ancho_selector)
 
-        barra_zoom.disabled = False
-        barra_zoom.update()
+
+        # habilitacion redimensionamiento del selector de recortes
+        page.on_resize = redimensionar_selector
 
         # se acomoda la barra de escala al valor preguardado
         if imagen.guardada:
@@ -391,36 +376,6 @@ def pagina_galeria(page: ft.Page):
             barra_escala.update()
 
         
-
-    def cambio_zoom(e: ft.ControlEvent):
-        valor = e.control.value
-        texto_zoom.value=f"Zoom: {int(valor):5}%"
-        texto_zoom.update()
-        # global clave_actual
-        proporcion = valor / 100
-        # proporcion = int(barra_zoom.value)/100
-
-        selector_recorte.dimensiones_graficas(proporcion, 768, 768) 
-
-        ancho = selector_recorte.width
-
-        columna_selector.width = ancho
-        barra_escala.width = ancho
-
-        columna_selector.update()
-
-        ancho_galeria = int(page.window_width - ancho)
-        if ancho_galeria >0:
-            galeria.width = ancho_galeria
-            galeria.update()
-
-        fila_galeria.width = page.window_width
-        fila_galeria.update()
-        # page.update()
-
-
-
-    barra_zoom.on_change = cambio_zoom
 
     # (NO USADO AUN) manejador del teclado
     def teclado_galeria(e: ft.KeyboardEvent):
@@ -480,10 +435,14 @@ def pagina_galeria(page: ft.Page):
     global imagen_temporal
     imagen_temporal = ImagenTemporal("recortador_imagenes_")
 
-    def redimensionar(e):
-        if e.data =="resize":
-            fila_galeria.width = page.window_width
-            fila_galeria.update()
+    def redimensionar_selector(e):
+        # if e.data =="resize":
+        ancho_pagina = int(page.window_width)
+        ancho_selector = int(ancho_pagina/2)
+        selector_recorte.dimensiones_graficas(1, ancho_selector, ancho_selector)
+        # print(f"Redimensionado. Ancho:{ancho_pagina}")
+        fila_galeria.width = page.window_width
+        fila_galeria.update()
 
     # Clase para manejar dialogos de archivo y de carpeta
     dialogo_directorio_origen   = ft.FilePicker(on_result = resultado_directorio_origen )
@@ -494,13 +453,11 @@ def pagina_galeria(page: ft.Page):
             dialogo_directorio_origen, dialogo_directorio_destino
         ])
 
-    page.on_window_event = redimensionar
+    # page.on_resize = redimensionar_selector
 
     page.title="Galeria Recorte"
     page.theme_mode = ft.ThemeMode.DARK
     page.theme_mode = ft.ThemeMode.LIGHT
-    # page.window_height = altura_pagina
-    # page.window_width  = ancho_pagina
     page.update()
 
 
