@@ -1,5 +1,6 @@
 
 
+from logging import disable
 from rich import print as print
 import flet as ft
 
@@ -351,6 +352,7 @@ def main(pagina: ft.Page):
 
     # Componentes especiales
     etiquetador_imagen = EtiquetadorBotones()
+    etiquetador_imagen.visible = False
     galeria = GaleriaEtiquetado( estilos_galeria )
     menu_seleccion = MenuEtiquetado( estilos_seleccion)
 
@@ -398,6 +400,7 @@ def main(pagina: ft.Page):
     tab_galeria = ft.Tab(
         text="Galeria",
         content=galeria,
+        visible=False,
         )
 
     # pestaña de etiquetado y navegacion de imagenes
@@ -414,6 +417,7 @@ def main(pagina: ft.Page):
     tab_etiquetado = ft.Tab(
         text="Etiquetado",
         content=fila_etiquetado_navegacion,
+        visible=False,
     )
 
     drawer_estadisticas = ft.NavigationDrawer(
@@ -543,13 +547,16 @@ def main(pagina: ft.Page):
     def resultado_directorio(e: ft.FilePickerResultEvent):
         if e.path:
 
+
             # acceso a elementos globales
             global imagenes_etiquetadas
             global imagenes_galeria
 
             # busqueda 
             directorio = e.path
+            ventana_emergente(pagina, f"Buscando imágenes...\nRuta: {directorio} ")
             rutas_imagen = buscar_imagenes(directorio)
+            
             # Carga de imagenes del directorio
             imagenes_etiquetadas, imagenes_galeria = cargar_imagenes(rutas_imagen)
 
@@ -593,7 +600,15 @@ def main(pagina: ft.Page):
             # reporte por snackbar
             ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_etiquetadas)}")
             # verificacion de dimensiones al abrir
-            filtrar_dimensiones_estados(None)     # FIX
+            filtrar_dimensiones_estados(None)    
+            
+            #visibilidad de las imagenes
+            tab_galeria.visible = True
+            tab_galeria.update()
+            tab_etiquetado.visible = True
+            tab_etiquetado.update()
+
+
 
 
     # Funcion de apertura de archivo con etiquetas (dataset)
@@ -615,6 +630,7 @@ def main(pagina: ft.Page):
             etiquetador_imagen.alto  = altura_tab_etiquetado
             etiquetador_imagen.ancho = 500
             etiquetador_imagen.expand = True
+            etiquetador_imagen.visible = True
             etiquetador_imagen.update()
 
             # Eventos de los botones
