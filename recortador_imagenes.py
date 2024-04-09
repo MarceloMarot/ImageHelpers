@@ -5,11 +5,12 @@ import flet as ft
 from typing import TypeVar
 import pathlib
 
-from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
+# from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 from componentes.galeria_imagenes import ContImag, Galeria, Contenedor_Imagen, imagen_clave, imagen_nombre
 from sistema_archivos.buscar_extension import buscar_imagenes
 from componentes.estilos_contenedores import estilos_galeria, estilos_seleccion
 from componentes.selector_recortes import ImagenTemporal, SelectorRecorte, DataRecorte
+from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
 
 def nada( e ):
@@ -146,10 +147,8 @@ def pagina_galeria(page: ft.Page):
     page.window_height = altura_pagina
     page.window_width  = ancho_pagina
 
-
     ################## COMPONENTES ########################
 
-    # Botones
     ancho_botones = 200
     altura_botones = 40
 
@@ -181,6 +180,13 @@ def pagina_galeria(page: ft.Page):
         color = ft.colors.WHITE,
     )
 
+    # lista desplegable para elegir opciones de imagen 
+    lista_dimensiones_desplegable = crear_lista_desplegable(tupla_resoluciones[1:], ancho=120)
+    
+    # textos
+    texto_dimensiones = ft.Text("Dimensiones\nimagen:")
+
+
     barra_zoom = ft.Slider(
         min=20,
         value=50, 
@@ -188,7 +194,9 @@ def pagina_galeria(page: ft.Page):
         divisions=70, 
         label="{value}%",
         disabled = True,
+        width=200,
         )
+
     texto_zoom = ft.Text(f"Zoom: {barra_zoom.value:5}%")
 
     barra_escala = ft.Slider(
@@ -200,15 +208,13 @@ def pagina_galeria(page: ft.Page):
         width=768
         )
 
-
     selector_recorte = SelectorRecorte()
-    # selector_recorte.dimensiones_graficas(0.5, 512, 512)
-    # selector_recorte.height = 512
-    # selector_recorte.width  = 512
     selector_recorte.height = 768
     selector_recorte.width  = 768
 
     galeria = GaleriaRecortes(estilos_galeria)
+
+    #################### MAQUETADO ########################
 
     columna_selector = ft.Column(
         [selector_recorte,
@@ -221,7 +227,31 @@ def pagina_galeria(page: ft.Page):
         alignment=ft.MainAxisAlignment.CENTER,
         )
 
-    fila_controles = ft.Row([boton_carpeta_origen, boton_carpeta_destino, texto_zoom, barra_zoom ])
+    # componentes repartidos en segmentos horizontales
+    fila_controles_apertura = ft.Row(
+        [boton_carpeta_origen, boton_carpeta_destino],
+        width = 500,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        wrap = True
+        )
+
+    fila_controles_dimensiones = ft.Row(
+        [texto_dimensiones, lista_dimensiones_desplegable],
+        width = 400,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        wrap = False
+        )
+
+    fila_controles = ft.Row([
+        # boton_carpeta_origen, boton_carpeta_destino, 
+        fila_controles_apertura,
+        fila_controles_dimensiones,
+        texto_zoom, barra_zoom 
+        ],
+        width=ancho_pagina,
+        wrap = True,
+        # alignment=ft.MainAxisAlignment.END,
+        )
 
     fila_galeria = ft.Row(
         [galeria, 
@@ -237,20 +267,21 @@ def pagina_galeria(page: ft.Page):
     page.add( fila_controles )
     page.add(fila_galeria)
 
-
-
-
-
-
-
-
     ####################### HANDLERS ##################################
 
-        
+    def cambio_dimensiones_recorte(e):
+        # conversion de texto a tupla numerica de dimensiones de imagen elegida
+        # global dimensiones_recorte 
+        opcion = lista_dimensiones_desplegable.value
+        dimensiones = convertir_dimensiones_opencv(str(opcion))
+        # print(dimensiones)
+        # correccion de errores y 
+        dimensiones_recorte = [dimensiones[1],dimensiones[0]]
+        selector_recorte.dimensiones_recorte = dimensiones_recorte
+        # print(dimensiones_recorte)
 
 
-
-
+    lista_dimensiones_desplegable.on_change = cambio_dimensiones_recorte
 
     def escalar_imagen(e):
         valor = e.control.value
@@ -340,7 +371,10 @@ def pagina_galeria(page: ft.Page):
 
         selector_recorte.asignar( imagen_temporal)
         selector_recorte.dimensiones_graficas(1, 768, 768)
-        selector_recorte.dimensiones_recorte = [512, 512]
+
+        # global dimensiones_recorte
+        # selector_recorte.dimensiones_recorte = dimensiones_recorte
+        # selector_recorte.dimensiones_recorte = [512, 512]
 
         barra_zoom.disabled = False
         barra_zoom.update()
