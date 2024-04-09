@@ -274,12 +274,9 @@ def pagina_galeria(page: ft.Page):
         # global dimensiones_recorte 
         opcion = lista_dimensiones_desplegable.value
         dimensiones = convertir_dimensiones_opencv(str(opcion))
-        # print(dimensiones)
-        # correccion de errores y 
-        dimensiones_recorte = [dimensiones[1],dimensiones[0]]
+        # asignacion de nuevas dimensiones del recorte 
+        dimensiones_recorte = [dimensiones[1], dimensiones[0]]
         selector_recorte.dimensiones_recorte = dimensiones_recorte
-        # print(dimensiones_recorte)
-
 
     lista_dimensiones_desplegable.on_change = cambio_dimensiones_recorte
 
