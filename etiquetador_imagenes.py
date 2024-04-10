@@ -566,47 +566,60 @@ def main(pagina: ft.Page):
             imagenes_etiquetadas_backup = imagenes_etiquetadas
             imagenes_galeria_backup = imagenes_galeria
 
-            # actualizar listas desplegables
-            actualizar_lista_dimensiones()
-            actualizar_lista_estados()      
+            # si se encuentran imagenes se visibilizan y configuran los controles
+            if len(imagenes_galeria) >0:
 
-            # iniciar lista emergente - todas las etiquetas usadas
-            estadisticas()
+                # actualizar listas desplegables
+                actualizar_lista_dimensiones()
+                actualizar_lista_estados()      
 
-            # Objeto galeria
-            galeria.cargar_imagenes( imagenes_galeria )
-            galeria.eventos(click = click_imagen_galeria)
-            galeria.update()
+                # iniciar lista emergente - todas las etiquetas usadas
+                estadisticas()
 
-            # Objeto seleccion imagen
-            menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
-            menu_seleccion.indice = 0
-            menu_seleccion.cargar_imagen()
-            menu_seleccion.eventos(
-                click=click_imagen_seleccion,
-                funcion_botones = lambda _ : click_botones_seleccion(_)
-                )
-            # actualizacion del etiquetador --> habilita los controles y etiquetas
-            etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
-            etiquetador_imagen.update()
+                # Objeto galeria
+                galeria.cargar_imagenes( imagenes_galeria )
+                galeria.eventos(click = click_imagen_galeria)
+                galeria.update()
 
-            # actualizacion del selector de imagenes --> habilita los controles
-            menu_seleccion.alto  = altura_tab_etiquetado
-            menu_seleccion.ancho = 600
-            menu_seleccion.expand = True
-            menu_seleccion.habilitado = True
-            menu_seleccion.update()
+                # Objeto seleccion imagen
+                menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
+                menu_seleccion.indice = 0
+                menu_seleccion.cargar_imagen()
+                menu_seleccion.eventos(
+                    click=click_imagen_seleccion,
+                    funcion_botones = lambda _ : click_botones_seleccion(_)
+                    )
+                # actualizacion del etiquetador --> habilita los controles y etiquetas
+                etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
+                etiquetador_imagen.update()
 
-            # reporte por snackbar
-            ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_etiquetadas)}")
-            # verificacion de dimensiones al abrir
-            filtrar_dimensiones_estados(None)    
-            
-            #visibilidad de las imagenes
-            tab_galeria.visible = True
-            tab_galeria.update()
-            tab_etiquetado.visible = True
-            tab_etiquetado.update()
+                # actualizacion del selector de imagenes --> habilita los controles
+                menu_seleccion.alto  = altura_tab_etiquetado
+                menu_seleccion.ancho = 600
+                menu_seleccion.expand = True
+                menu_seleccion.habilitado = True
+                menu_seleccion.update()
+
+                # reporte por snackbar
+                ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_etiquetadas)}")
+                # verificacion de dimensiones al abrir
+                filtrar_dimensiones_estados(None)    
+                
+                #visibilidad de las imagenes
+                tab_galeria.visible = True
+                tab_galeria.update()
+                tab_etiquetado.visible = True
+                tab_etiquetado.update()
+
+            else:
+                # iniciar lista emergente - todas las etiquetas usadas
+                estadisticas()
+                #visibilidad de las imagenes
+                tab_galeria.visible = False
+                tab_galeria.update()
+                tab_etiquetado.visible = False
+                tab_etiquetado.update()
+                ventana_emergente(pagina, f"Directorio de imagenes vacío.")
 
 
 
