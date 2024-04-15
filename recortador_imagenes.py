@@ -1,23 +1,16 @@
 
-import cv2
+
 from rich import print as print
 import flet as ft
 from typing import TypeVar
 import pathlib
-from  threading import Thread
-# INSTALAR
-# pip install psutil
-import psutil
-import os
-import gc
-from multiprocessing import Process, Pipe, freeze_support, Lock
 
-
-from manejo_imagenes.cortar_imagen import ImagenOpenCV , ParametrosVentana
-from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
+# from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 from componentes.galeria_imagenes import ContImag, Galeria, Contenedor_Imagen, imagen_clave, imagen_nombre
 from sistema_archivos.buscar_extension import buscar_imagenes
-from componentes.estilos_contenedores import estilos_galeria,estilos_seleccion
+from componentes.estilos_contenedores import estilos_galeria, estilos_seleccion
+from componentes.selector_recortes import ImagenTemporal, SelectorRecorte, DataRecorte
+from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
 
 def nada( e ):
@@ -32,10 +25,15 @@ class ContenedorRecortes( Contenedor_Imagen):
         self.guardada = False
         self.defectuosa = False
         # datos de la ventana emergente
-        self.parametros = ParametrosVentana(
-            ruta_origen=ruta, 
-            clave=clave,
-            )
+        self.clave = clave 
+        self.ruta_origen = ruta
+        self.ruta_destino = "recorte.jpg"
+        self.data_actual   = DataRecorte()
+        self.data_marcado  = DataRecorte()
+        self.data_guardado = DataRecorte()
+        # archivo temporal con la imagen recortada
+        self.recorte_imagen = None
+        self.tooltip = "Click izquierdo para seleccionar esta imagen."
 
 
     def ruta_recorte(self, ruta_directorio: str):
@@ -45,8 +43,7 @@ class ContenedorRecortes( Contenedor_Imagen):
         # composicion del archivo de salida
         ruta_recorte = pathlib.Path(directorio, nombre_archivo)
         # asignacion de ruta de salida
-        self.parametros.ruta_recorte = str(ruta_recorte)
-
+        self.ruta_destino = str(ruta_recorte)
 
 
 # nuevos tipados para contenedor y sus subclases
@@ -82,6 +79,7 @@ class GaleriaRecortes( Galeria):
     def ruta_recortes(self, ruta_directorio: str):
 
         for contenedor in self.controls:
+            contenedor: ContenedorRecortes
             contenedor.ruta_recorte(ruta_directorio)    
 
 
@@ -130,20 +128,6 @@ def actualizar_estilo_estado(
         contenedor.estilo( estilo )
 
 
-
-def memory_usage_psutil( x=""):
-    # return the memory usage in MB
-    process = psutil.Process(os.getpid())
-    mem = process.memory_info().rss / float(2 ** 20)
-    print(f"[bold green]Espacio en memoria: {mem}")
-    return mem
-
-
-
-def liberar_memoria():
-    gc.collect(0)
-
-
 # reasignacion de dimensiones para las imagenes de galeria
 estilos_galeria["predefinido"]. width   = 128
 estilos_galeria["predefinido"]. height  = 128
@@ -155,17 +139,33 @@ estilos_galeria["erroneo"].     width   = 128
 estilos_galeria["erroneo"].     height  = 128
 
 
+texto_ayuda = """Selector de recortes:
+- Click derecho sobre la imagen ampliada para guardar el recorte marcado;
+- Click izquierdo para marcado provisional (no se guarda);
+- Deslizar la barra para ajustar el zoom.
+Teclas rápidas:
+- Home:  primera imagen;
+- RePag | A: imagen anterior;
+- AvPag | D: imagen siguiente;
+- End:   última imagen;
+- Flechas: cambia zoom
+"""
 
 
-def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
+clave_actual = None
+
+
+def pagina_galeria(page: ft.Page):
     """Funcion gráfica para crear la galería de Flet"""
-    # lista completa de tuberias disponibles
-    [tuberia_datos_recorte , tuberia_apertura_ventana ] = tuberias 
 
-    ancho_pagina = 900
-    altura_pagina = 800
+    ancho_pagina = 1500
+    altura_pagina = 900
 
-    # Botones
+    page.window_height = altura_pagina
+    page.window_width  = ancho_pagina
+
+    ################## COMPONENTES ########################
+
     ancho_botones = 200
     altura_botones = 40
 
@@ -181,6 +181,7 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
         on_click=lambda _: dialogo_directorio_origen.get_directory_path(
             dialog_title="Elegir carpeta con las capturas de imagen"
         ),
+        tooltip="Elegir carpeta con las capturas de imagen",
     )
 
     boton_carpeta_destino = ft.ElevatedButton(
@@ -188,8 +189,9 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
         icon=ft.icons.FOLDER_OPEN,
         ## manejador: leer sólo directorios
         on_click=lambda _: dialogo_directorio_destino.get_directory_path(
-            dialog_title="Elegir carpeta para los recortes",
+            dialog_title="Elegir carpeta para los recortes creados",
             ),
+        tooltip = "Elegir carpeta para los recortes creados",
         disabled = True,       
         height = altura_botones,
         width  = ancho_botones,
@@ -197,23 +199,136 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
         color = ft.colors.WHITE,
     )
 
-    barra_zoom = ft.Slider(min=20,value=50, max=200, divisions=40, label="{value}%")
-    texto_zoom = ft.Text(f"Zoom: {barra_zoom.value:5}%")
+    # lista desplegable para elegir opciones de imagen 
+    lista_dimensiones_desplegable = crear_lista_desplegable(tupla_resoluciones[1:], ancho=120)
+    
+    # textos
+    texto_dimensiones = ft.Text("Dimensiones\nrecorte:", tooltip="512x512 por defecto")
 
-    page.add(ft.Row([
-        boton_carpeta_origen,
-        boton_carpeta_destino,
+    # texto_ayuda = ft.Text("Click derecho para guardar el recorte\nClick izquierdo para marcado provisional.")
+    # texto_titulo = ft.Text("", expand=True, text_align=ft.TextAlign.CENTER, weight=ft.FontWeight.BOLD, size =20)
+    texto_zoom = ft.Text("Zoom:")
+
+
+    ayuda_emergente = ft.Tooltip(
+        message=texto_ayuda,
+        content=ft.Text("Ayuda emergente",size=20, width=200),
+        padding=20,
+        border_radius=10,
+        text_style=ft.TextStyle(size=15, color=ft.colors.WHITE),
+    )
+
+    barra_escala = ft.Slider(
+        min=30, 
+        max=330, 
+        divisions=300,
+        value=100, 
+        label="{value}", 
+        width=700,
+        round=0,
+        )
+
+    selector_recorte = SelectorRecorte()
+    selector_recorte.height = 768
+    selector_recorte.width  = 768
+    # selector_recorte.tooltip = "Click derecho para guardar el recorte\nClick izquierdo para marcado provisional."
+
+    galeria = GaleriaRecortes(estilos_galeria)
+    
+
+    #################### MAQUETADO ########################
+
+    columna_selector = ft.Column(
+        [
+        # ft.Row([texto_titulo], height=30,expand=True, alignment=ft.MainAxisAlignment.CENTER  ),
+        selector_recorte,
+        # ft.Row([texto_zoom, barra_escala]),
         texto_zoom,
-        barra_zoom,
-        ]))
+        barra_escala,
+        # ayuda_emergente,
+        ],
+        width  = 768,
+        # height = altura_pagina,
+        expand = True ,
+        visible= False,
+        # alignment=ft.MainAxisAlignment.START,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        )
+
+    # componentes repartidos en segmentos horizontales
+    fila_controles_apertura = ft.Row(
+        [boton_carpeta_origen, boton_carpeta_destino],
+        width = 500,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        wrap = True
+        )
+
+    fila_controles_dimensiones = ft.Row(
+        [texto_dimensiones, lista_dimensiones_desplegable],
+        width = 400,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        wrap = False
+        )
+
+    fila_controles = ft.Row([
+        # boton_carpeta_origen, boton_carpeta_destino, 
+        fila_controles_apertura,
+        fila_controles_dimensiones,
+        ayuda_emergente
+        ],
+        wrap = True,
+        # alignment=ft.MainAxisAlignment.END,
+        )
+
+    fila_galeria = ft.Row(
+        [galeria, 
+        ft.VerticalDivider(width=6),
+        columna_selector],
+        expand = True,
+        vertical_alignment=ft.CrossAxisAlignment.START,
+        )
+
+
+    page.add( fila_controles )
+    page.add(fila_galeria)
+
+    ####################### HANDLERS ##################################
+
+
+    def ventana_emergente(pagina:ft.Page, texto: str):
+        page.show_snack_bar(
+            ft.SnackBar(ft.Text(texto), open=True, show_close_icon=True)
+        )
+
+    def cambio_dimensiones_recorte(e):
+        # conversion de texto a tupla numerica de dimensiones de imagen elegida
+        # global dimensiones_recorte 
+        opcion = lista_dimensiones_desplegable.value
+        dimensiones = convertir_dimensiones_opencv(str(opcion))
+        # asignacion de nuevas dimensiones del recorte 
+        dimensiones_recorte = [dimensiones[1], dimensiones[0]]
+        selector_recorte.dimensiones_recorte = dimensiones_recorte
+
+    lista_dimensiones_desplegable.on_change = cambio_dimensiones_recorte
+
+    def escalar_imagen(e):
+        valor = e.control.value
+        imagen_temporal.ampliar(int(valor))
+        # print("cambio escala disparado")
+
+    barra_escala.on_change = escalar_imagen
+
 
     # Funcion de apertura de directorio
     def resultado_directorio_origen(e: ft.FilePickerResultEvent):
         if e.path:
             # acceso a elementos globales
             global imagenes_galeria
-            # busqueda 
+            # ruta de directorio elegido
             directorio = e.path
+             # reporte por snackbar
+            ventana_emergente(page,f"Buscando imágenes...")
+            # busqueda de imagenes
             rutas_imagen = buscar_imagenes(directorio)
             # Creacion y carga de imagenes del directorio
             imagenes_galeria = cargar_imagenes_recortes(rutas_imagen)
@@ -224,12 +339,14 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
             # desbloquea el boton de recortes
             boton_carpeta_destino.disabled=False
             boton_carpeta_destino.update()
-            # asignacion de dimensiones y ubicacion de ventana emergente
-            for img in imagenes_galeria:
-                ruta = img.parametros.ruta_origen
-                [altura, base, _ ] = dimensiones_imagen(ruta)
-                # lectura de dimensiones
-                img.parametros.dimensiones_original = [base, altura]
+
+            # ocultamiento del recortador de imagenes
+            columna_selector.visible = False
+            columna_selector.update()
+
+            # reporte por snackbar
+            ventana_emergente(page,f"Directorio de imágenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_galeria)}")
+
 
     def resultado_directorio_destino(e: ft.FilePickerResultEvent):
         if e.path:
@@ -251,178 +368,255 @@ def pagina_galeria(page: ft.Page, tuberias, candado_recorte):
                     imagen_seleccionada = imagen_nombre(nombre, imagenes_galeria)
                     indice = nombres_recortes.index(nombre)
                     imagen_seleccionada.guardada = True
-                    imagen_seleccionada.update()
-                    candado_recorte.acquire()
                     imagen_seleccionada.ruta_imagen = rutas_recortes[indice]
-                    candado_recorte.release()
                     imagen_seleccionada.update()
 
             # actualizar graficas con los recortes 
             galeria.actualizar_estilos()
             galeria.update()
 
+            # ocultamiento del recortador de imagenes
+            columna_selector.visible = False
+            columna_selector.update()
+
+            # reporte por snackbar
+            ventana_emergente(page,f"Directorio de recortes elegido\nRuta: {directorio} ")
+
+
+
+
+    def cargar_selector(imagen: ContenedorRecortes):
+        """Asigna toda la data de la imagen seleccionada al selector de recortes."""
+        # se transfieren los datos auxiliares: escalas, coordenadas, etc
+        global imagen_temporal
+        imagen_temporal.data_actual   = imagen.data_actual 
+        imagen_temporal.data_marcado  = imagen.data_marcado 
+        imagen_temporal.data_guardado = imagen.data_guardado 
+        imagen_temporal.clave = imagen.clave
+        # imagen_temporal.clave = clave_actual
+
+        imagen_temporal.abrir_imagen( imagen.ruta_origen)  
+
+        selector_recorte.asignar( imagen_temporal)
+        
+        # redimensionado del selector de recortes
+        ancho_pagina = int(page.window_width)
+        ancho_selector = int(ancho_pagina/2)
+        selector_recorte.dimensiones_graficas(1, ancho_selector, ancho_selector)
+
+
+        n = len(imagenes_galeria)
+        i = imagenes_galeria.index(imagen)
+        nombre =  pathlib.Path(imagen.ruta_origen).name
+
+        # reporte por snackbar
+        ventana_emergente(page,f"Imagen {i+1} de {n}\nNombre archivo: {nombre}")
+
+        # habilitacion redimensionamiento del selector de recortes
+        page.on_resize = redimensionar_selector
+
+        # se acomoda la barra de escala al valor preguardado
+        if imagen.guardada:
+            escala = imagen.data_guardado.escala
+            barra_escala.value = escala
+            barra_escala.update()
+        elif imagen.marcada:
+            escala = imagen.data_marcado.escala
+            barra_escala.value = escala
+            barra_escala.update()
+        else:
+            escala = imagen.data_actual.escala
+            barra_escala.value = escala
+            barra_escala.update()
+
+
+        galeria.actualizar_estilos()
+        # imagen.bgcolor = ft.colors.INDIGO_400
+        imagen.bgcolor = ft.colors.PURPLE_200
+        imagen.border=ft.border.all(10, ft.colors.LIGHT_BLUE_ACCENT_200)
+        imagen.update()
+        galeria.update()
+
+
+
+    def click_galeria(e: ft.ControlEvent):
+
+        # visibilizacion del recortador de imagenes
+        columna_selector.visible = True
+        columna_selector.update()
+
+        global imagenes_galeria
+        global clave_actual
+
+        # lectura de datos de la imagen elegida
+        contenedor = e.control     # es ft.Container
+        clave_actual = contenedor.clave
+
+        imagen: ContenedorRecortes
+        imagen = imagen_clave(clave_actual, imagenes_galeria)
+
+        cargar_selector(imagen)
+
+        
+
+    # manejador del teclado
+    def teclado_galeria(e: ft.KeyboardEvent):
+        """Permite el desplazamiento rapido de imagenes con teclas del teclado predefinidas"""
+        tecla = e.key   
+        print(f"Tecla: {tecla}")
+
+        global imagenes_galeria
+        global clave_actual
+
+
+        # print(clave_actual)
+        if clave_actual != None:
+
+            # lectura de datos de la imagen elegida
+            # contenedor = e.control     # es ft.Container
+            # clave_actual = contenedor.clave
+            numero_imagenes = len(imagenes_galeria)
+
+            imagen: ContenedorRecortes
+            imagen = imagen_clave(clave_actual, imagenes_galeria)
+
+            indice = imagenes_galeria.index(imagen)
+            # cambio de imagen seleccionada
+            cambiar_imagen = False
+            if tecla == "A" or tecla =="Page Up":
+                indice -= 1 
+                indice = indice if indice>0 else 0
+                cambiar_imagen = True
+            elif tecla == "D" or tecla=="Page Down":
+                indice += 1 
+                indice = indice if indice<numero_imagenes else numero_imagenes-1
+                cambiar_imagen = True
+            elif tecla == "Home":
+                indice = 0
+                cambiar_imagen = True
+            elif tecla == "End":
+                indice = numero_imagenes - 1
+                cambiar_imagen = True
+            
+            # if tecla=="A" or tecla =="D":
+            if cambiar_imagen:
+                imagen: ContenedorRecortes
+                # actualizacion de parametros
+                imagen = imagenes_galeria[indice]
+                clave_actual = imagen.clave 
+                galeria.scroll_to(key=clave_actual, duration=1000)
+                cargar_selector(imagen)
+
+            # cambio de zoom
+            if tecla == "W":
+                barra_escala.value +=1
+                barra_escala.update()
+                valor = barra_escala.value
+                imagen_temporal.ampliar(int(valor))
+            elif tecla == "S":
+                barra_escala.value -=1
+                barra_escala.update()
+                valor = barra_escala.value
+                imagen_temporal.ampliar(int(valor))
+
+            
+
+
+
+  
+    # propiedad de pagina: handler del teclado elegido
+    page.on_keyboard_event = teclado_galeria
+
+
+    def click_izquierdo_selector(e):
+        global imagenes_galeria
+        global clave_actual
+        # busqueda de imagen y guardado de estado
+        clave_actual = imagen_temporal.clave
+        imagen: ContenedorRecortes
+        imagen = imagen_clave(clave_actual, imagenes_galeria)
+        imagen.marcada = True
+        imagen.guardada = False
+        # se transfieren los datos auxiliares: escalas, coordenadas, etc
+        imagen.data_actual   = imagen_temporal.data_actual 
+        imagen.data_marcado  = imagen_temporal.data_marcado
+        imagen.data_guardado = imagen_temporal.data_guardado  
+
+        galeria.actualizar_estilos()
+        galeria.update()
+        # print(f"dimensiones marcado: {imagen_temporal.dimensiones_recorte}")
+        
+        # reporte por snackbar
+        ventana_emergente(page,f"Marca provisoria creada.")
+
+
+
+    def click_derecho_selector(e):
+        global imagenes_galeria
+        global clave_actual
+        # busqueda de imagen y guardado de estado
+        clave_actual = imagen_temporal.clave
+        imagen: ContenedorRecortes
+        imagen = imagen_clave(clave_actual, imagenes_galeria)
+        imagen.marcada = False
+        imagen.guardada = True
+        # se transfieren los datos auxiliares: escalas, coordenadas, etc
+        imagen.data_actual   = imagen_temporal.data_actual 
+        imagen.data_marcado  = imagen_temporal.data_marcado
+        imagen.data_guardado = imagen_temporal.data_guardado  
+        # guardado en disco
+        ruta_archivo = imagen.ruta_destino
+        print("ruta archivo: ", ruta_archivo)
+        imagen_temporal.guardar_recorte_archivo(ruta_archivo)
+        # asignacion de imagen a la galeria
+        imagen.ruta_imagen = imagen.ruta_destino
+
+        galeria.actualizar_estilos()
+        galeria.update()
+
+        # reporte por snackbar
+        ventana_emergente(page,f"Recorte de archivo creado!")
+
+
+
+ 
+    selector_recorte.dimensiones_recorte = [512, 512]
+    selector_recorte.funcion_click_izquierdo = click_izquierdo_selector
+    selector_recorte.funcion_click_derecho = click_derecho_selector
+
+    global imagen_temporal
+    imagen_temporal = ImagenTemporal("recortador_imagenes_")
+
+    def redimensionar_selector(e):
+        # if e.data =="resize":
+        ancho_pagina = int(page.window_width)
+        ancho_selector = int(ancho_pagina/2)
+        selector_recorte.dimensiones_graficas(1, ancho_selector, ancho_selector)
+        # print(f"Redimensionado. Ancho:{ancho_pagina}")
+        fila_galeria.width = page.window_width
+        fila_galeria.update()
 
     # Clase para manejar dialogos de archivo y de carpeta
     dialogo_directorio_origen   = ft.FilePicker(on_result = resultado_directorio_origen )
-    dialogo_directorio_destino   = ft.FilePicker(on_result = resultado_directorio_destino )
+    dialogo_directorio_destino  = ft.FilePicker(on_result = resultado_directorio_destino )
    
     # Añadido de diálogos a la página
     page.overlay.extend([
             dialogo_directorio_origen, dialogo_directorio_destino
         ])
 
-
-    def recepcion_datos_ventana(tuberia_datos_recorte):
-        while True:
-            # se espera a recibir data emitida por los eventos del mouse
-            [parametros] = tuberia_datos_recorte[1].recv()
-            imagen_seleccionada = imagen_clave(parametros.clave, imagenes_galeria)
-            imagen_seleccionada: ContenedorRecortes
-            parametros: ParametrosVentana
-            imagen_seleccionada.parametros = parametros
-
-            if parametros.coordenadas_guardado != [0,0,0,0] :
-                # marcado de propiedades y actualizacion grafica
-                imagen_seleccionada.guardada = True
-                imagen_seleccionada.marcada = False 
-                imagen_seleccionada.update()
-                # 
-                candado_recorte.acquire()
-                imagen_seleccionada.ruta_imagen = parametros.ruta_recorte
-                candado_recorte.release()
-                # actualizacion grafica
-                imagen_seleccionada.update()
-
-            if parametros.coordenadas_recorte != [0,0,0,0] and parametros.coordenadas_recorte != parametros.coordenadas_guardado :
-                imagen_seleccionada.marcada = True
-                imagen_seleccionada.update()
-
-            # actualizacion de bordes
-            galeria.actualizar_estilos()
-            galeria.update()
-
-
-    def click_galeria(e: ft.ControlEvent):
-        global imagenes_galeria
-        global clave_actual        
-        # lectura de datos de la imagen elegida
-        contenedor = e.control     # es ft.Container
-        clave_actual = contenedor.clave
-        enviar_imagen_clave(clave_actual)
-
-
-    def enviar_imagen_clave(clave):
-        """Esta funcion envia los parametros de la imagen con la clave indicada para visualizarla en la ventana emergente."""
-        global imagenes_galeria
-        imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-        parametros = imagen_seleccionada.parametros
-        # Forzar dimensiones y ubicacion de ventana emergente
-        #movimiento
-        page.update()
-        x = int(page.window_left + page.window_width)
-        y = int(page.window_top)
-        parametros.coordenadas_ventana = [x, y]  
-        zoom = barra_zoom.value
-        base   = int(zoom * parametros.dimensiones_original[0] / 100)
-        altura = int(zoom * parametros.dimensiones_original[1] / 100 )
-        parametros.dimensiones_ventana = [base, altura]   
-        tuberia_apertura_ventana[1].send([parametros])
-
-
-    def cambio_zoom(e: ft.ControlEvent):
-        valor = e.control.value
-        texto_zoom.value=f"Zoom: {int(valor):5}%"
-        texto_zoom.update()
-
-        global clave_actual
-        enviar_imagen_clave(clave_actual)
-
-    barra_zoom.on_change = cambio_zoom
-
-    # hilo perpetuo para recibir datos de la seleccion del recorte
-    hilo_recepcion_datos = Thread(
-        target=recepcion_datos_ventana, args=[tuberia_datos_recorte,])
-    hilo_recepcion_datos.start()
-
-    # (NO USADO AUN) manejador del teclado
-    def teclado_galeria(e: ft.KeyboardEvent):
-        """Permite el desplazamiento rapido de imagenes con teclas del teclado predefinidas"""
-        tecla = e.key   
-        print(f"Tecla: {tecla}")
-  
-    # propiedad de pagina: handler del teclado elegido
-    page.on_keyboard_event = teclado_galeria
-
-    galeria = GaleriaRecortes(estilos_galeria)
-    page.add(galeria)
-
-    liberar_memoria()
-    memory_usage_psutil()
+    # page.on_resize = redimensionar_selector
 
     page.title="Galeria Recorte"
-    page.theme_mode = ft.ThemeMode.DARK
-    # page.theme_mode = ft.ThemeMode.LIGHT
-    page.window_height = altura_pagina
-    page.window_width  = ancho_pagina
+    # page.theme_mode = ft.ThemeMode.DARK
+    page.theme_mode = ft.ThemeMode.LIGHT
     page.update()
-
-
-
-def apertura_ventana_opencv( tuberias, candado_recorte ):
-    """Esta rutina llama a la ventana de edicion hecha en OpenCV. Se ejecuta en un subproceso."""
-
-    [tuberia_datos_recorte , tuberia_apertura_ventana ] = tuberias 
-
-    ventana_emergente = ImagenOpenCV(
-        candado = candado_recorte,
-        canal_recepcion = tuberia_apertura_ventana,
-        canal_transmision = tuberia_datos_recorte,
-        )    
-    
-    # llamado a la ventana grafica (bucle condicional, se sale por teclado)
-    ventana_emergente.interfaz_edicion( 
-        texto_consola = False, 
-        escape_teclado = True, 
-        # escape_teclado = False, 
-        )    # Tamaño predefinido 
-     
-
-
-def crear_galeria(tuberias, candado):
-    """Esta funcion auxiliar permite llamar a la pagina de FLET .
-    Al mismo tiempo le adjunta como argumentos los pipes y locks necesarios para que funcionw el sistema.
-    Se ejecuta en un subproceso."""
-    principal_tuberias = lambda pagina: pagina_galeria(pagina, tuberias, candado)
-    ft.app(target=principal_tuberias)
-
 
 
 if __name__=="__main__":
 
-    #(requerido para los  subprocesos en Windows)
-    freeze_support() # requerido para crear ejecutables en Windows
+    ft.app(target=pagina_galeria)
 
-    # candado para proteger el acceso a archivos
-    candado_recorte = Lock()
-    # Pipe (tuberia) para interconectar interfases graficas
-    extremo_interno, extremo_externo = Pipe()
-    tuberia_datos_recorte = [extremo_interno, extremo_externo]
-    # Pipe (tuberia) para sincronizar la creacion de ventanas
-    extremo_interno, extremo_externo = Pipe()
-    tuberia_apertura_ventana = [extremo_interno, extremo_externo]
-
-    tuberias = [tuberia_datos_recorte , tuberia_apertura_ventana ]
-
-    subproceso_galeria = Process(
-        target=crear_galeria, args=[tuberias, candado_recorte  ])
-    subproceso_galeria.start()
-
-    subproceso_solicitud_ventana =  Process(
-        target=apertura_ventana_opencv, args=[tuberias, candado_recorte  ])
-    subproceso_solicitud_ventana.start()
-
-
-    # se espera al cierre de la galeria para forzar el cierre de la ventana 
-    subproceso_galeria.join()
-    subproceso_solicitud_ventana.terminate()
-
+    # elimina la carpeta temporal y sus archivos internos al salir
+    global imagen_temporal
+    imagen_temporal.cerrar()
