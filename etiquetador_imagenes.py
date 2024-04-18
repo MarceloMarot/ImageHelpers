@@ -1,6 +1,7 @@
 
 
 from logging import disable
+from os import scandir
 from rich import print as print
 import flet as ft
 
@@ -359,6 +360,7 @@ def main(pagina: ft.Page):
     # textos
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
     texto_estados = ft.Text("Estado\netiquetado:")
+    # texto_conteo_etiquetas_totales = ft.Text("")
 
     #############  MAQUETADO ############################
 
@@ -376,11 +378,30 @@ def main(pagina: ft.Page):
         wrap = False
         )
 
-    fila_controles_etiquetas =ft.Row(
+    fila_controles_etiquetas = ft.Row(
         [texto_estados, lista_estados_desplegable, boton_filtrar_etiquetas],
         width = 400,
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
         wrap = False
+        )
+
+
+    galeria.expand=3
+
+    columna_etiquetas = ft.Column(
+        controls=[],
+        visible=False,
+        # visible=True,
+        expand=2,
+        scroll=ft.ScrollMode.AUTO,
+        )
+
+
+    fila_galeria_etiquetas = ft.Row(
+        [galeria, ft.VerticalDivider(), columna_etiquetas],
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        wrap = False,
+        expand=True,
         )
 
     # Fila de botones para abrir carpetas y leer archivos
@@ -399,7 +420,8 @@ def main(pagina: ft.Page):
     #pestaña de galeria
     tab_galeria = ft.Tab(
         text="Galeria",
-        content=galeria,
+        # content=galeria,
+        content=fila_galeria_etiquetas,
         visible=False,
         )
 
@@ -420,12 +442,6 @@ def main(pagina: ft.Page):
         visible=False,
     )
 
-    drawer_estadisticas = ft.NavigationDrawer(
-        # on_dismiss=end_drawer_dismissed,
-        controls = [],
-        )
-    pagina.end_drawer = drawer_estadisticas
-
     # organizacion en pestañas
     pestanias = ft.Tabs(
         selected_index=0,
@@ -436,7 +452,6 @@ def main(pagina: ft.Page):
             # tab_estadisticas,
         ],
         expand=1,
-        # disabled=True,        # deshabilita controles internos, no las pestañas en si
     )
 
     # Añadido componentes (todos juntos)
@@ -828,7 +843,11 @@ def main(pagina: ft.Page):
         set_etiquetas = set()
         for boton in botones_tags:
             if boton.estado == True:
-                set_etiquetas.add(boton.text)
+                # extraccion del numero de repeticiones
+                texto = boton.text.split("(")[0]
+                texto = texto.strip()
+                set_etiquetas.add(texto)
+                # set_etiquetas.add(boton.text)
 
         imagenes_etiquetadas = imagenes_etiquetadas_filtradas_backup
         imagenes_galeria = imagenes_galeria_filtradas_backup
@@ -853,10 +872,15 @@ def main(pagina: ft.Page):
             ventana_emergente(pagina, 
                 f"{renglon1}\n{renglon2}\n{renglon3}")
             # drawer_estadisticas
-            pagina.show_end_drawer(drawer_estadisticas) # apertura barra lateral
+            # pagina.show_end_drawer(drawer_estadisticas) # apertura barra lateral
+            columna_etiquetas.visible = True
+            columna_etiquetas.update()
         else:
             ventana_emergente(pagina, 
                 f"Filtrado por etiquetas deshabilitado.")
+            columna_etiquetas.visible = False
+            columna_etiquetas.update()
+
 
         actualizar_componentes(e)
 
@@ -959,9 +983,11 @@ def main(pagina: ft.Page):
             for tag in imagen.tags:
                 conteo_etiquetas[tag] += 1
 
+        nro_tags = len(conteo_etiquetas.keys()) 
+
         boton_reset_tags = ft.ElevatedButton(
-            text = "Borrar tags",
-            bgcolor = ft.colors.PURPLE_800,
+            text = f"Borrar seleccion   ({nro_tags})",
+            bgcolor = ft.colors.BLUE_800,
             color = ft.colors.WHITE,
             width = 200,
             on_click = reset_tags_filtros,
@@ -970,32 +996,29 @@ def main(pagina: ft.Page):
         filas_conteo = [                
             ft.Row(
                 [ boton_reset_tags],
-                width=300,
-                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                alignment=ft.MainAxisAlignment.CENTER,
                 ),
             # ft.Divider(height=15, thickness=5) ,   
             ft.Divider(height=7, thickness=1) , 
-            ft.Divider(height=7, thickness=1)  
+            # ft.Divider(height=7, thickness=1) , 
             ]
         global botones_tags 
         botones_tags = []
+
         for tag in conteo_etiquetas.keys():
-            boton = BotonBiestable(f"{tag}",color_true=ft.colors.BLUE_800)
-            boton.width = 150  
+            boton = BotonBiestable(f"{tag}  ({conteo_etiquetas[tag]})",color_true=ft.colors.BLUE_800) 
+            # boton = BotonBiestable(f"{tag}", color_true=ft.colors.BLUE_800) 
             boton.click_boton = filtrar_todas_etiquetas
             botones_tags.append(boton)
-            filas_conteo.append(
-                # ft.Text(f"'{tag}' : {conteo_etiquetas[tag]} ")
-                ft.Row([
-                    boton,
-                    ft.Text(f"Aparece {conteo_etiquetas[tag]} veces"),
-                    ],
-                    width=300,
-                    alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                    )
-                )
-            filas_conteo.append(ft.Divider(height=7, thickness=1)  )
-        drawer_estadisticas.controls = filas_conteo
+
+        filas_etiquetas = ft.Row(
+            controls = botones_tags,
+            wrap = True,
+            )
+        filas_conteo.append(filas_etiquetas)
+
+        columna_etiquetas.controls = filas_conteo
+        columna_etiquetas.update()
 
 
     ###########  ASIGNACION HANDLERS #################
@@ -1052,13 +1075,6 @@ def main(pagina: ft.Page):
     pagina.window_minimizable = True
     pagina.window_maximized   = False
     pagina.update()
-
-    # reporte de bugs
-    print("[bold red]BUGS CONOCIDOS:")
-    # print("[bold red]1 - si la galeria queda vacía los eventos de click se rompen;")
-    print("[bold red]2 - El programa es incapaz de vaciar los archivos de etiquetas. Sólo puede reescribir si hay al menos UNA etiqueta")
-
-
     
 
 
