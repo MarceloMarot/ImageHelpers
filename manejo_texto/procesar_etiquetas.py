@@ -80,7 +80,7 @@ def lectura_archivo(entrada: str) -> list:
         return []   # lista vacía si hay error
 
 
-def separar_etiquetas(renglones_entrada: list[str], repetidas=False):
+def separar_etiquetas(renglones_entrada: list[str], filtrar_repetidas=True):
     """
     Funcion que separa etiquetas en base a comas y puntos aparte. 
     Descarta etiquetas repetidas.
@@ -92,7 +92,6 @@ def separar_etiquetas(renglones_entrada: list[str], repetidas=False):
     set_etiquetas=set([])
     # auxiliar: numero de grupo 
     n = 0
-
     for i in range(0,len(renglones_entrada)):
         nuevo_tag = False
         # Eliminacion de renglones vacios
@@ -104,14 +103,18 @@ def separar_etiquetas(renglones_entrada: list[str], repetidas=False):
                 etiqueta = etiqueta.strip()
                 # Filtrado de etiquetas no nulas
                 if len(etiqueta)>0:
-                    # sólo se añaden elementos no repetidos
-                    if not (etiqueta in set_etiquetas):
-                        # lista_etiquetas.append(etiqueta)
-                        # grupo_etiquetas.append(n)
-                        # salida en pares clave -valor 
+                    if filtrar_repetidas:
+                        # sólo se añaden elementos no repetidos
+                        if not (etiqueta in set_etiquetas):
+                            dicc_etiquetas[etiqueta] = n
+                            set_etiquetas.add(etiqueta) 
+                            nuevo_tag=True
+                    else:
+                        # salida en pares clave - valor 
                         dicc_etiquetas[etiqueta] = n
                         set_etiquetas.add(etiqueta) 
                         nuevo_tag=True
+
             # Nuevo renglon con tags añadidas --> nuevo grupo
             if nuevo_tag :
                 n += 1

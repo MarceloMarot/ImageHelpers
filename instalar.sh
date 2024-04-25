@@ -18,6 +18,10 @@ pip  install -r requirements.txt
 # flet pack FileMover.py --add-data ./local:./local  # Importacion de traducciones fallida
 # Running PyInstaller: ['ImageTagger.py', '--noconfirm', '--noconsole', '--onefile']
 
-pyinstaller FileMover.py --distpath dist/ --noconfirm --noconsole --onefile --add-data local/:dist/local/
+pyinstaller etiquetador_imagenes.py --distpath dist/ --noconfirm --noconsole --onefile --add-data traducciones/:dist/traducciones
+pyinstaller recortador_imagenes.py --distpath dist/ --noconfirm --noconsole --onefile --add-data traducciones/:dist/traducciones
+pyinstaller convertidor_imagenes.py --distpath dist/ --noconfirm --noconsole --onefile --add-data traducciones/:dist/traducciones
+pyinstaller organizador_archivos.py --distpath dist/ --noconfirm --noconsole --onefile --add-data traducciones/:dist/traducciones
+
 
 
