@@ -2,6 +2,7 @@
 
 from logging import disable
 from os import scandir
+from flet_core.border_radius import vertical
 from rich import print as print
 import flet as ft
 
@@ -386,13 +387,13 @@ def main(pagina: ft.Page):
         )
 
 
-    galeria.expand=3
+    galeria.expand=1
 
     columna_etiquetas = ft.Column(
         controls=[],
         visible=False,
         # visible=True,
-        expand=2,
+        expand=1,
         scroll=ft.ScrollMode.AUTO,
         )
 
@@ -400,6 +401,7 @@ def main(pagina: ft.Page):
     fila_galeria_etiquetas = ft.Row(
         [galeria, ft.VerticalDivider(), columna_etiquetas],
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        vertical_alignment=ft.CrossAxisAlignment.START,
         wrap = False,
         expand=True,
         )
@@ -983,10 +985,13 @@ def main(pagina: ft.Page):
             for tag in imagen.tags:
                 conteo_etiquetas[tag] += 1
 
+        # etiquetas ordenadas de más repetidas a menos usadas
+        conteo_etiquetas = dict(sorted(conteo_etiquetas.items(), key=lambda item:item[1], reverse=True))
+
         nro_tags = len(conteo_etiquetas.keys()) 
 
         boton_reset_tags = ft.ElevatedButton(
-            text = f"Borrar seleccion   ({nro_tags})",
+            text = f"Deseleccionar todos  ({nro_tags} tags)",
             bgcolor = ft.colors.BLUE_800,
             color = ft.colors.WHITE,
             width = 200,
@@ -1011,11 +1016,43 @@ def main(pagina: ft.Page):
             boton.click_boton = filtrar_todas_etiquetas
             botones_tags.append(boton)
 
+        # coloreo de botones en base a percentiles
+        
+        for i in range(0, int(nro_tags * 0.25)):
+            botones_tags[i].color_true  = ft.colors.GREEN_800
+            botones_tags[i].color_false = ft.colors.GREEN_200
+            botones_tags[i].bgcolor = ft.colors.GREEN_200
+
+        for i in range(int(nro_tags * 0.25), int(nro_tags * 0.5)):
+            botones_tags[i].color_true  = ft.colors.YELLOW_800
+            botones_tags[i].color_false = ft.colors.YELLOW_200
+            botones_tags[i].bgcolor = ft.colors.YELLOW_200
+
+        for i in range(int(nro_tags * 0.5), int(nro_tags * 0.75)):
+            botones_tags[i].color_true  = ft.colors.ORANGE_800
+            botones_tags[i].color_false = ft.colors.ORANGE_200
+            botones_tags[i].bgcolor = ft.colors.ORANGE_200
+
+        for i in range(int(nro_tags * 0.75), int(nro_tags * 1)):
+            botones_tags[i].color_true  = ft.colors.RED_800
+            botones_tags[i].color_false = ft.colors.RED_200
+            botones_tags[i].bgcolor = ft.colors.RED_200
+
+
+
         filas_etiquetas = ft.Row(
             controls = botones_tags,
             wrap = True,
             )
         filas_conteo.append(filas_etiquetas)
+
+        # controles adicionales
+
+        filas_conteo.append(ft.Divider(height=7, thickness=1))
+
+        # boton_a
+
+        filas_conteo.append(ft.Divider(height=7, thickness=1))
 
         columna_etiquetas.controls = filas_conteo
         columna_etiquetas.update()

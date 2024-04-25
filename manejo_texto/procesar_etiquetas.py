@@ -9,10 +9,10 @@ class Etiquetas:
     """
     # def __init__(self, tags: list, grupo: list, ruta: str):	
     def __init__(self, ruta: str, tags=[], grupo=[] ):	
-        self.tags   = tags	    # lista etiquetas
-        self.grupo  = grupo     # numeros de grupo de las etiquetas
-        self.ruta   = ruta      # ruta archivo
-        self.data = dict()
+        self.tags  :list   = tags	    # lista etiquetas
+        self.grupo :list   = grupo     # numeros de grupo de las etiquetas
+        self.ruta  :str    = ruta      # ruta archivo
+        self.data  :dict   = dict()      # etiquetas y grupos en formato diccionario
         # lectura automatica
         try:
             # self.ruta = pathlib.Path(ruta).with_suffix('.txt')
@@ -23,19 +23,19 @@ class Etiquetas:
 
 
     #lectura desde disco
-    def leer_archivo(self):
-        """Lee las etiquetas desde archivo de texto."""
+    def leer_archivo(self) -> None:
+        """Lee las etiquetas desde archivo de texto. Si éste no existe la data interna queda vacía """
         renglones_listas = lectura_archivo(self.ruta)
         self.data = separar_etiquetas(renglones_listas)
         self.tags  = list( self.data.keys()   )
         self.grupo = list( self.data.values() )
 
     # escritura en disco
-    def guardar(self, etiquetas= []):
+    def guardar(self, etiquetas=[], modo: str="w", encoding='utf-8'):
         """Conversion de lista de etiquetas a texto (añade comas y respeta saltos de renglón)"""
         texto = etiquetas2texto(etiquetas)
         # guardado, actualizacion del objeto e indicacion de exito
-        guardado_exitoso = guardar_archivo(self.ruta, texto)
+        guardado_exitoso = guardar_archivo(self.ruta, texto, modo, encoding)
         if guardado_exitoso:
             self.leer_archivo()
         return guardado_exitoso
@@ -44,7 +44,7 @@ class Etiquetas:
 
 #FUNCIONES
 
-def etiquetas2texto(lista_renglones: list):
+def etiquetas2texto(lista_renglones: list) -> str:
     """Hace la conversion de lista de etiquetas a texto.
     Asigna una etiqueta por indice de la lista y las separa poor comas."""
     texto = ""
@@ -53,20 +53,24 @@ def etiquetas2texto(lista_renglones: list):
     return texto
 
 
-def guardar_archivo(ruta: str, texto:str):
-    """ Funcion de guardado en archivo (modo SOBREESCRITURA)"""
-    # print(ruta)
+def guardar_archivo(ruta: str, texto:str, modo: str="w", encoding='utf-8') -> bool:
+    """ Funcion de guardado en archivo TXT. 
+    Modos:
+    - "w": sobreescritura (por defecto)
+    - "a": agregado al final 
+    Codificacion UTF-8 por defecto
+    """
     path = pathlib.Path(ruta).with_suffix('.txt')
     try:
-        with open(path,"w") as archivo:
+        with open(path,modo,encoding=encoding) as archivo:
             archivo.writelines(texto)
         return True
     except:
-        return False        
+        return False   
 
 
-def lectura_archivo(entrada: str): 
-    """Funcion de lectura de un archivo de texto. Devuelve una lista de los renglones leidos"""
+def lectura_archivo(entrada: str) -> list: 
+    """Funcion de lectura de un archivo de texto. Devuelve una lista con los renglones de texto leidos"""
     path = pathlib.Path(entrada).with_suffix('.txt')
     try:
         with open(path,"r") as archivo:
@@ -76,7 +80,7 @@ def lectura_archivo(entrada: str):
         return []   # lista vacía si hay error
 
 
-def separar_etiquetas(lista_entrada: list):
+def separar_etiquetas(renglones_entrada: list[str], repetidas=False):
     """
     Funcion que separa etiquetas en base a comas y puntos aparte. 
     Descarta etiquetas repetidas.
@@ -89,12 +93,12 @@ def separar_etiquetas(lista_entrada: list):
     # auxiliar: numero de grupo 
     n = 0
 
-    for i in range(0,len(lista_entrada)):
+    for i in range(0,len(renglones_entrada)):
         nuevo_tag = False
         # Eliminacion de renglones vacios
-        if len(lista_entrada[i].strip()) > 0:
+        if len(renglones_entrada[i].strip()) > 0:
             # separacion de etiquetas mediante comas (estas se eliminan)
-            etiquetas_renglon = lista_entrada[i].split(',')
+            etiquetas_renglon = renglones_entrada[i].split(',')
             # quita de espacios vacios y guardado en lista
             for etiqueta in etiquetas_renglon :
                 etiqueta = etiqueta.strip()

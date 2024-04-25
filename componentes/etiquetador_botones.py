@@ -472,7 +472,7 @@ def main(page: ft.Page):
     etiquetas   = Etiquetas(archivo_etiquetas) 
 
     etiquetador.alto = 800
-    etiquetador.ancho  = 500
+    etiquetador.ancho  = 700
     # carga de archivos (sentido inverso)
     etiquetador.setear_salida( etiquetas )      # carga el estado de los botones
     etiquetador.leer_dataset(   dataset   )     # crea los botones de etiquetado
