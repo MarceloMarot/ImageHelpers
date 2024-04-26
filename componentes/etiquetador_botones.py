@@ -96,7 +96,7 @@ class FilasBotonesEtiquetas(ft.Column):
         self.dataset = dataset
         tags = self.dataset.tags
         grupo = self.dataset.grupos
-        data = self.dataset.data
+        data = self.dataset.datos
         # conteo grupos de etiquetas
         grupos = list(set(grupo))
         self.__numero_grupos = len(grupos)

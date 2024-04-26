@@ -19,18 +19,6 @@ from sistema_archivos.buscar_extension import buscar_imagenes
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 
-# reasignacion de dimensiones para las imagenes de galeria
-estilos_galeria["predefinido"]. width   = 128
-estilos_galeria["predefinido"]. height  = 128
-estilos_galeria["guardado"].    width   = 128
-estilos_galeria["guardado"].    height  = 128
-estilos_galeria["modificado"].  width   = 128
-estilos_galeria["modificado"].  height  = 128
-estilos_galeria["erroneo"].     width   = 128
-estilos_galeria["erroneo"].     height  = 128
-
-
-
 def nada( e ):
     pass
 
@@ -44,7 +32,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         self.__defectuosa = False
         self.__dimensiones: tuple[int, int, int] | None
         self.leer_dimensiones()
-        self.verificar_imagen( None)   # Modificar
+        self.verificar_imagen( None)   # FIX
         self.verificar_etiquetado()
         self.verificar_guardado(None)
 
@@ -134,28 +122,33 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         return guardado_exitoso
 
 
-class MenuEtiquetado( MenuNavegacion):
-    def __init__(self, estilos: dict):
-        super().__init__()
-        self.estilos = estilos
-        self.alto  = 800
-        self.ancho = 600
+    def actualizar_estilo_estado(self, estilos):
+        actualizar_estilo_estado([self], estilos)
+
+
+
+# class MenuEtiquetado( MenuNavegacion):
+#     def __init__(self, estilos: dict):
+#         super().__init__()
+#         self.estilos = estilos
+#         self.alto  = 800
+#         self.ancho = 600
         
 
-    def cargar_imagen(self):
-        """"Este metodo carga la imagen y cambia el estilo del contenedor segun el estado del etiquetado"""
-        super().cargar_imagen()
-        indice = self.indice
-        contenedor_imagen = self.imagenes[indice]
-        # seleccion de estilo segun jerarquia
-        actualizar_estilo_estado( [contenedor_imagen], self.estilos)
+#     def cargar_imagen(self):
+#         """"Este metodo carga la imagen y cambia el estilo del contenedor segun el estado del etiquetado"""
+#         super().cargar_imagen()
+#         indice = self.indice
+#         contenedor_imagen = self.imagenes[indice]
+#         # seleccion de estilo segun jerarquia
+#         actualizar_estilo_estado( [contenedor_imagen], self.estilos)
 
 
-    def cargar_imagenes(self, imagenes: list[Contenedor]):
-        super().cargar_imagenes(imagenes)
-        # self.__contenedores_imagen 
-        # actualizar_estilo_estado( self.__contenedores_imagen , self.estilos)
-        actualizar_estilo_estado( imagenes, self.estilos)
+#     def cargar_imagenes(self, imagenes: list[Contenedor]):
+#         super().cargar_imagenes(imagenes)
+#         # self.__contenedores_imagen 
+#         # actualizar_estilo_estado( self.__contenedores_imagen , self.estilos)
+#         actualizar_estilo_estado( imagenes, self.estilos)
 
 
 class GaleriaEtiquetado( Galeria):
@@ -186,8 +179,7 @@ class GaleriaEtiquetado( Galeria):
         actualizar_estilo_estado( self.imagenes, self.estilos)    
 
 
-def actualizar_estilo_estado(
-    contenedores: list[Contenedor_Etiquetado], estilos : dict ):
+def actualizar_estilo_estado( contenedores: list[Contenedor_Etiquetado], estilos : dict ):
     for contenedor in contenedores:
         if contenedor.defectuosa :
             estilo = estilos["erroneo"]     
@@ -288,10 +280,10 @@ def filtrar_estados(
 
 dimensiones_elegidas = None
 imagenes_galeria = []
-imagenes_etiquetadas = []
-imagenes_etiquetadas_backup = []
+# imagenes_etiquetadas = []
+# imagenes_etiquetadas_backup = []
 imagenes_galeria_backup = []
-imagenes_etiquetadas_filtradas_backup = []
+# imagenes_etiquetadas_filtradas_backup = []
 imagenes_galeria_filtradas_backup = []
 
 botones_tags = []
@@ -354,16 +346,26 @@ def main(pagina: ft.Page):
 
     # Componentes especiales
     etiquetador_imagen = EtiquetadorBotones()
-    etiquetador_imagen.visible = False
+    etiquetador_imagen.visible = False   # FIX
     galeria = GaleriaEtiquetado( estilos_galeria )
-    menu_seleccion = MenuEtiquetado( estilos_seleccion)
+    # menu_seleccion = MenuEtiquetado( estilos_seleccion)
 
     # textos
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
     texto_estados = ft.Text("Estado\netiquetado:")
     # texto_conteo_etiquetas_totales = ft.Text("")
 
+
+    contenedor_seleccion = Contenedor(512, 512)
+    contenedor_seleccion.bgcolor = ft.colors.LIGHT_BLUE
+
     #############  MAQUETADO ############################
+
+    columna_seleccion = ft.Column(
+        [contenedor_seleccion],
+        alignment=ft.MainAxisAlignment.CENTER,
+
+    )
 
     # componentes repartidos en segmentos horizontales
     fila_controles_apertura =ft.Row(
@@ -431,7 +433,8 @@ def main(pagina: ft.Page):
     altura_tab_etiquetado = 800
     fila_etiquetado_navegacion = ft.Row(
         controls = [ 
-            menu_seleccion ,
+            # menu_seleccion ,
+            columna_seleccion,  # FIX
             ft.VerticalDivider(),
             etiquetador_imagen
             ], 
@@ -441,7 +444,8 @@ def main(pagina: ft.Page):
     tab_etiquetado = ft.Tab(
         text="Etiquetado",
         content=fila_etiquetado_navegacion,
-        visible=False,
+        # visible=False,
+        visible=True,   # FIX  
     )
 
     # organizacion en pestañas
@@ -464,13 +468,13 @@ def main(pagina: ft.Page):
     ############## HANDLERS ##################################
 
     def etiquetas_a_imagen(indice: int):
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
         global imagenes_galeria
         # Se transfieren los botones de la botonera a las imagenes 
 
         etiquetas_botones = etiquetador_imagen.leer_botones()
         imagenes_galeria[indice].tags = etiquetas_botones
-        imagenes_etiquetadas[indice].tags = etiquetas_botones
+        # imagenes_etiquetadas[indice].tags = etiquetas_botones  # FIX 
         # etiquetador_imagen.update()
         return etiquetas_botones
 
@@ -492,7 +496,9 @@ def main(pagina: ft.Page):
         global imagenes_galeria
         global dimensiones_elegidas 
 
-        indice = menu_seleccion.indice
+        # indice = menu_seleccion.indice
+        indice = 0 # FIX
+
         # Se transfieren los botones de la botonera a las imagenes 
         etiquetas_botones = etiquetas_a_imagen(indice)
 
@@ -503,13 +509,13 @@ def main(pagina: ft.Page):
         imagenes_galeria[indice].update()
 
         # actualizacion bordes selector
-        imagenes_etiquetadas[indice].verificar_etiquetado()
-        imagenes_etiquetadas[indice].verificar_imagen(dimensiones_elegidas)
-        imagenes_etiquetadas[indice].verificar_guardado(etiquetas_botones) 
-        imagenes_etiquetadas[indice].update()
+        # imagenes_etiquetadas[indice].verificar_etiquetado()
+        # imagenes_etiquetadas[indice].verificar_imagen(dimensiones_elegidas)
+        # imagenes_etiquetadas[indice].verificar_guardado(etiquetas_botones) 
+        # imagenes_etiquetadas[indice].update()
 
-        menu_seleccion.cargar_imagen()
-        menu_seleccion.update()
+        # menu_seleccion.cargar_imagen()
+        # menu_seleccion.update()
 
         galeria.cargar_imagenes( imagenes_galeria )
         galeria.update()
@@ -524,9 +530,9 @@ def main(pagina: ft.Page):
         lista_resoluciones = [tupla_resoluciones[0]] # opcion "No filtrar" agregada
         set_dimensiones = set()
 
-        for imagen in imagenes_etiquetadas:
-            dimensiones = imagen.dimensiones
-            set_dimensiones.add(dimensiones)
+        # for imagen in imagenes_etiquetadas:
+        #     dimensiones = imagen.dimensiones
+        #     set_dimensiones.add(dimensiones)
 
         for resolucion in tupla_resoluciones:
             resolucion_conv = convertir_dimensiones_opencv(str(resolucion))
@@ -539,11 +545,13 @@ def main(pagina: ft.Page):
 
     def actualizar_lista_estados():
         # acceso a elementos globales
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
+        global imagenes_galeria  # FIX 
         lista_estados = [tupla_estados[0]] # opcion "No filtrar" agregada
         set_estados = set("todas")
 
-        for imagen in imagenes_etiquetadas:
+        for imagen in imagenes_galeria:
+        # for imagen in imagenes_etiquetadas:
             if imagen.guardada:
                 set_estados.add("guardadas")
             elif imagen.etiquetada:
@@ -566,7 +574,7 @@ def main(pagina: ft.Page):
 
 
             # acceso a elementos globales
-            global imagenes_etiquetadas
+            # global imagenes_etiquetadas
             global imagenes_galeria
 
             # busqueda 
@@ -575,16 +583,18 @@ def main(pagina: ft.Page):
             rutas_imagen = buscar_imagenes(directorio)
             
             # Carga de imagenes del directorio
-            imagenes_etiquetadas, imagenes_galeria = cargar_imagenes(rutas_imagen)
+            # imagenes_etiquetadas, imagenes_galeria = cargar_imagenes(rutas_imagen)
+            imagenes_galeria = cargar_imagenes(rutas_imagen) # FIX
 
             # copias de respaldo para los filtros de imagenes
-            global imagenes_etiquetadas_backup
+            # global imagenes_etiquetadas_backup
             global imagenes_galeria_backup
-            imagenes_etiquetadas_backup = imagenes_etiquetadas
+            # imagenes_etiquetadas_backup = imagenes_etiquetadas
             imagenes_galeria_backup = imagenes_galeria
 
             # si se encuentran imagenes se visibilizan y configuran los controles
             if len(imagenes_galeria) >0:
+
 
                 # actualizar listas desplegables
                 actualizar_lista_dimensiones()
@@ -598,27 +608,33 @@ def main(pagina: ft.Page):
                 galeria.eventos(click = click_imagen_galeria)
                 galeria.update()
 
+                # estilos bordes
+                actualizar_estilo_estado( imagenes_galeria, estilos_galeria )
+                galeria.update()
+
                 # Objeto seleccion imagen
-                menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
-                menu_seleccion.indice = 0
-                menu_seleccion.cargar_imagen()
-                menu_seleccion.eventos(
-                    click=click_imagen_seleccion,
-                    funcion_botones = lambda _ : click_botones_seleccion(_)
-                    )
+                # menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
+                # menu_seleccion.indice = 0
+                # menu_seleccion.cargar_imagen()
+                # menu_seleccion.eventos(
+                #     click=click_imagen_seleccion,
+                #     funcion_botones = lambda _ : click_botones_seleccion(_)
+                #     )
                 # actualizacion del etiquetador --> habilita los controles y etiquetas
-                etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
+                # etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
+                etiquetador_imagen.setear_salida(imagenes_galeria[0]) # FIX
                 etiquetador_imagen.update()
 
                 # actualizacion del selector de imagenes --> habilita los controles
-                menu_seleccion.alto  = altura_tab_etiquetado
-                menu_seleccion.ancho = 600
-                menu_seleccion.expand = True
-                menu_seleccion.habilitado = True
-                menu_seleccion.update()
+                # menu_seleccion.alto  = altura_tab_etiquetado
+                # menu_seleccion.ancho = 600
+                # menu_seleccion.expand = True
+                # menu_seleccion.habilitado = True
+                # menu_seleccion.update()
 
                 # reporte por snackbar
-                ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_etiquetadas)}")
+                # ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_etiquetadas)}") # FIX
+                ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_galeria)}")
                 # verificacion de dimensiones al abrir
                 filtrar_dimensiones_estados(None)    
                 
@@ -654,11 +670,12 @@ def main(pagina: ft.Page):
             etiquetador_imagen.leer_dataset( dataset )
 
             # se asegura que los botones esten deshabilitados hasta abrir galeria
-            etiquetador_imagen.habilitado = True if menu_seleccion.habilitado else False
+            etiquetador_imagen.habilitado = True  # FIX
+            # etiquetador_imagen.habilitado = True if menu_seleccion.habilitado else False
             etiquetador_imagen.update() 
 
-            etiquetador_imagen.alto  = altura_tab_etiquetado
-            etiquetador_imagen.ancho = 500
+            etiquetador_imagen.altura  = altura_tab_etiquetado
+            etiquetador_imagen.base = 500
             etiquetador_imagen.expand = True
             etiquetador_imagen.visible = True
             etiquetador_imagen.update()
@@ -678,15 +695,27 @@ def main(pagina: ft.Page):
         """Esta imagen permite elegir una imagen desde la galeria y pasarla al selector de imagenes al tiempo que carga las etiquetas de archivo."""
         contenedor = e.control
         clave = contenedor.content.key
-        global imagenes_etiquetadas
+        
+        print(clave)
+        contenedor.leer_archivo()
+        contenedor.actualizar_estilo_estado(estilos_galeria)
+        contenedor.update()
+        print(contenedor.tags)
+        return
+        # global imagenes_etiquetadas
         global imagenes_galeria
         # actualizacion de imagen seleccionada y etiquetado
-        imagen_seleccionada = imagen_clave(clave, imagenes_etiquetadas)
+        # imagen_seleccionada = imagen_clave(clave, imagenes_etiquetadas) # FIX
+        imagen_seleccionada = imagen_clave(clave, imagenes_galeria) 
         # actualizacion del indice
-        indice = imagenes_etiquetadas.index(imagen_seleccionada)
+        # indice = imagenes_etiquetadas.index(imagen_seleccionada) # FIX
+        indice = imagenes_galeria.index(imagen_seleccionada) 
         # actaualizacion de controles
         etiquetador_imagen.setear_salida(imagen_seleccionada)
-        menu_seleccion.indice = indice
+        
+        # menu_seleccion.indice = indice
+        # indice        # HACER ALGO CON EL INDICE
+
         # carga de etiquetas a los botones
         etiquetas_a_botones(indice)
         #cambio de pestaña
@@ -698,10 +727,14 @@ def main(pagina: ft.Page):
     # Funcion para el click sobre la imagen seleccionada
     def click_imagen_seleccion( e: ft.ControlEvent):
         """Esta funcion regresa a la galería de imagenes cerca de la imagen seleccionada."""
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
+        global imagenes_galeria
         #regreso a la galeria
-        indice = menu_seleccion.indice
-        clave = imagenes_etiquetadas[indice].content.key
+        # indice = menu_seleccion.indice
+
+        indice = 0  # FIX !!!
+        # clave = imagenes_etiquetadas[indice].content.key  # FIX
+        clave = imagenes_galeria[indice].content.key  
         apuntar_galeria( clave)   
         # carga de etiquetas a los botones
         etiquetas_a_botones(indice)
@@ -712,17 +745,18 @@ def main(pagina: ft.Page):
 
     def filtrar_dimensiones_estados( e: ft.ControlEvent | None):
         """Selecciona solamente aquellas imagenes que cumplan con el tamaño y estado especificados."""
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
         global imagenes_galeria
-        global imagenes_etiquetadas_backup
+        # global imagenes_etiquetadas_backup
         global imagenes_galeria_backup
 
         # restauracion temporal de las imagenes 
         imagenes_galeria = imagenes_galeria_backup
-        imagenes_etiquetadas = imagenes_etiquetadas_backup
+        # imagenes_etiquetadas = imagenes_etiquetadas_backup
 
         # prevencion de problemas por galeria vacia 
-        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+        if len(imagenes_galeria) == 0 :   # FIX
+        # if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
             ventana_emergente(pagina, "Galeria vacía")
             return
 
@@ -733,16 +767,16 @@ def main(pagina: ft.Page):
 
         # Filtrado en base a las dimensiones de imagen
         dimensiones = dimensiones_elegidas if boton_filtrar_dimensiones.estado else None
-        imagenes_etiquetadas = filtrar_dimensiones(imagenes_etiquetadas, dimensiones)
+        # imagenes_etiquetadas = filtrar_dimensiones(imagenes_etiquetadas, dimensiones)
         imagenes_galeria = filtrar_dimensiones(imagenes_galeria, dimensiones)
         # Filtrado en base a los estados de las imagenes
         estado = lista_estados_desplegable.value
-        imagenes_etiquetadas = filtrar_estados(imagenes_etiquetadas, estado)
+        # imagenes_etiquetadas = filtrar_estados(imagenes_etiquetadas, estado)
         imagenes_galeria = filtrar_estados(imagenes_galeria, estado)
 
         # marcado de bordes según las dimensiones requeridas 
-        for imagen in imagenes_etiquetadas:
-            imagen.verificar_imagen(dimensiones_elegidas)
+        # for imagen in imagenes_etiquetadas:
+        #     imagen.verificar_imagen(dimensiones_elegidas)
         for imagen in imagenes_galeria:
             imagen.verificar_imagen(dimensiones_elegidas)
 
@@ -755,14 +789,15 @@ def main(pagina: ft.Page):
                     tags.append(boton.text)
 
         # reporte por snackbar
-        ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(imagenes_etiquetadas)} imagenes seleccionadas.")
+        # ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(imagenes_etiquetadas)} imagenes seleccionadas.")  # FIX
+        ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(imagenes_galeria)} imagenes seleccionadas.")
         # actualizacion de las etiquetas encontradas
         estadisticas()
 
         # respaldo para que funcione el filtro de etiquetas
-        global imagenes_etiquetadas_filtradas_backup
+        # global imagenes_etiquetadas_filtradas_backup
         global imagenes_galeria_filtradas_backup
-        imagenes_etiquetadas_filtradas_backup = imagenes_etiquetadas
+        # imagenes_etiquetadas_filtradas_backup = imagenes_etiquetadas
         imagenes_galeria_filtradas_backup = imagenes_galeria
 
         actualizar_componentes(e)    
@@ -770,16 +805,18 @@ def main(pagina: ft.Page):
 
     def guardar_cambios(e):
         """Guarda las etiquetas en archivo de todas las imagenes modificadas. También actualiza estados y graficas."""
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
         global imagenes_galeria
 
-        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+        # if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 : # FIX
+        if len(imagenes_galeria) == 0 : 
             ventana_emergente(pagina,f"Galería vacía - sin cambios")
             return
 
         imagen: Contenedor_Etiquetado
         i = 0
-        for imagen in imagenes_etiquetadas:
+        # for imagen in imagenes_etiquetadas:  # FIX
+        for imagen in imagenes_galeria:  #
             guardado = imagen.guardar_archivo()
             if guardado :
                 i += 1 
@@ -809,12 +846,13 @@ def main(pagina: ft.Page):
         galeria.cargar_imagenes( imagenes_galeria )
         galeria.update()
         # Objeto seleccion imagen
-        menu_seleccion.indice = 0
-        menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
-        menu_seleccion.cargar_imagen()
-        menu_seleccion.update()
+        # menu_seleccion.indice = 0  # FIX
+        # menu_seleccion.cargar_imagenes(imagenes_etiquetadas)
+        # menu_seleccion.cargar_imagen()
+        # menu_seleccion.update()
         # actualizacion del etiquetador --> habilita los controles y etiquetas
-        etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])
+        # etiquetador_imagen.setear_salida(imagenes_etiquetadas[0])  # FIX
+        etiquetador_imagen.setear_salida(imagenes_galeria[0])  # FIX
         etiquetador_imagen.update()
         # actualizacion de listas desplegables para evitar errores
         actualizar_listas_desplegables(e)
@@ -835,9 +873,9 @@ def main(pagina: ft.Page):
     def filtrar_todas_etiquetas( e: ft.ControlEvent | None ):
         """Selecciona las imagenes con al menos una de las etiquetas activadas en la pestaña de estadisticas."""
         
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
         global imagenes_galeria
-        global imagenes_etiquetadas_filtradas_backup
+        # global imagenes_etiquetadas_filtradas_backup
         global imagenes_galeria_filtradas_backup
 
         global botones_tags 
@@ -851,11 +889,12 @@ def main(pagina: ft.Page):
                 set_etiquetas.add(texto)
                 # set_etiquetas.add(boton.text)
 
-        imagenes_etiquetadas = imagenes_etiquetadas_filtradas_backup
+        # imagenes_etiquetadas = imagenes_etiquetadas_filtradas_backup
         imagenes_galeria = imagenes_galeria_filtradas_backup
 
         # prevencion de problemas por galeria vacia 
-        if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 :
+        # if len(imagenes_etiquetadas) == 0 or len(imagenes_galeria) == 0 : # FIX
+        if len(imagenes_galeria) == 0 : 
             ventana_emergente(pagina, "Galeria vacía")
             boton_filtrar_dimensiones.estado = False
             boton_filtrar_dimensiones.update()
@@ -863,14 +902,15 @@ def main(pagina: ft.Page):
             return
 
         if boton_filtrar_etiquetas.estado == True:
-            imagenes_etiquetadas = filtrar_etiquetas(imagenes_etiquetadas, list(set_etiquetas))
+            # imagenes_etiquetadas = filtrar_etiquetas(imagenes_etiquetadas, list(set_etiquetas))
             imagenes_galeria = filtrar_etiquetas(imagenes_galeria, list(set_etiquetas))
 
         # reporte por snackbar
         if boton_filtrar_etiquetas.estado:
             renglon1 = f"Filtrado por etiquetas habilitado"
             renglon2 = f" - {len(set_etiquetas)} de {len(botones_tags)} etiquetas seleccionadas;"
-            renglon3 = f" - {len(imagenes_etiquetadas)}  de {len(imagenes_etiquetadas_filtradas_backup)} imagenes seleccionadas."
+            # renglon3 = f" - {len(imagenes_etiquetadas)}  de {len(imagenes_etiquetadas_filtradas_backup)} imagenes seleccionadas."
+            renglon3 = f" - {len(imagenes_galeria)}  de {len(imagenes_galeria_filtradas_backup)} imagenes seleccionadas."
             ventana_emergente(pagina, 
                 f"{renglon1}\n{renglon2}\n{renglon3}")
             # drawer_estadisticas
@@ -899,15 +939,16 @@ def main(pagina: ft.Page):
         elif tecla == "Arrow Right" or tecla == "D":
             incremento = 1      # avance
         # cambio de imagen seleccion
-        menu_seleccion.cambiar_indice(incremento, 1 )
+        # menu_seleccion.cambiar_indice(incremento, 1 ) # FIX
 
 
     def cambio_pestanias(e):
-        indice = menu_seleccion.indice
-        if menu_seleccion.maximo > 0:
-            clave = imagenes_etiquetadas[indice].content.key
-            if pestanias.selected_index == 0:
-                apuntar_galeria(clave)
+        pass # FIX
+        # indice = menu_seleccion.indice 
+        # if menu_seleccion.maximo > 0:
+        #     clave = imagenes_etiquetadas[indice].content.key
+        #     if pestanias.selected_index == 0:
+        #         apuntar_galeria(clave)
 
 
     ###########  FUNCIONES LOCALES #################
@@ -916,22 +957,25 @@ def main(pagina: ft.Page):
     # (Compartir una misma imagen en distintos contenedores funciona mal)
     def cargar_imagenes(rutas: list[str]):
         # Imagenes - objetos ft.Image con etiquetas leidas desde archivo TXT
-        etiquetadas = []
-        etiquetadas = leer_imagenes_etiquetadas(
-            rutas,
-            ancho=768,
-            alto=768, 
-            redondeo=30
-            )
+        # etiquetadas = []
+        # etiquetadas = leer_imagenes_etiquetadas(
+        #     rutas,
+        #     ancho=768,
+        #     alto=768, 
+        #     redondeo=30
+        #     )
         # replica de imagenes para la galeria - menor resolucion
         galeria = []
         galeria = leer_imagenes_etiquetadas(
             rutas,
-            ancho=256,
-            alto=256, 
+            ancho=128,
+            alto=128, 
+            # ancho=256,
+            # alto=256, 
             redondeo=10
             )
-        return [etiquetadas, galeria]
+        # return [etiquetadas, galeria]
+        return galeria
 
 
     def apuntar_galeria(clave):
@@ -943,10 +987,13 @@ def main(pagina: ft.Page):
         """ Esta funcion controla el cambio de imagen en el selector"""
         # (el cambio de imagen está integrado al componente)
         # actualizacion etiquetas
-        global imagenes_etiquetadas
+        pass  # FIX
+
+        # global imagenes_etiquetadas
         global imagenes_galeria
 
-        etiquetador_imagen.setear_salida(imagenes_etiquetadas[indice])
+        # etiquetador_imagen.setear_salida(imagenes_etiquetadas[indice])  # FIX
+        etiquetador_imagen.setear_salida(imagenes_galeria[indice])  
         # carga de etiquetas a los botones
         etiquetas_a_botones(indice)
         # actualizacion pagina
@@ -964,24 +1011,26 @@ def main(pagina: ft.Page):
 
     def estadisticas():
         """Detecta todas las etiquetas usadas en las imagenes y cuenta cuantas repeticiones tiene cada una."""
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
         global imagenes_galeria
 
-        global imagenes_etiquetadas_resolucion_backup
+        # global imagenes_etiquetadas_resolucion_backup
         global imagenes_galeria_resolucion_backup
 
         # backup de la lista de imagenes con dimensiones correctas
         imagenes_galeria_resolucion_backup = imagenes_galeria 
-        imagenes_etiquetadas_resolucion_backup = imagenes_etiquetadas
+        # imagenes_etiquetadas_resolucion_backup = imagenes_etiquetadas
 
         conteo_etiquetas = dict()
         # busqueda de etiquetas
-        for imagen in imagenes_etiquetadas:
+        # for imagen in imagenes_etiquetadas:  # FIX
+        for imagen in imagenes_galeria:  
             for tag in imagen.tags:
                 conteo_etiquetas[tag] = 0
 
         # conteo de repeticiones para cada etiqueta
-        for imagen in imagenes_etiquetadas:
+        # for imagen in imagenes_etiquetadas:  # FIX
+        for imagen in imagenes_galeria:
             for tag in imagen.tags:
                 conteo_etiquetas[tag] += 1
 
@@ -1090,13 +1139,13 @@ def main(pagina: ft.Page):
      
     galeria.ancho = 1200
 
-    menu_seleccion.alto  = altura_tab_etiquetado
-    # menu_seleccion.ancho = 600
-    menu_seleccion.expand = True
-    menu_seleccion.habilitado = False
+    # menu_seleccion.alto  = altura_tab_etiquetado
+    # # menu_seleccion.ancho = 600
+    # menu_seleccion.expand = True
+    # menu_seleccion.habilitado = False
 
-    etiquetador_imagen.alto  = altura_tab_etiquetado
-    etiquetador_imagen.ancho = 500
+    etiquetador_imagen.altura = altura_tab_etiquetado
+    etiquetador_imagen.base = 500
     etiquetador_imagen.expand = True
     etiquetador_imagen.habilitado = False
 

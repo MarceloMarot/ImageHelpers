@@ -10,19 +10,19 @@ class Etiquetas:
     # def __init__(self, tags: list, grupo: list, ruta: str):	
     def __init__(self, ruta: str="", tags=[], grupo=[] ):	
         self.ruta : str    = ruta      # ruta archivo
-        self.data : dict   = dict()      # etiquetas y grupos en formato diccionario
+        self.datos : dict   = dict()      # etiquetas y grupos en formato diccionario
         # lectura automatica
         try:
             self.leer_archivo()
         except:
-            self.data = dict([]) 
+            self.datos = dict([]) 
 
 
     @property
     def tags(self)->list:
         """Devuelve la lista de etiquetas encontradas. Puede estar vacía."""
-        if self.data != None:
-            return list( self.data.keys() )
+        if self.datos != None:
+            return list( self.datos.keys() )
         else:
             return []
 
@@ -30,8 +30,8 @@ class Etiquetas:
     @property
     def grupos(self)->list:
         """Devuelve la lista con todos los grupos asignados a las etiquetas. Puede estar vacía."""
-        if self.data != None:
-            listas  = list(self.data.values() )
+        if self.datos != None:
+            listas  = list(self.datos.values() )
             valores = set()
             for lista in listas:
                 for valor in lista:
@@ -45,7 +45,7 @@ class Etiquetas:
     def leer_archivo(self, etiquetas_repetidas=True) -> None:
         """Lee las etiquetas desde archivo de texto. Si éste no existe la data interna queda vacía """
         renglones_listas = lectura_archivo(self.ruta)
-        self.data = separar_etiquetas(renglones_listas, etiquetas_repetidas)
+        self.datos = separar_etiquetas(renglones_listas, etiquetas_repetidas)
 
 
     # escritura en disco
@@ -68,9 +68,9 @@ class Etiquetas:
 
         for tag in tags:
             if tag in set(self.tags): 
-                self.data[tag].append(nro_grupo)
+                self.datos[tag].append(nro_grupo)
             else:
-                self.data[tag]=[nro_grupo]
+                self.datos[tag]=[nro_grupo]
 
 
 

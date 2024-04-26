@@ -4,32 +4,32 @@ from . galeria_imagenes import Estilo_Contenedor
 
 # estilos para contenedores 
 estilo_galeria_defecto = Estilo_Contenedor(
-    width = 256, 
-    height = 256,
+    width = 128, 
+    height = 128,
     border_radius = 10, 
     bgcolor = ft.colors.BLUE_100,
     border=ft.border.all(5, ft.colors.INDIGO_100)
     )
 
 estilo_galeria_modificado = Estilo_Contenedor(
-    width = 256, 
-    height = 256,
+    width = 128, 
+    height = 128,
     border_radius = 10, 
     bgcolor = ft.colors.YELLOW_600,
     border=ft.border.all(5, ft.colors.AMBER_600)
     )
 
 estilo_galeria_guardado = Estilo_Contenedor(
-    width = 256, 
-    height = 256,
+    width = 128, 
+    height = 128,
     border_radius = 10, 
     bgcolor = ft.colors.LIME_800,
     border=ft.border.all(5, ft.colors.GREEN_800)
     )
 
 estilo_galeria_erroneo = Estilo_Contenedor(
-    width = 256, 
-    height = 256,
+    width = 128, 
+    height = 128,
     border_radius = 10, 
     bgcolor = ft.colors.RED_800,
     border=ft.border.all(5, ft.colors.BROWN_800)
