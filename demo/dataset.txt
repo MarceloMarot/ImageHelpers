@@ -7,5 +7,21 @@
  persona, 
  zapato, bota
  rio, cascada, catarata,
-  montaña
+montaña
 
+vestido blanco, pelo negro
+vestido blanco, vestido negro
+
+3 , casa, persona, 
+4, chica,   pelo negro 
+5, chico,   pelo negro
+6, persona, 
+7, zapato,
+8, rio,
+9, montaña
+10, dfk, xcd
+11, asx,  
+12, hjy,
+13, qwet, edsw,
+14, ret dd,
+15, vnit , 

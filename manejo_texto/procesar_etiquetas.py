@@ -8,7 +8,7 @@ class Etiquetas:
     las etiquetas se guardan/leen de un archivo de igual nombre pero con extension '.txt' 
     """
     # def __init__(self, tags: list, grupo: list, ruta: str):	
-    def __init__(self, ruta: str, tags=[], grupo=[] ):	
+    def __init__(self, ruta: str="", tags=[], grupo=[] ):	
         self.ruta : str    = ruta      # ruta archivo
         self.data : dict   = dict()      # etiquetas y grupos en formato diccionario
         # lectura automatica
@@ -29,7 +29,7 @@ class Etiquetas:
 
     @property
     def grupos(self)->list:
-        """Devuelve la lista de grupos asignados a las etiquetas. Puede estar vacía."""
+        """Devuelve la lista con todos los grupos asignados a las etiquetas. Puede estar vacía."""
         if self.data != None:
             listas  = list(self.data.values() )
             valores = set()
@@ -62,16 +62,14 @@ class Etiquetas:
     def agregar_tags(self, tags: list[str], nro_grupo: int|None = None):
         """Agrega etiquetas al objeto desde el programa. Asigna tambien un numero de grupo."""
 
-        # nuevo grupo de etiquetas si no se indica
+        # nuevo grupo de etiquetas si no se indica a la entrada
         if nro_grupo == None:
             nro_grupo= len(self.grupos)
 
         for tag in tags:
             if tag in set(self.tags): 
-                # print(f"'{tag}' repetido")
                 self.data[tag].append(nro_grupo)
             else:
-                # print(f"'{tag}' agregado")
                 self.data[tag]=[nro_grupo]
 
 
@@ -103,14 +101,15 @@ def guardar_archivo(ruta: str, texto:str, modo: str="w", encoding='utf-8') -> bo
         return False   
 
 
-def lectura_archivo(entrada: str) -> list: 
+def lectura_archivo(entrada: str = "") -> list: 
     """Funcion de lectura de un archivo de texto. Devuelve una lista con los renglones de texto leidos"""
-    path = pathlib.Path(entrada).with_suffix('.txt')
     try:
+        path = pathlib.Path(entrada).with_suffix('.txt')
         with open(path,"r") as archivo:
             # se lee TODO como LISTA de renglones
             return archivo.readlines()
-    except FileNotFoundError: 
+    # except FileNotFoundError: 
+    except: 
         return []   # lista vacía si hay error
 
 
@@ -157,7 +156,7 @@ def separar_etiquetas(renglones_entrada: list[str], repetidas=True):
 if __name__ == "__main__":
 
 
-    archivo = "demo_etiquetas.txt"
+    archivo = "demo/dataset.txt"
 
     # lectura de etiquetas desde archivo
     etiqueta = Etiquetas(archivo) 
@@ -179,8 +178,8 @@ if __name__ == "__main__":
     print(f'[bold yellow]Longitud grupos: {len(grupos)}')
 
     # Guardado en archivo aparte
-    etiqueta.ruta = "etiquetas_salida.txt"
-    if etiqueta.guardar():
+    etiqueta.ruta = "demo/etiquetas_salida.txt"
+    if etiqueta.guardar(tags):
         print("[green]Guardado exitoso")
     else:
         print("[bold red]ERROR: [green]guardado fallido")
