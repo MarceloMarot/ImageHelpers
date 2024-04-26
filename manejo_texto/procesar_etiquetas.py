@@ -9,26 +9,44 @@ class Etiquetas:
     """
     # def __init__(self, tags: list, grupo: list, ruta: str):	
     def __init__(self, ruta: str, tags=[], grupo=[] ):	
-        self.tags  :list   = tags	    # lista etiquetas
-        self.grupo :list   = grupo     # numeros de grupo de las etiquetas
-        self.ruta  :str    = ruta      # ruta archivo
-        self.data  :dict   = dict()      # etiquetas y grupos en formato diccionario
+        self.ruta : str    = ruta      # ruta archivo
+        self.data : dict   = dict()      # etiquetas y grupos en formato diccionario
         # lectura automatica
         try:
-            # self.ruta = pathlib.Path(ruta).with_suffix('.txt')
             self.leer_archivo()
         except:
-            self.tags  = []
-            self.grupo = []
+            self.data = dict([]) 
+
+
+    @property
+    def tags(self)->list:
+        """Devuelve la lista de etiquetas encontradas. Puede estar vacía."""
+        if self.data != None:
+            return list( self.data.keys() )
+        else:
+            return []
+
+
+    @property
+    def grupos(self)->list:
+        """Devuelve la lista de grupos asignados a las etiquetas. Puede estar vacía."""
+        if self.data != None:
+            listas  = list(self.data.values() )
+            valores = set()
+            for lista in listas:
+                for valor in lista:
+                    valores.add(valor)
+            return  list(valores)
+        else:
+            return []
 
 
     #lectura desde disco
-    def leer_archivo(self) -> None:
+    def leer_archivo(self, etiquetas_repetidas=True) -> None:
         """Lee las etiquetas desde archivo de texto. Si éste no existe la data interna queda vacía """
         renglones_listas = lectura_archivo(self.ruta)
-        self.data = separar_etiquetas(renglones_listas)
-        self.tags  = list( self.data.keys()   )
-        self.grupo = list( self.data.values() )
+        self.data = separar_etiquetas(renglones_listas, etiquetas_repetidas)
+
 
     # escritura en disco
     def guardar(self, etiquetas=[], modo: str="w", encoding='utf-8'):
@@ -39,6 +57,22 @@ class Etiquetas:
         if guardado_exitoso:
             self.leer_archivo()
         return guardado_exitoso
+
+
+    def agregar_tags(self, tags: list[str], nro_grupo: int|None = None):
+        """Agrega etiquetas al objeto desde el programa. Asigna tambien un numero de grupo."""
+
+        # nuevo grupo de etiquetas si no se indica
+        if nro_grupo == None:
+            nro_grupo= len(self.grupos)
+
+        for tag in tags:
+            if tag in set(self.tags): 
+                # print(f"'{tag}' repetido")
+                self.data[tag].append(nro_grupo)
+            else:
+                # print(f"'{tag}' agregado")
+                self.data[tag]=[nro_grupo]
 
 
 
@@ -80,14 +114,14 @@ def lectura_archivo(entrada: str) -> list:
         return []   # lista vacía si hay error
 
 
-def separar_etiquetas(renglones_entrada: list[str], filtrar_repetidas=True):
+def separar_etiquetas(renglones_entrada: list[str], repetidas=True):
     """
     Funcion que separa etiquetas en base a comas y puntos aparte. 
     Descarta etiquetas repetidas.
     Asigna numero de grupo a los tags en base al primer renglon de aparicion
     """
     # diccionario auxiliar para contener los datos
-    dicc_etiquetas = {}
+    dicc_etiquetas = dict([])
     # conjunto auxiliar: se filtrarán las etiquetas repetidas 
     set_etiquetas=set([])
     # auxiliar: numero de grupo 
@@ -103,24 +137,20 @@ def separar_etiquetas(renglones_entrada: list[str], filtrar_repetidas=True):
                 etiqueta = etiqueta.strip()
                 # Filtrado de etiquetas no nulas
                 if len(etiqueta)>0:
-                    if filtrar_repetidas:
-                        # sólo se añaden elementos no repetidos
-                        if not (etiqueta in set_etiquetas):
-                            dicc_etiquetas[etiqueta] = n
-                            set_etiquetas.add(etiqueta) 
-                            nuevo_tag=True
-                    else:
-                        # salida en pares clave - valor 
-                        dicc_etiquetas[etiqueta] = n
+                    # caso nueva etiqueta
+                    if not (etiqueta in set_etiquetas):
+                        dicc_etiquetas[etiqueta] = [n]
                         set_etiquetas.add(etiqueta) 
                         nuevo_tag=True
-
+                    # agregado de elementos repetidos (opcional)
+                    elif repetidas:
+                        dicc_etiquetas[etiqueta].append(n)
+                    
             # Nuevo renglon con tags añadidas --> nuevo grupo
             if nuevo_tag :
                 n += 1
                 nuevo_tag = False
     # Retorno de una clase con las etiquetas y el numero de renglón (grupo)
-    # return [lista_etiquetas, grupo_etiquetas]
     return dicc_etiquetas
 
 
@@ -133,19 +163,20 @@ if __name__ == "__main__":
     etiqueta = Etiquetas(archivo) 
     etiqueta.leer_archivo()
 
+    # agregado de etiquetas desde programa
+    tags_nuevos = [ "diamante", "cuarzo", "esmeralda", "amatista", '1', '5', '7']
+    etiqueta.agregar_tags(tags_nuevos)      # default: (numero grupo + 1)
+    etiqueta.agregar_tags(tags_nuevos, 999) # nro grupo arbitrario
+
+    # # Muestra de resultados
     tags  = etiqueta.tags
-    grupo = etiqueta.grupo 
-    # tags = etiqueta.keys()
-    # grupo = etiqueta.values()
+    grupos = etiqueta.grupos 
 
+    print(f'[bold green] {tags }')
+    print(f'[bold yellow] {grupos}')
 
-    # Muestra de resultados
-    print(f'[bold green]Etiquetas y Nº grupos:')
-    for i in range(0,len(tags) ):
-        print(f'[bold yellow] {grupo[i]} , {tags[i] }')
-
-    print(f'[bold red]Longitud total: {len(tags)}')
-
+    print(f'[bold green]Longitud etiquetas: {len(tags)}')
+    print(f'[bold yellow]Longitud grupos: {len(grupos)}')
 
     # Guardado en archivo aparte
     etiqueta.ruta = "etiquetas_salida.txt"
