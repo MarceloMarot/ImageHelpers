@@ -363,7 +363,8 @@ def main(pagina: ft.Page):
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
     texto_estados = ft.Text("Estado\netiquetado:")
     # texto_conteo_etiquetas_totales = ft.Text("")
-
+    texto_imagen= ft.Text("(Titulo)")
+    texto_datos = ft.Text("(nada)")
 
     # contenedor_seleccion = Contenedor(512, 512)
     # contenedor_seleccion = Contenedor_Etiquetado("",512, 512)
@@ -372,12 +373,6 @@ def main(pagina: ft.Page):
     contenedor_seleccion.bgcolor = ft.colors.LIGHT_BLUE
 
     #############  MAQUETADO ############################
-
-    columna_seleccion = ft.Column(
-        [contenedor_seleccion],
-        alignment=ft.MainAxisAlignment.CENTER,
-
-    )
 
     # componentes repartidos en segmentos horizontales
     fila_controles_apertura =ft.Row(
@@ -441,6 +436,23 @@ def main(pagina: ft.Page):
         # visible=False,
         visible=True,
         )
+
+
+    columna_seleccion = ft.Column(
+        [texto_imagen, contenedor_seleccion, texto_datos],
+        # controls= [
+        #     ft.Row([texto_imagen]        , alignment=ft.MainAxisAlignment.CENTER ,expand=True),
+        #     ft.Row([contenedor_seleccion], alignment=ft.MainAxisAlignment.CENTER ,expand=True),
+        #     ft.Row([texto_datos ]        , alignment=ft.MainAxisAlignment.CENTER ,expand=True),
+        # ],
+        # alignment=ft.MainAxisAlignment.CENTER,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        # width=512,
+        expand=True,
+    )
+
+    etiquetador_imagen.expand = 1
 
     # pestaña de etiquetado y navegacion de imagenes
     altura_tab_etiquetado = 800
@@ -1148,7 +1160,18 @@ def main(pagina: ft.Page):
         columna_etiquetas.update()
 
 
+
+    def redimensionar_botonera(e):
+
+        # redimensionado etiquetador:
+        etiquetador_imagen.base   = int(pagina.width/2)
+        etiquetador_imagen.altura = pagina.height - 100
+        etiquetador_imagen.update()
+
+
     ###########  ASIGNACION HANDLERS #################
+
+    pagina.on_resize = redimensionar_botonera
 
     # eventos deshabilitados mientras no haya imagenes cargadas
     lista_dimensiones_desplegable.on_change = filtrar_dimensiones_estados    
@@ -1196,7 +1219,7 @@ def main(pagina: ft.Page):
     pagina.title = "Etiquetador Imágenes"
     # pagina.window_width  = 1500
     pagina.window_width  = 1300
-    pagina.window_min_width = 1300
+    # pagina.window_min_width = 1300
     pagina.window_height = 900
     # pagina.theme_mode = ft.ThemeMode.DARK
     pagina.theme_mode = ft.ThemeMode.LIGHT

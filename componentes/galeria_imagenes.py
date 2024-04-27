@@ -53,7 +53,8 @@ class Contenedor(ft.Container):
             alignment=ft.alignment.center,
             bgcolor=ft.colors.WHITE,
             border = ft.border.all(0, ft.colors.WHITE),
-            border_radius=redondeo ,         
+            border_radius=redondeo ,  
+            image_fit = ft.ImageFit.CONTAIN,       
             animate=ft.animation.Animation(
                 1000, 
                 ft.AnimationCurve.BOUNCE_OUT # acomodamiento con "rebotes"
