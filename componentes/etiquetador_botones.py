@@ -158,7 +158,7 @@ class FilasBotonesEtiquetas(ft.Column):
                 boton.estado = False
         self.update()
 
-    def leer_botones(self):
+    def leer_botones(self)->list[str]:
         """Lee todas las etiquetas habilitadas mediante los botones"""
         etiquetas = []
         for boton in self.botones_etiquetas:

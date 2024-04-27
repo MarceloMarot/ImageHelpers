@@ -8,7 +8,7 @@ class Etiquetas:
     las etiquetas se guardan/leen de un archivo de igual nombre pero con extension '.txt' 
     """
     # def __init__(self, tags: list, grupo: list, ruta: str):	
-    def __init__(self, ruta: str="", tags=[], grupo=[] ):	
+    def __init__(self, ruta: str=""):	
         self.ruta : str    = ruta      # ruta archivo
         self.datos : dict   = dict()      # etiquetas y grupos en formato diccionario
         # lectura automatica
@@ -19,7 +19,7 @@ class Etiquetas:
 
 
     @property
-    def tags(self)->list:
+    def tags(self)->list[str]:
         """Devuelve la lista de etiquetas encontradas. Puede estar vacía."""
         if self.datos != None:
             return list( self.datos.keys() )
