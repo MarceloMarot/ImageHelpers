@@ -59,8 +59,11 @@ class Etiquetas:
         return guardado_exitoso
 
 
-    def agregar_tags(self, tags: list[str], nro_grupo: int|None = None):
+    def agregar_tags(self, tags: list[str], nro_grupo: int|None = None, sobreescribir:bool=False):
         """Agrega etiquetas al objeto desde el programa. Asigna tambien un numero de grupo."""
+
+        if sobreescribir:
+            self.datos=dict()
 
         # nuevo grupo de etiquetas si no se indica a la entrada
         if nro_grupo == None:
@@ -166,6 +169,7 @@ if __name__ == "__main__":
     tags_nuevos = [ "diamante", "cuarzo", "esmeralda", "amatista", '1', '5', '7']
     etiqueta.agregar_tags(tags_nuevos)      # default: (numero grupo + 1)
     etiqueta.agregar_tags(tags_nuevos, 999) # nro grupo arbitrario
+    # etiqueta.agregar_tags(tags_nuevos, sobreescribir=True) # borrado data
 
     # # Muestra de resultados
     tags  = etiqueta.tags

@@ -24,7 +24,7 @@ def nada( e ):
 
 
 class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
-    def __init__(self, ruta, ancho=768, alto=768, redondeo=0):
+    def __init__(self, ruta: str, ancho:int=768, alto:int=768, redondeo:int=0 ):
         Etiquetas.__init__(self, ruta)
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
         self.__etiquetada = False
@@ -32,10 +32,9 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         self.__defectuosa = False
         self.__dimensiones: tuple[int, int, int] | None
         self.leer_dimensiones()
-        self.verificar_imagen( None)   # FIX
+        self.verificar_imagen()   
         self.verificar_etiquetado()
-        self.verificar_guardado(None)
-
+        self.verificar_guardado()
 
 
     def buscar_etiqueta(self, etiqueta: str):
@@ -54,7 +53,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         return self.__dimensiones
 
 
-    def verificar_imagen(self, dimensiones: tuple[int, int, int] | None)->bool|None:
+    def verificar_imagen(self, dimensiones: tuple[int, int, int] | None=None)->bool|None:
         """Este método verifica dimensiones de archivo.
         Devuelve 'True' si las dimensiones coinciden.
         """
@@ -124,6 +123,16 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
 
     def actualizar_estilo_estado(self, estilos):
         actualizar_estilo_estado([self], estilos)
+
+
+    # def cargar_imagen(self):
+    #     """"Este metodo carga la imagen y cambia el estilo del contenedor segun el estado del etiquetado"""
+    #     super().cargar_imagen()
+    #     indice = self.indice
+    #     contenedor_imagen = self.imagenes[indice]
+    #     # seleccion de estilo segun jerarquia
+    #     actualizar_estilo_estado( [contenedor_imagen], self.estilos)
+
 
 
 
@@ -346,7 +355,7 @@ def main(pagina: ft.Page):
 
     # Componentes especiales
     etiquetador_imagen = EtiquetadorBotones()
-    etiquetador_imagen.visible = False   # FIX
+    etiquetador_imagen.visible = True   # FIX
     galeria = GaleriaEtiquetado( estilos_galeria )
     # menu_seleccion = MenuEtiquetado( estilos_seleccion)
 
@@ -356,7 +365,10 @@ def main(pagina: ft.Page):
     # texto_conteo_etiquetas_totales = ft.Text("")
 
 
-    contenedor_seleccion = Contenedor(512, 512)
+    # contenedor_seleccion = Contenedor(512, 512)
+    # contenedor_seleccion = Contenedor_Etiquetado("",512, 512)
+    contenedor_seleccion = Contenedor_Imagen("",512,512)
+    contenedor_seleccion.estilo(estilos_seleccion["predefinido"])
     contenedor_seleccion.bgcolor = ft.colors.LIGHT_BLUE
 
     #############  MAQUETADO ############################
@@ -426,7 +438,8 @@ def main(pagina: ft.Page):
         text="Galeria",
         # content=galeria,
         content=fila_galeria_etiquetas,
-        visible=False,
+        # visible=False,
+        visible=True,
         )
 
     # pestaña de etiquetado y navegacion de imagenes
@@ -467,37 +480,52 @@ def main(pagina: ft.Page):
 
     ############## HANDLERS ##################################
 
-    def etiquetas_a_imagen(indice: int):
+    def etiquetas_a_imagen(indice: int)->list[str]:
         # global imagenes_etiquetadas
         global imagenes_galeria
         # Se transfieren los botones de la botonera a las imagenes 
 
         etiquetas_botones = etiquetador_imagen.leer_botones()
-        imagenes_galeria[indice].tags = etiquetas_botones
+
+        # imagenes_galeria[indice].tags = etiquetas_botones
+        imagenes_galeria[indice].agregar_tags(etiquetas_botones, sobreescribir=True)
+
+        # imagenes_galeria[indice].datos = {}
+
         # imagenes_etiquetadas[indice].tags = etiquetas_botones  # FIX 
         # etiquetador_imagen.update()
         return etiquetas_botones
 
 
     def etiquetas_a_botones(indice: int):
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
+        global imagenes_galeria
         # Se transfieren los botones de la imagen  a la botonera 
-        etiquetas_imagen = imagenes_etiquetadas[indice].tags 
+        etiquetas_imagen = imagenes_galeria[indice].tags 
+        # etiquetas_imagen = imagenes_etiquetadas[indice].tags 
 
         # actualizacion grafica
-        etiquetador_imagen.asignar_etiquetas(etiquetas_imagen)
+        # etiquetador_imagen.asignar_etiquetas(etiquetas_imagen)
+
+
+        etiquetador_imagen.setear_salida( imagenes_galeria[indice] )
+        etiquetador_imagen.actualizar_botones()
+
         return etiquetas_imagen
 
 
     def actualizar_bordes( e: ft.ControlEvent ):
 
         # acceso a elementos globales
-        global imagenes_etiquetadas
+        # global imagenes_etiquetadas
         global imagenes_galeria
         global dimensiones_elegidas 
 
         # indice = menu_seleccion.indice
-        indice = 0 # FIX
+        global clave
+
+        imagen_seleccionada = imagen_clave(clave, imagenes_galeria) 
+        indice = imagenes_galeria.index(imagen_seleccionada) 
 
         # Se transfieren los botones de la botonera a las imagenes 
         etiquetas_botones = etiquetas_a_imagen(indice)
@@ -682,9 +710,9 @@ def main(pagina: ft.Page):
 
             # Eventos de los botones
             etiquetador_imagen.evento_click(
-                actualizar_bordes,
-                actualizar_bordes,
-                actualizar_bordes
+                funcion_etiquetas=actualizar_bordes,
+                funcion_grupo=actualizar_bordes,
+                funcion_comando=actualizar_bordes
                 )
             # reporte por snackbar
             ventana_emergente(pagina, f"Archivo de  dataset abierto\nNombre archivo: {archivo_dataset}")
@@ -694,14 +722,16 @@ def main(pagina: ft.Page):
     def click_imagen_galeria(e: ft.ControlEvent):
         """Esta imagen permite elegir una imagen desde la galeria y pasarla al selector de imagenes al tiempo que carga las etiquetas de archivo."""
         contenedor = e.control
+
+        global clave
         clave = contenedor.content.key
         
         print(clave)
-        contenedor.leer_archivo()
-        contenedor.actualizar_estilo_estado(estilos_galeria)
-        contenedor.update()
-        print(contenedor.tags)
-        return
+        # contenedor.leer_archivo()
+        # contenedor.actualizar_estilo_estado(estilos_galeria)
+        # contenedor.update()
+        # print(contenedor.tags)  # correcto
+ 
         # global imagenes_etiquetadas
         global imagenes_galeria
         # actualizacion de imagen seleccionada y etiquetado
@@ -710,9 +740,17 @@ def main(pagina: ft.Page):
         # actualizacion del indice
         # indice = imagenes_etiquetadas.index(imagen_seleccionada) # FIX
         indice = imagenes_galeria.index(imagen_seleccionada) 
-        # actaualizacion de controles
+        # actualizacion de controles
         etiquetador_imagen.setear_salida(imagen_seleccionada)
         
+        # contenedor_seleccion.clave = clave
+
+
+        contenedor_seleccion.ruta_imagen = imagen_seleccionada.ruta
+        contenedor_seleccion.estilo(estilos_seleccion["predefinido"])
+        # actualizar_estilo_estado( [contenedor_seleccion,] estilos_galeria  )
+        contenedor_seleccion.update()
+
         # menu_seleccion.indice = indice
         # indice        # HACER ALGO CON EL INDICE
 
@@ -732,7 +770,10 @@ def main(pagina: ft.Page):
         #regreso a la galeria
         # indice = menu_seleccion.indice
 
-        indice = 0  # FIX !!!
+        global clave
+        imagen_seleccionada = imagen_clave(clave, imagenes_galeria) 
+        indice = imagenes_galeria.index(imagen_seleccionada) 
+
         # clave = imagenes_etiquetadas[indice].content.key  # FIX
         clave = imagenes_galeria[indice].content.key  
         apuntar_galeria( clave)   
@@ -1134,6 +1175,8 @@ def main(pagina: ft.Page):
 
 
     boton_guardar.on_click = guardar_cambios
+
+    contenedor_seleccion.on_click = click_imagen_seleccion
 
     ############## CONFIGURACIONES GRAFICAS ################     
      

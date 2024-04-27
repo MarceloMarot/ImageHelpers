@@ -416,7 +416,7 @@ class EtiquetadorBotones(ft.Column):
             # flag de estado
             self.__habilitado = False
 
-    def leer_botones(self):
+    def leer_botones(self)->list[str]:
         """Lee todas las etiquetas habilitadas mediante los botones"""
         etiquetas = self.__filas_botones.leer_botones()
         return etiquetas
