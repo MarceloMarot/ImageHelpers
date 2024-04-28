@@ -210,7 +210,7 @@ def clave_imagen_correcta(key, x: ContImag):
     return True if key == x.clave else False
 
 
-def imagen_clave(clave: str, imagenes: list[ContImag]):
+def imagen_clave(clave: str, imagenes: list[ContImag])->ContImag:
     """Devuelve el contenedor de imagen con la clave seleccionada"""
     key_imagen = lambda x: clave_imagen_correcta(clave, x)
     objeto_filtrado = filter(key_imagen ,imagenes)

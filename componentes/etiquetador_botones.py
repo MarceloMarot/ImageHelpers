@@ -148,6 +148,13 @@ class FilasBotonesEtiquetas(ft.Column):
         self.etiquetas.leer_archivo()
         self.actualizar_botones()
 
+
+    def agregar_tags(self, tags: list[str], sobreescribir=False):
+        """Ingresa las etiquetas desde una lista y actualiza los botones."""
+        self.etiquetas.agregar_tags(tags, sobreescribir)
+        self.actualizar_botones()
+
+
     def actualizar_botones(self):
         """Lee los estados de los botones en base a las etiquetas ingresadas al componente"""
         for boton in self.botones_etiquetas:
@@ -158,14 +165,21 @@ class FilasBotonesEtiquetas(ft.Column):
                 boton.estado = False
         self.update()
 
-    def leer_botones(self)->list[str]:
-        """Lee todas las etiquetas habilitadas mediante los botones"""
+
+
+    def leer_botones(self, filtrar_repetidos=True)->list[str]:
+        """Lee todas las etiquetas habilitadas mediante los botones. Por defecto filtra los repetidos."""
         etiquetas = []
         for boton in self.botones_etiquetas:
             if boton.estado:
                 tag = boton.text
                 etiquetas.append(tag)
-        return etiquetas
+        if filtrar_repetidos:
+            set_etiquetas = set(etiquetas)
+            return list(set_etiquetas)
+        else:
+            return etiquetas
+
 
     def leer_etiquetas_archivo(self):
         """Lee y carga las etiquetas ya guardadas en el archivo de salida"""
@@ -380,6 +394,13 @@ class EtiquetadorBotones(ft.Column):
         self.__salida_seteada = True
         self.habilitado = True if self.__dataset_seteado else False
             
+
+    def agregar_tags(self, tags: list[str], sobreescribir=False):
+        """Ingresa las etiquetas desde una lista y actualiza los botones."""
+        self.__filas_botones.agregar_tags(tags, sobreescribir)
+        self.actualizar_botones()
+
+
     
     @property
     def dataset_seteado(self):
@@ -416,9 +437,9 @@ class EtiquetadorBotones(ft.Column):
             # flag de estado
             self.__habilitado = False
 
-    def leer_botones(self)->list[str]:
-        """Lee todas las etiquetas habilitadas mediante los botones"""
-        etiquetas = self.__filas_botones.leer_botones()
+    def leer_botones(self, filtrar_repetidos=True)->list[str]:
+        """Lee todas las etiquetas habilitadas mediante los botones. Por defecto filtra los repetidos."""
+        etiquetas = self.__filas_botones.leer_botones(filtrar_repetidos)
         return etiquetas
 
     def actualizar_botones(self):
@@ -486,7 +507,7 @@ def main(page: ft.Page):
     etiquetador.altura = 800
     etiquetador.base = 700
     # carga de archivos (sentido inverso)
-    etiquetador.setear_salida( etiquetas )      # carga el estado de los botones
+    etiquetador.setear_salida( etiquetas )      # carga el estado de los botones desde archivo
     etiquetador.leer_dataset(   dataset   )     # crea los botones de etiquetado
 
     # configuracion de eventos ante el click sobre los botones
@@ -494,6 +515,24 @@ def main(page: ft.Page):
 
     # actualizar el estado de los botones
     etiquetador.actualizar_botones()
+
+    # reporte de etiquetas almacenadas
+    leido = etiquetador.leer_botones()
+    print("[cyan]Etiquetas leidas")
+    print(leido)
+
+    # etiquetas agregadas desde el programa
+    nuevos_tags = ["12", "13", "14", "15", "Aquiles Brinco"] 
+    etiquetador.agregar_tags(nuevos_tags)
+
+    # reporte de etiquetas almacenadas
+    leido = etiquetador.leer_botones()
+    print("[cyan]Tags agregados - etiquetas leidas")
+    print(leido)
+
+    leido = etiquetador.leer_botones(False)
+    print("[cyan]Todos los tags - incluye repetidos")
+    print(leido)
 
 
     def redimensionar_botonera(e):
