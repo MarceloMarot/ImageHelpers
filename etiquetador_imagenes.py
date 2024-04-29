@@ -724,6 +724,9 @@ def main(pagina: ft.Page):
         global imagenes_galeria_filtradas_backup
         imagenes_galeria_filtradas_backup = imagenes_galeria
 
+        # asignacion del primer elemento de la galeria filtrada
+        global clave
+        clave = imagenes_galeria[0].clave
         actualizar_componentes(e)    
 
 
@@ -764,11 +767,12 @@ def main(pagina: ft.Page):
             galeria.update()
             # seleccion imagen
             global clave
-            imagen_elegida = imagenes_galeria[0]
-            clave = imagen_elegida.clave
+            # imagen_elegida = imagenes_galeria[0] # FIX
+            # clave = imagen_elegida.clave
+            imagen_elegida = imagen_clave(clave, imagenes_galeria)
             # imagen_elegida = imagen_clave(clave, imagenes_galeria)
-            # etiquetador_imagen.setear_salida(imagen_elegida)  # FIX
-            etiquetador_imagen.agregar_tags(imagen_elegida.tags)  # FIX
+            etiquetador_imagen.setear_salida(imagen_elegida)  # FIX
+            # etiquetador_imagen.agregar_tags(imagen_elegida.tags)  # FIX
             etiquetador_imagen.update()
 
             imagen_seleccion(imagen_elegida)
@@ -824,14 +828,42 @@ def main(pagina: ft.Page):
     def desplazamiento_teclado(e: ft.KeyboardEvent):
         """Permite el desplazamiento rapido de imagenes con teclas del teclado predefinidas"""
         tecla = e.key   
-        # Avance y retroseso de imagenes en seleccion y galeria
-        incremento = 0
-        if tecla == "Arrow Left" or tecla == "A":
-            incremento = - 1     # retroceso
-        elif tecla == "Arrow Right" or tecla == "D":
-            incremento = 1      # avance
-        # cambio de imagen seleccion
-        # menu_seleccion.cambiar_indice(incremento, 1 ) # FIX
+        global imagenes_galeria
+        global clave
+
+        numero_imagenes = len(imagenes_galeria)
+        if numero_imagenes > 0:
+            imagen = imagen_clave(clave, imagenes_galeria)
+            indice = imagenes_galeria.index(imagen)
+            # cambio de imagen seleccionada
+            cambiar_imagen = False
+            # avanzar
+            if tecla == "A" or tecla =="Page Up" or tecla == "Arrow Left":
+                indice -= 1 
+                indice = indice if indice>0 else 0
+                cambiar_imagen = True
+            # retroceder
+            elif tecla == "D" or tecla=="Page Down" or tecla == "Arrow Right":
+                indice += 1 
+                indice = indice if indice<numero_imagenes else numero_imagenes-1
+                cambiar_imagen = True
+            # ir al inicio
+            elif tecla == "Home":
+                indice = 0
+                cambiar_imagen = True
+            # ir al final
+            elif tecla == "End":
+                indice = numero_imagenes - 1
+                cambiar_imagen = True
+            
+            if cambiar_imagen:
+                imagen: Contenedor_Etiquetado
+                # actualizacion de parametros
+                imagen = imagenes_galeria[indice]
+                clave = imagen.clave 
+                # carga de imagen
+                asignar_imagen_edicion(clave)
+                apuntar_galeria(clave)
 
 
     def cambio_pestanias(e):
