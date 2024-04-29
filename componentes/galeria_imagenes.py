@@ -211,10 +211,22 @@ def clave_imagen_correcta(key, x: ContImag):
 
 
 def imagen_clave(clave: str, imagenes: list[ContImag])->ContImag:
-    """Devuelve el contenedor de imagen con la clave seleccionada"""
+    """Devuelve el contenedor de la primera imagen con la clave seleccionada. Se presupone que dicha clave existe."""
     key_imagen = lambda x: clave_imagen_correcta(clave, x)
     objeto_filtrado = filter(key_imagen ,imagenes)
-    return list(objeto_filtrado)[0]
+    imagenes_clave = list(objeto_filtrado)
+    return imagenes_clave[0]
+
+
+def indice_clave(clave: str, imagenes: list[ContImag])->int|None:
+    """Devuelve el indice de la primera imagen con la clave seleccionada. Si dicha clave no se encuentra se devuelve 'None'"""
+    key_imagen = lambda x: clave_imagen_correcta(clave, x)
+    objeto_filtrado = filter(key_imagen ,imagenes)
+    imagenes_clave = list(objeto_filtrado)
+    if len(imagenes_clave) > 0:
+        return imagenes.index(imagenes_clave[0])
+    else:
+        return None
 
 
 def nombre_imagen_correcto(nombre: str, contenedor: ContImag ):
