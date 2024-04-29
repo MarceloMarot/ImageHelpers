@@ -453,16 +453,17 @@ def main(pagina: ft.Page):
 
         if len(imagenes_galeria)>0:
             imagen_seleccionada = imagen_clave(clave, imagenes_galeria) 
-            indice = imagenes_galeria.index(imagen_seleccionada) 
+            # indice = imagenes_galeria.index(imagen_seleccionada) 
 
             # Se transfieren los tags de la botonera a las imagenes 
             etiquetas_botones = etiquetador_imagen.leer_botones()
-            imagenes_galeria[indice].agregar_tags(etiquetas_botones, sobreescribir=True)
+            # imagenes_galeria[indice].agregar_tags(etiquetas_botones, sobreescribir=True)
+            imagen_seleccionada.agregar_tags(etiquetas_botones, sobreescribir=True)
 
-            print("click_botones_etiquetador")
-            print(clave)
-            print(imagen_seleccionada.tags) # FIX
-            print(etiquetador_imagen.leer_botones())
+            # print("click_botones_etiquetador")
+            # print(clave)
+            # print(imagen_seleccionada.tags) # FIX
+            # print(etiquetador_imagen.leer_botones())
 
             # actualizacion bordes galeria
             imagen_seleccionada.verificar_etiquetado()
@@ -477,7 +478,8 @@ def main(pagina: ft.Page):
 
             # actualizacion bordes selector
             # asignar_imagen_edicion(clave)
-            imagen_seleccion(imagenes_galeria[indice])
+            # imagen_seleccion(imagenes_galeria[indice])
+            imagen_seleccion(imagen_seleccionada)
 
         # renovar lista de etiquetas
         estadisticas()
@@ -620,7 +622,8 @@ def main(pagina: ft.Page):
         # actualizacion del indice
         imagenes_galeria.index(imagen_seleccionada) 
         # actualizacion de controles
-        etiquetador_imagen.agregar_tags(imagen_seleccionada.tags, sobreescribir=True) 
+        etiquetador_imagen.setear_salida(imagen_seleccionada) 
+        # etiquetador_imagen.agregar_tags(imagen_seleccionada.tags, sobreescribir=True) 
         etiquetador_imagen.update()
 
         # actualizacion de imagen
@@ -732,7 +735,6 @@ def main(pagina: ft.Page):
             return
         imagen: Contenedor_Etiquetado
         i = 0
-        # for imagen in imagenes_etiquetadas:  # FIX
         for imagen in imagenes_galeria:  #
             guardado = imagen.guardar_archivo()
             if guardado :

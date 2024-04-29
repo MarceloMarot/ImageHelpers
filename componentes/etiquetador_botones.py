@@ -145,7 +145,7 @@ class FilasBotonesEtiquetas(ft.Column):
     def setear_salida(self, etiquetas :Etiquetas):
         """Carga el archivo de etiquetas de salida y actualiza el etiquetador grafico"""
         self.etiquetas = etiquetas
-        self.etiquetas.leer_archivo()
+        # self.etiquetas.leer_archivo()
         self.actualizar_botones()
 
 
@@ -334,8 +334,8 @@ class EtiquetadorBotones(ft.Column):
 
     def guardar_etiquetas(self, e):
         """Guarda todas las etiquetas seleccionadas en el archivo de texto asignado al componente. Se filtran las etiquetas repetidas."""
+        # lectura de etiquetas (elementos repetidos flitrados)
         etiquetas = self.__filas_botones.leer_botones()
-        # filtrado elementos repetidos
         set_etiquetas = set(etiquetas) 
         lista_etiquetas = list(set_etiquetas)
         # relectura de etiquetas para prevenir relecturas inutiles
