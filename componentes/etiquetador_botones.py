@@ -91,7 +91,7 @@ class FilasBotonesEtiquetas(ft.Column):
        
     def leer_dataset(self, dataset: Etiquetas):
         """Lee TODAS las etiquetas (el 'dataset') desde un archivo de texto y crea los botones de activacion de la interfaz gráfica.
-        El componente clasifica las etiquetas en distintos 'grupos' en base al primer renglón del archivo en que se encuentran.
+        El componente clasifica las etiquetas en distintos 'grupos' en base al renglón del archivo en que se encuentran.
         """
         self.dataset = dataset
         tags = self.dataset.tags
@@ -149,9 +149,9 @@ class FilasBotonesEtiquetas(ft.Column):
         self.actualizar_botones()
 
 
-    def agregar_tags(self, tags: list[str], sobreescribir=False):
+    def agregar_tags(self, tags: list[str], sobreescribir:bool=False):
         """Ingresa las etiquetas desde una lista y actualiza los botones."""
-        self.etiquetas.agregar_tags(tags, sobreescribir)
+        self.etiquetas.agregar_tags(tags,  sobreescribir=sobreescribir)
         self.actualizar_botones()
 
 
@@ -395,9 +395,10 @@ class EtiquetadorBotones(ft.Column):
         self.habilitado = True if self.__dataset_seteado else False
             
 
-    def agregar_tags(self, tags: list[str], sobreescribir=False):
+    def agregar_tags(self, tags: list[str],  sobreescribir:bool=False):
         """Ingresa las etiquetas desde una lista y actualiza los botones."""
         self.__filas_botones.agregar_tags(tags, sobreescribir)
+        self.habilitado = True if self.__dataset_seteado else False
         self.actualizar_botones()
 
 
@@ -513,27 +514,41 @@ def main(page: ft.Page):
     # configuracion de eventos ante el click sobre los botones
     etiquetador.evento_click(funcion_etiqueta, funcion_grupos, funcion_comando)
 
-    # actualizar el estado de los botones
-    etiquetador.actualizar_botones()
-
     # reporte de etiquetas almacenadas
     leido = etiquetador.leer_botones()
     print("[cyan]Etiquetas leidas")
     print(leido)
 
+
+    page.title = "Botones etiquetado"
+    page.window_height      = 800
+    page.window_min_height  = 800
+    page.window_width       = 650
+    page.update()
+
+
+    # cambios con delay
+    import time 
+    time.sleep(2)
     # etiquetas agregadas desde el programa
-    nuevos_tags = ["12", "13", "14", "15", "Aquiles Brinco"] 
-    etiquetador.agregar_tags(nuevos_tags)
+    nuevos_tags = ["3","4","5","6", "Aquiles Brinco"] 
+    etiquetador.agregar_tags(nuevos_tags, False)
 
     # reporte de etiquetas almacenadas
     leido = etiquetador.leer_botones()
     print("[cyan]Tags agregados - etiquetas leidas")
     print(leido)
 
-    leido = etiquetador.leer_botones(False)
-    print("[cyan]Todos los tags - incluye repetidos")
-    print(leido)
 
+    time.sleep(2)
+    # etiquetas agregadas desde el programa
+    nuevos_tags = ["3","4","5","6", "Aquiles Brinco"] 
+    etiquetador.agregar_tags(nuevos_tags, True)
+
+    # reporte de etiquetas almacenadas
+    leido = etiquetador.leer_botones()
+    print("[cyan]Sobreescritura de tags - etiquetas leidas")
+    print(leido)
 
     def redimensionar_botonera(e):
 
