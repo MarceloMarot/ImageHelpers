@@ -51,7 +51,10 @@ class Etiquetas:
     # escritura en disco
     def guardar(self, etiquetas=[], modo: str="w", encoding='utf-8'):
         """Conversion de lista de etiquetas a texto (añade comas y respeta saltos de renglón)"""
-        texto = etiquetas2texto(etiquetas)
+        if len(etiquetas)>0:
+            texto = etiquetas2texto(etiquetas)
+        else:
+            texto = etiquetas2texto(self.tags)
         # guardado, actualizacion del objeto e indicacion de exito
         guardado_exitoso = guardar_archivo(self.ruta, texto, modo, encoding)
         if guardado_exitoso:

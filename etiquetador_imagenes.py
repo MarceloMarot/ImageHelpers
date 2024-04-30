@@ -6,7 +6,7 @@ import flet as ft
 from manejo_texto.procesar_etiquetas import Etiquetas 
 
 from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
-from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable
+from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable, FilasBotonesEtiquetas
 from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
@@ -245,8 +245,6 @@ imagenes_galeria = []
 imagenes_galeria_backup = []
 imagenes_galeria_filtradas_backup = []
 
-botones_tags = []
-
 tupla_estados = (
     "todas",
     "guardadas",
@@ -290,6 +288,27 @@ def main(pagina: ft.Page):
         tooltip="Elige el archivo TXT con todas las etiquetas\n(cada renglon de archivo representa un 'grupo')"
     )
 
+    boton_agregar_archivo = ft.ElevatedButton(
+        text = f"Guardar/agregar a dataset...",
+        bgcolor = ft.colors.AMBER_800,
+        icon=ft.icons.SAVE,
+        color = ft.colors.WHITE,
+        ## manejador
+        on_click=lambda _: dialogo_agregado_tags.save_file(
+            dialog_title = "Modificar archivo de dataset (formato .txt)",
+            allowed_extensions=["txt"],
+            ),
+        tooltip="Guarda en archivo de texto las etiquetas encontradas. Si el archivo ya existe, las agrega al final.",
+        )
+
+    boton_reset_tags = ft.ElevatedButton(
+        text = f"Deseleccionar todos...",
+        bgcolor = ft.colors.BLUE_800,
+        color = ft.colors.WHITE,
+        tooltip="Reinicia la selección de etiquetas encontradas"
+        )
+
+
     boton_filtrar_dimensiones = BotonBiestable("Filtrar por tamaño", ft.colors.BROWN_100, ft.colors.BROWN_800)
     boton_filtrar_dimensiones.color = ft.colors.WHITE
 
@@ -309,6 +328,17 @@ def main(pagina: ft.Page):
     etiquetador_imagen.altura = pagina.height - 100
 
     galeria = GaleriaEtiquetado( estilos_galeria )
+
+    filas_filtrado = FilasBotonesEtiquetas()
+    filas_filtrado.altura = pagina.height - 200
+
+    filas_filtrado.lista_colores=[
+        ft.colors.GREEN_800,
+        ft.colors.YELLOW_800,
+        ft.colors.ORANGE_800,
+        ft.colors.RED_800,
+        ]
+
 
     # textos
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
@@ -346,11 +376,30 @@ def main(pagina: ft.Page):
 
     galeria.expand=1
 
+
+    # ft.Row(
+    #     [ boton_reset_tags, boton_agregar_archivo],
+    #     # alignment=ft.MainAxisAlignment.CENTER,
+    #     alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+    #     ),  
+    # ft.Divider(height=7, thickness=1) , 
+
+
+
     columna_etiquetas = ft.Column(
-        controls=[],
+        controls=[    ft.Row(
+        [ boton_reset_tags, boton_agregar_archivo],
+        # alignment=ft.MainAxisAlignment.CENTER,
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        ),  
+        ft.Divider(height=7, thickness=1) ,
+        filas_filtrado,
+        ft.Divider(height=7, thickness=1) ,
+        ft.Divider(height=7, thickness=1) ,
+        ],
         visible=False,
-        expand=1,
-        scroll=ft.ScrollMode.AUTO,
+        expand=True, 
+        scroll=ft.ScrollMode.AUTO, 
         )
 
 
@@ -686,12 +735,7 @@ def main(pagina: ft.Page):
             imagen.verificar_imagen(dimensiones_elegidas)
 
         # busqueda de etiquetas presentes en imagenes
-        global botones_tags 
-        tags = []
-        if boton_filtrar_etiquetas.estado == True:
-            for boton in botones_tags:
-                if boton.estado: 
-                    tags.append(boton.text)
+        # tags = filas_filtrado.leer_botones() # FIX
 
         # reporte por snackbar
         ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(imagenes_galeria)} imagenes seleccionadas.")
@@ -761,7 +805,6 @@ def main(pagina: ft.Page):
     
         global imagenes_galeria
         global imagenes_galeria_filtradas_backup
-        global botones_tags 
 
         # animacion: los  scrolls se mueven a la etiqueta clickeada
         boton = e.control
@@ -769,17 +812,13 @@ def main(pagina: ft.Page):
 
         etiquetador_imagen.mostrar_tag(texto_tag)
         etiquetador_imagen.update()
-        # columna_etiquetas.scroll_to(key=texto_tag) # FIX: no anda
-        # columna_etiquetas.update()
 
         # extraccion del numero de repeticiones
         set_etiquetas = set()
-        for boton in botones_tags:
-            if boton.estado == True:
-                # extraccion del numero de repeticiones
-                texto = boton.text.split("(")[0]
-                texto = texto.strip()
-                set_etiquetas.add(texto)
+        tags_conteo = filas_filtrado.leer_botones()
+        for tag in tags_conteo:
+            texto = tag.split("(")[0].strip()
+            set_etiquetas.add(texto)
 
         imagenes_galeria = imagenes_galeria_filtradas_backup
 
@@ -796,7 +835,8 @@ def main(pagina: ft.Page):
         # reporte por snackbar
         if boton_filtrar_etiquetas.estado:
             renglon1 = f"Filtrado por etiquetas habilitado"
-            renglon2 = f" - {len(set_etiquetas)} de {len(botones_tags)} etiquetas seleccionadas;"
+            renglon2 = f" - {len(set_etiquetas)} de {len(tags_conteo)} etiquetas seleccionadas;"
+            # renglon2 = f" - {len(set_etiquetas)} de {len(botones_tags)} etiquetas seleccionadas;"
             renglon3 = f" - {len(imagenes_galeria)}  de {len(imagenes_galeria_filtradas_backup)} imagenes seleccionadas."
             ventana_emergente(pagina, 
                 f"{renglon1}\n{renglon2}\n{renglon3}")
@@ -895,15 +935,47 @@ def main(pagina: ft.Page):
 
     def reset_tags_filtros(e: ft.ControlEvent):
         """Restaura todos los botones de filtrado."""
-        global botones_tags 
-        if len(botones_tags)>0:
-            for boton in botones_tags:
-                boton.estado = False
-            filtrar_todas_etiquetas(e)
+        filas_filtrado.agregar_tags([], True)
+        filtrar_todas_etiquetas(e)
+
+    def agregar_tags_archivo(e: ft.FilePickerResultEvent):
+        # texto = e.path if e.path else "Agregado de etiquetas a archivo cancelado"
+        if e.path :
+            ruta = e.path
+            texto=f"Agregado de etiquetas a archivo\nRuta: {ruta}"
+
+            dataset_archivo = Etiquetas(ruta)
+
+            tags_dataset  = dataset_archivo.tags
+            tags_conteados = filas_filtrado.dataset.tags
+
+            # correccion formato
+            tags_imagenes = []
+            for tag in tags_conteados:
+                texto = tag.split("(")[0].strip()
+                tags_imagenes.append(texto)
+
+            set_tags_extra = set(tags_imagenes).difference(tags_dataset)
+            tags_extra = list(set_tags_extra)
+            
+            
+            texto = str(tags_extra)
+            print(tags_extra)
+
+            dataset_archivo.agregar_tags(tags_extra, sobreescribir=True)
+            guardado_exitoso = dataset_archivo.guardar(modo="a")
+
+            print(f"Guardado exitoso: {guardado_exitoso}")
+
+        else :
+            texto=f"Guardado cancelado"
+        # etiquetador_imagen.guardar_dataset(INCOMPLETO)
+        ventana_emergente(pagina, texto)
 
 
     def estadisticas()->dict:
-        """Detecta todas las etiquetas usadas en las imagenes y cuenta cuantas repeticiones tiene cada una."""
+        """Detecta todas las etiquetas usadas en las imagenes y cuenta cuantas repeticiones tiene cada una.
+        Crea tambien los botones de filtrado correspondientes a cada una."""
 
         global imagenes_galeria
         global imagenes_galeria_resolucion_backup
@@ -926,62 +998,46 @@ def main(pagina: ft.Page):
         conteo_etiquetas = dict(sorted(conteo_etiquetas.items(), key=lambda item:item[1], reverse=True))
 
         nro_tags = len(conteo_etiquetas.keys()) 
+        lista_tags = list(conteo_etiquetas.keys()) 
 
-        boton_reset_tags = ft.ElevatedButton(
-            text = f"Deseleccionar todos  ({nro_tags} tags)",
-            bgcolor = ft.colors.BLUE_800,
-            color = ft.colors.WHITE,
-            # width = 200,
-            on_click = reset_tags_filtros,
-            )
-        
-        filas_conteo = [                
-            ft.Row(
-                [ boton_reset_tags],
-                alignment=ft.MainAxisAlignment.CENTER,
-                ),  
-            ft.Divider(height=7, thickness=1) , 
-            ]
-        global botones_tags 
-        botones_tags = []
+        boton_reset_tags.text = f"Deseleccionar todos  ({nro_tags} tags)"
 
-        for tag in conteo_etiquetas.keys():
-            boton = BotonBiestable(f"{tag}  ({conteo_etiquetas[tag]})",color_true=ft.colors.BLUE_800) 
-            boton.click_boton = filtrar_todas_etiquetas
-            botones_tags.append(boton)
+        tags_contadas = []
+        for tag in lista_tags:
+            tags_contadas.append(f"{tag}  ({conteo_etiquetas[tag]})")
 
-        # coloreo de botones en base a percentiles
-        
+        # objeto auxiliar vacio para almacenar etiquetass    
+        etiquetas_marcadas = Etiquetas()
+
+        tags_grupo = []
         for i in range(0, int(nro_tags * 0.25)):
-            botones_tags[i].color_true  = ft.colors.GREEN_800
-            botones_tags[i].color_false = ft.colors.GREEN_200
-            botones_tags[i].bgcolor = ft.colors.GREEN_200
+            tags_grupo.append(tags_contadas[i])
 
+        etiquetas_marcadas.agregar_tags(tags_grupo)
+
+        # reparto en grupos y coloreo de botones en base a percentiles
+        tags_grupo = []
         for i in range(int(nro_tags * 0.25), int(nro_tags * 0.5)):
-            botones_tags[i].color_true  = ft.colors.YELLOW_800
-            botones_tags[i].color_false = ft.colors.YELLOW_200
-            botones_tags[i].bgcolor = ft.colors.YELLOW_200
+            tags_grupo.append(tags_contadas[i])
 
+        etiquetas_marcadas.agregar_tags(tags_grupo)
+
+        tags_grupo = []
         for i in range(int(nro_tags * 0.5), int(nro_tags * 0.75)):
-            botones_tags[i].color_true  = ft.colors.ORANGE_800
-            botones_tags[i].color_false = ft.colors.ORANGE_200
-            botones_tags[i].bgcolor = ft.colors.ORANGE_200
+            tags_grupo.append(tags_contadas[i])
 
+        etiquetas_marcadas.agregar_tags(tags_grupo)
+
+        tags_grupo = []
         for i in range(int(nro_tags * 0.75), int(nro_tags * 1)):
-            botones_tags[i].color_true  = ft.colors.RED_800
-            botones_tags[i].color_false = ft.colors.RED_200
-            botones_tags[i].bgcolor = ft.colors.RED_200
+            tags_grupo.append(tags_contadas[i])
 
-        filas_etiquetas = ft.Row(
-            controls = botones_tags,
-            wrap = True,
-            )
-        filas_conteo.append(filas_etiquetas)
+        etiquetas_marcadas.agregar_tags(tags_grupo)
 
-        filas_conteo.append(ft.Divider(height=7, thickness=1))
-        filas_conteo.append(ft.Divider(height=7, thickness=1))
-
-        columna_etiquetas.controls = filas_conteo
+        filas_filtrado.leer_dataset(etiquetas_marcadas)
+        filas_filtrado.agregar_tags([], True)
+        filas_filtrado.evento_click(filtrar_todas_etiquetas)
+  
         columna_etiquetas.update()
 
         return conteo_etiquetas
@@ -992,18 +1048,20 @@ def main(pagina: ft.Page):
         # redimensionado etiquetador:
         etiquetador_imagen.base   = int(pagina.width/2)
         etiquetador_imagen.altura = pagina.height - 100
+        filas_filtrado.altura = pagina.height - 200
         etiquetador_imagen.update()
 
 
     ###########  ASIGNACION HANDLERS #################
 
     pagina.on_resize = redimensionar_botonera
-
-    # eventos deshabilitados mientras no haya imagenes cargadas
+    
+    # 
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
     lista_estados_desplegable.on_change = cargar_galeria_componentes
     boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes
     boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
+    boton_reset_tags.on_click = reset_tags_filtros
     # inicializacion opciones
     boton_filtrar_dimensiones.estado = False
     boton_filtrar_etiquetas.estado = False
@@ -1014,12 +1072,13 @@ def main(pagina: ft.Page):
     pestanias.on_change = cambio_pestanias
 
     # Clase para manejar dialogos de archivo y de carpeta
-    dialogo_directorio   = ft.FilePicker(on_result = resultado_directorio )
-    dialogo_dataset      = ft.FilePicker(on_result = resultado_dataset)
+    dialogo_directorio      = ft.FilePicker(on_result = resultado_directorio )
+    dialogo_dataset         = ft.FilePicker(on_result = resultado_dataset)
+    dialogo_agregado_tags   = ft.FilePicker(on_result = agregar_tags_archivo)
 
     # Añadido de diálogos a la página
     pagina.overlay.extend([
-            dialogo_directorio, dialogo_dataset
+            dialogo_directorio, dialogo_dataset, dialogo_agregado_tags
         ])
 
 

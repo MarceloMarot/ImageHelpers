@@ -98,9 +98,10 @@ class FilasBotonesEtiquetas(ft.Column):
             )
 
        
-    def leer_dataset(self, dataset: Etiquetas):
+    def leer_dataset(self, dataset: Etiquetas, botones_grupo_visibles=True):
         """Lee TODAS las etiquetas (el 'dataset') desde un archivo de texto y crea los botones de activacion de la interfaz gráfica.
         El componente clasifica las etiquetas en distintos 'grupos' en base al renglón del archivo en que se encuentran.
+        Permite dejar los botones de grupo ocultos.
         """
         self.dataset = dataset
         tags = self.dataset.tags
@@ -117,6 +118,7 @@ class FilasBotonesEtiquetas(ft.Column):
             g = BotonGrupo()
             g.data = i          # indice grupo
             g.on_click = self.conmutar_grupo    # evento
+            g.visible = botones_grupo_visibles
             # lista para acceso
             self.botones_grupo.append(g)
             # colocacion al comienzo de cada fila de botones
@@ -143,6 +145,14 @@ class FilasBotonesEtiquetas(ft.Column):
         self.controls = self.__filas_botones
         self.update()
         self.evento_click()
+
+
+    def guardar_dataset(self, etiquetas: Etiquetas, sobreescribir=False):
+        """Añade o sobreescribe las etiquetas del archivo de dataset"""
+        modo = "w" if sobreescribir else "a"
+        guardado_exitoso = self.dataset.guardar(etiquetas, modo=modo)
+        return guardado_exitoso
+
 
     def deshabilitar_botones(self, valor: bool):
         for boton in self.botones_grupo:
@@ -391,14 +401,21 @@ class EtiquetadorBotones(ft.Column):
         self.__filas_botones.height = valor - resta
 
 
-    def leer_dataset(self, etiquetas: Etiquetas):
-        """Lee las etiquetas del dataset y actualiza etiquetas de salida si corresponde"""
-        self.__filas_botones.leer_dataset( etiquetas )
+    def leer_dataset(self, etiquetas: Etiquetas, botones_grupo_visibles=True):
+        """Lee las etiquetas del dataset y actualiza etiquetas de salida si corresponde.
+        Permite dejar los botones de grupo ocultos."""
+        self.__filas_botones.leer_dataset( etiquetas, botones_grupo_visibles )
         self.__dataset_seteado = True
         self.habilitado = True if self.__salida_seteada else False
         # actualiza aspecto grafico para prevenir errores
         if self.__salida_seteada : 
             self.restablecer_etiquetas( "e")
+
+
+    def guardar_dataset(self, etiquetas: Etiquetas, sobreescribir=False):
+        """Añade o sobreescribe las etiquetas del archivo de dataset"""
+        guardado_exitoso = self.__filas_botones.guardar_dataset(etiquetas, sobreescribir)
+        return guardado_exitoso
 
 
     def setear_salida(self, etiquetas: Etiquetas):
@@ -415,7 +432,6 @@ class EtiquetadorBotones(ft.Column):
         self.actualizar_botones()
 
 
-    
     @property
     def dataset_seteado(self):
         """Indica si se eligio el archivo del dataset con todas las etiquetas"""
@@ -526,10 +542,11 @@ def main(page: ft.Page):
     # dataset = Etiquetas()   # borrado forzoso
 
     etiquetador.altura = 800
-    etiquetador.base = 700
+    etiquetador.base = 600
     # carga de archivos (sentido inverso)
     etiquetador.setear_salida( etiquetas )      # carga el estado de los botones desde archivo
-    etiquetador.leer_dataset(   dataset   )     # crea los botones de etiquetado
+    etiquetador.leer_dataset(   dataset   )     # crea los botones de etiquetado y de grupo
+    # etiquetador.leer_dataset( dataset, False )     # crea sólo los botones de etiquetado
 
     # configuracion de eventos ante el click sobre los botones
     etiquetador.evento_click(funcion_etiqueta, funcion_grupos, funcion_comando)
@@ -543,9 +560,8 @@ def main(page: ft.Page):
     page.title = "Botones etiquetado"
     page.window_height      = 800
     page.window_min_height  = 800
-    page.window_width       = 650
+    page.window_width       = 600
     page.update()
-
 
     # cambios con delay
     import time 
@@ -588,7 +604,7 @@ def main(page: ft.Page):
     page.title = "Botones etiquetado"
     page.window_height      = 800
     page.window_min_height  = 800
-    page.window_width       = 650
+    page.window_width       = 600
     page.update()
 
 
