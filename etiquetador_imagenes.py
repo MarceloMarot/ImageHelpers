@@ -2,8 +2,9 @@
 
 from rich import print as print
 import flet as ft
+import pathlib
 
-from manejo_texto.procesar_etiquetas import Etiquetas 
+from manejo_texto.procesar_etiquetas import Etiquetas , etiquetas2texto
 
 from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
 from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable, FilasBotonesEtiquetas
@@ -349,7 +350,8 @@ def main(pagina: ft.Page):
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
     texto_estados = ft.Text("Estado\netiquetado:")
     texto_imagen= ft.Text("(Titulo)")
-    texto_datos = ft.Text("(nada)")
+    texto_ruta = ft.Text("(ruta))")
+    texto_tags = ft.Text("(tags)")
 
     # contenedor visualizador de la imagen actual
     contenedor_seleccion = Contenedor_Imagen("",512,512)
@@ -438,7 +440,7 @@ def main(pagina: ft.Page):
 
 
     columna_seleccion = ft.Column(
-        [texto_imagen, contenedor_seleccion, texto_datos],
+        [texto_imagen, contenedor_seleccion, texto_ruta, texto_tags],
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         expand=True,
@@ -593,6 +595,7 @@ def main(pagina: ft.Page):
             global imagenes_galeria
 
             # busqueda 
+            global directorio
             directorio = e.path
             ventana_emergente(pagina, f"Buscando imágenes...\nRuta: {directorio} ")
             rutas_imagen = buscar_imagenes(directorio)
@@ -686,6 +689,23 @@ def main(pagina: ft.Page):
             estilo = "predefinido"
         contenedor_seleccion.estilo(estilos_seleccion[estilo]) 
         contenedor_seleccion.update()
+        #textos informativos
+        # global directorio
+        # ruta = pathlib.Path(imagen.ruta).relative_to(directorio)
+        ruta = pathlib.Path(imagen.ruta)
+        nombre = ruta.name
+        indice = imagenes_galeria.index(imagen)
+        tags = imagen.tags
+        texto_imagen.value = f"{indice+1} - {nombre}"
+        texto_imagen.visible = True 
+        texto_imagen.update()
+        texto_ruta.value = f"Ruta archivo:\n{ruta}"
+        texto_ruta.visible = True
+        texto_ruta.update()
+        # texto_tags.value = etiquetas2texto(tags)
+        texto_tags.value = f"Tags imagen:\n{etiquetas2texto(tags)}"
+        texto_tags.visible = True
+        texto_tags.update()
 
 
     # Eventos galeria
