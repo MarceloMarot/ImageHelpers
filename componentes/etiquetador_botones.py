@@ -145,7 +145,6 @@ class FilasBotonesEtiquetas(ft.Column):
     def setear_salida(self, etiquetas :Etiquetas):
         """Carga el archivo de etiquetas de salida y actualiza el etiquetador grafico"""
         self.etiquetas = etiquetas
-        # self.etiquetas.leer_archivo()
         self.actualizar_botones()
 
 

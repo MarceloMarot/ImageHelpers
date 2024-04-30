@@ -33,7 +33,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         self.__etiquetada = False
         self.__guardada = False
         self.__defectuosa = False
-        self.__dimensiones: tuple[int, int, int] | None
+        self.__dimensiones: tuple[int, ...]|None
         self.leer_dimensiones()
         self.verificar_imagen()   
         self.verificar_etiquetado()
@@ -126,21 +126,10 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         actualizar_estilo_estado([self], self.estilos)
         
 
-
-    # def cargar_imagen(self):
-    #     """"Este metodo carga la imagen y cambia el estilo del contenedor segun el estado del etiquetado"""
-    #     super().cargar_imagen()
-    #     indice = self.indice
-    #     contenedor_imagen = self.imagenes[indice]
-    #     # seleccion de estilo segun jerarquia
-    #     actualizar_estilo_estado( [contenedor_imagen], self.estilos)
-
-
 class GaleriaEtiquetado( Galeria):
     def __init__(self, estilos: dict):
         super().__init__()
         self.estilos = estilos
-        self.imagenes: list[Contenedor_Etiquetado ]
 
 
     def cargar_imagenes(self, 
@@ -175,7 +164,7 @@ def leer_imagenes_etiquetadas(rutas_imagen: list[str], ancho=1024, alto=1024, re
     contenedores = [] 
     for i in range( len(rutas_imagen)):
         contenedor = Contenedor_Etiquetado(rutas_imagen[i], ancho, alto, redondeo)
-        contenedor.content.key = f"imag_{i}"
+        contenedor.clave = f"imag_{i}"
         contenedores.append(contenedor)
     return contenedores
 
@@ -408,8 +397,7 @@ def main(pagina: ft.Page):
     altura_tab_etiquetado = 800
     fila_etiquetado_navegacion = ft.Row(
         controls = [ 
-            # menu_seleccion ,
-            columna_seleccion,  # FIX
+            columna_seleccion,  
             ft.VerticalDivider(),
             etiquetador_imagen
             ], 
@@ -419,8 +407,7 @@ def main(pagina: ft.Page):
     tab_etiquetado = ft.Tab(
         text="Etiquetado",
         content=fila_etiquetado_navegacion,
-        # visible=False,
-        visible=True,   # FIX  
+        visible=True,    
     )
 
     # organizacion en pestañas
@@ -430,7 +417,6 @@ def main(pagina: ft.Page):
         tabs=[
             tab_galeria   ,
             tab_etiquetado,
-            # tab_estadisticas,
         ],
         expand=1,
     )
@@ -442,8 +428,31 @@ def main(pagina: ft.Page):
 
     ############## HANDLERS ##################################
 
-    def click_botones_etiquetador( e: ft.ControlEvent ):
 
+    def click_botones_tags(e: ft.ControlEvent ):
+        """Habilita el accionamiento solidario de los botones de etiquetas repetidas. Tambien llama al handler de actualizaciones."""
+        tag = e.control.text
+        estado = e.control.estado
+
+        # Se transfieren los tags de la botonera a las imagenes 
+        etiquetas_botones = etiquetador_imagen.leer_botones()
+
+        # caso de deseleccion de etiquetas -> botones repetidos actualizados
+        if estado==False:
+            # extraccion de etiqueta actual
+            set_actual = set(etiquetas_botones)
+            set_resta = set([tag])
+            set_tags = set_actual.difference(set_resta)
+            etiquetas_botones = list(set_tags)
+  
+        etiquetador_imagen.agregar_tags(etiquetas_botones, sobreescribir=True)
+        # transferencias y actualizaciones graficas de imagenes
+        click_botones_etiquetador(None)
+
+
+
+    def click_botones_etiquetador( e: ft.ControlEvent | None ):
+        """Actualiza etiquetas, estado, estadisticas y estilo de bordes de las imagenes en base al boton del etiquetador accionado."""
         # acceso a elementos globales
         global imagenes_galeria
         global dimensiones_elegidas 
@@ -514,7 +523,8 @@ def main(pagina: ft.Page):
 
         # Eventos de los botones
         etiquetador_imagen.evento_click(
-            funcion_etiquetas   = click_botones_etiquetador,
+            # funcion_etiquetas   = click_botones_etiquetador,
+            funcion_etiquetas   = click_botones_tags,
             funcion_grupo       = click_botones_etiquetador,
             funcion_comando     = click_botones_etiquetador
             )
@@ -600,8 +610,6 @@ def main(pagina: ft.Page):
         global imagenes_galeria
         # actualizacion de imagen seleccionada y etiquetado
         imagen_seleccionada = imagen_clave(clave, imagenes_galeria)
-        # actualizacion del indice
-        # imagenes_galeria.index(imagen_seleccionada) # FIX (????)
         # actualizacion de controles
         etiquetador_imagen.setear_salida(imagen_seleccionada) 
         etiquetador_imagen.update()
