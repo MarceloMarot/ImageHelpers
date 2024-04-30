@@ -316,8 +316,7 @@ def main(pagina: ft.Page):
     texto_imagen= ft.Text("(Titulo)")
     texto_datos = ft.Text("(nada)")
 
-    # contenedor_seleccion = Contenedor(512, 512)
-    # contenedor_seleccion = Contenedor_Etiquetado("",512, 512)
+    # contenedor visualizador de la imagen actual
     contenedor_seleccion = Contenedor_Imagen("",512,512)
     contenedor_seleccion.estilo(estilos_seleccion["predefinido"])
     contenedor_seleccion.bgcolor = ft.colors.LIGHT_BLUE
@@ -485,6 +484,7 @@ def main(pagina: ft.Page):
    
 
     def actualizar_lista_dimensiones():
+        """Reduce la lista de dimensiones seleccionables en base al tamaño detectado de las imagenes de galeria."""
         # acceso a elementos globales
         global imagenes_galeria
         lista_resoluciones = [tupla_resoluciones[0]] # opcion "No filtrar" agregada
@@ -504,6 +504,7 @@ def main(pagina: ft.Page):
 
 
     def crear_botones_etiquetador(ruta_dataset: str = ""):
+        """Crea los botones del etiquetador en base al archivo de texto indicado y a los tags ya presentes en las imagenes"""
 
         # lectura del archivo de dataset (si no existe el dataset queda vacio)
         dataset = Etiquetas(ruta_dataset) 
@@ -755,13 +756,23 @@ def main(pagina: ft.Page):
             imagen_seleccion(imagen_elegida)
 
 
-    def filtrar_todas_etiquetas( e: ft.ControlEvent | None ):
+    def filtrar_todas_etiquetas( e: ft.ControlEvent ):
         """Selecciona las imagenes con al menos una de las etiquetas activadas en la pestaña de estadisticas."""
     
         global imagenes_galeria
         global imagenes_galeria_filtradas_backup
         global botones_tags 
 
+        # animacion: los  scrolls se mueven a la etiqueta clickeada
+        boton = e.control
+        texto_tag = boton.text.split("(")[0].strip()
+
+        etiquetador_imagen.mostrar_tag(texto_tag)
+        etiquetador_imagen.update()
+        # columna_etiquetas.scroll_to(key=texto_tag) # FIX: no anda
+        # columna_etiquetas.update()
+
+        # extraccion del numero de repeticiones
         set_etiquetas = set()
         for boton in botones_tags:
             if boton.estado == True:
@@ -882,7 +893,7 @@ def main(pagina: ft.Page):
         galeria.scroll_to(key=clave, duration=1000)
 
 
-    def reset_tags_filtros(e):
+    def reset_tags_filtros(e: ft.ControlEvent):
         """Restaura todos los botones de filtrado."""
         global botones_tags 
         if len(botones_tags)>0:
@@ -1027,9 +1038,7 @@ def main(pagina: ft.Page):
 
     # Propiedades pagina 
     pagina.title = "Etiquetador Imágenes"
-    # pagina.window_width  = 1500
     pagina.window_width  = 1300
-    # pagina.window_min_width = 1300
     pagina.window_height = 900
     # pagina.theme_mode = ft.ThemeMode.DARK
     pagina.theme_mode = ft.ThemeMode.LIGHT

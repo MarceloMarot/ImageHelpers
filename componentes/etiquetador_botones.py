@@ -14,6 +14,7 @@ class BotonBiestable(ft.ElevatedButton):
         self.color_false = color_false
         super().__init__(
             text = texto,
+            key=texto,          # asignacion automatica
             bgcolor= self.color_false,
             on_click=self.click
             )
@@ -42,6 +43,14 @@ class BotonBiestable(ft.ElevatedButton):
             self.bgcolor = self.color_false
             self.color   = ft.colors.BLUE_800
         self.update()
+
+    @property
+    def clave(self):
+        return self.key
+
+    @clave.setter
+    def clave(self, valor: str):
+        self.key = valor
 
 
 class BotonGrupo(ft.IconButton):
@@ -221,6 +230,11 @@ class FilasBotonesEtiquetas(ft.Column):
             boton.click_boton =  self.funcion_etiquetas
         for boton in self.botones_grupo:
             boton.click_boton =  self.funcion_grupo
+
+    def mostrar_tag(self, clave: str, duracion = 1000):
+        """Mueve el scroll para mostrar el primer boton con la clave indicada."""
+        self.scroll_to(key=clave, duration=duracion)
+        self.update()
 
 
     @property
@@ -453,6 +467,13 @@ class EtiquetadorBotones(ft.Column):
             self.click_botones = funcion_comando
 
 
+    def mostrar_tag(self, clave: str, duracion = 1000):
+        """Mueve el scroll para mostrar el primer boton de etiquetado con la clave indicada."""
+        self.__filas_botones.mostrar_tag(clave, duracion)
+        self.__filas_botones.update()
+        # self.scroll_to(key=clave)
+
+
 ########### FUNCIONES TEST #####################
 
 def funcion_etiqueta(e: ft.ControlEvent):
@@ -537,17 +558,23 @@ def main(page: ft.Page):
     leido = etiquetador.leer_botones()
     print("[cyan]Tags agregados - etiquetas leidas")
     print(leido)
+    etiquetador.mostrar_tag("6")
 
 
     time.sleep(2)
     # etiquetas agregadas desde el programa
-    nuevos_tags = ["3","4","5","6", "Aquiles Brinco"] 
+    nuevos_tags = ["3","4","5","6", "15","Aquiles Brinco"] 
     etiquetador.agregar_tags(nuevos_tags, True)
+
 
     # reporte de etiquetas almacenadas
     leido = etiquetador.leer_botones()
     print("[cyan]Sobreescritura de tags - etiquetas leidas")
     print(leido)
+    etiquetador.mostrar_tag("fuente")
+
+    time.sleep(2)
+    etiquetador.mostrar_tag("6")
 
     def redimensionar_botonera(e):
 
