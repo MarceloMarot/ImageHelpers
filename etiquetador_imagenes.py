@@ -332,13 +332,18 @@ def main(pagina: ft.Page):
     filas_filtrado = FilasBotonesEtiquetas()
     filas_filtrado.altura = pagina.height - 200
 
-    filas_filtrado.lista_colores=[
+    filas_filtrado.lista_colores_activo=[
         ft.colors.GREEN_800,
         ft.colors.YELLOW_800,
         ft.colors.ORANGE_800,
         ft.colors.RED_800,
         ]
-
+    filas_filtrado.lista_colores_pasivo=[
+        ft.colors.GREEN_100,
+        ft.colors.YELLOW_100,
+        ft.colors.ORANGE_100,
+        ft.colors.RED_100,
+        ]
 
     # textos
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
@@ -1034,7 +1039,7 @@ def main(pagina: ft.Page):
 
         etiquetas_marcadas.agregar_tags(tags_grupo)
 
-        filas_filtrado.leer_dataset(etiquetas_marcadas)
+        filas_filtrado.leer_dataset(etiquetas_marcadas, False)
         filas_filtrado.agregar_tags([], True)
         filas_filtrado.evento_click(filtrar_todas_etiquetas)
   

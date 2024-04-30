@@ -75,7 +75,7 @@ class FilasBotonesEtiquetas(ft.Column):
         self.__filas_botones = []
         self.__numero_grupos = 0
         self.__numero_colores = 0
-        self.lista_colores = [
+        self.lista_colores_activo = [
             ft.colors.RED_800,
             ft.colors.ORANGE_800, 
             ft.colors.YELLOW_800,
@@ -86,6 +86,18 @@ class FilasBotonesEtiquetas(ft.Column):
             ft.colors.BLUE_800,           
             ft.colors.PURPLE_800,      
             ft.colors.BROWN_800,
+            ]
+        self.lista_colores_pasivo = [
+            ft.colors.RED_100,
+            ft.colors.ORANGE_100, 
+            ft.colors.YELLOW_100,
+            ft.colors.LIME_100,
+            ft.colors.GREEN_100,
+            ft.colors.GREEN_ACCENT_100,
+            ft.colors.CYAN_100,        
+            ft.colors.BLUE_100,           
+            ft.colors.PURPLE_100,      
+            ft.colors.BROWN_100,
             ]
         self.funcion_etiquetas = nada
         self.funcion_grupo = nada
@@ -110,7 +122,7 @@ class FilasBotonesEtiquetas(ft.Column):
         # conteo grupos de etiquetas
         grupos = list(set(grupo))
         self.__numero_grupos = len(grupos)
-        self.__numero_colores = len(self.lista_colores)  
+        self.__numero_colores = len(self.lista_colores_activo)  
         # maquetado
         self.__filas_botones = []
         self.botones_grupo = []
@@ -138,10 +150,11 @@ class FilasBotonesEtiquetas(ft.Column):
                 self.botones_etiquetas.append(b)
                 self.__filas_botones[grupo].controls.append(b)
                 # asignacion color
-                b.color_false = ft.colors.INDIGO_50
+                b.color_false = self.lista_colores_pasivo[grupo % self.__numero_colores ]
+                # b.color_false = ft.colors.INDIGO_50
                 # se pone un tope a los grupos posibles
-                b.color_true = self.lista_colores[grupo % self.__numero_colores ]
-                self.botones_grupo[grupo].bgcolor = self.lista_colores[grupo % self.__numero_colores ]
+                b.color_true = self.lista_colores_activo[grupo % self.__numero_colores ]
+                self.botones_grupo[grupo].bgcolor = self.lista_colores_activo[grupo % self.__numero_colores ]
         self.controls = self.__filas_botones
         self.update()
         self.evento_click()
