@@ -78,6 +78,8 @@ class FilasBotonesEtiquetas(ft.Column):
         self.__numero_grupos = 0
         self.__numero_colores = 0
         self.lista_colores_activo = [
+            ft.colors.PURPLE_800,      
+            ft.colors.BROWN_800,
             ft.colors.RED_800,
             ft.colors.ORANGE_800, 
             ft.colors.YELLOW_800,
@@ -86,10 +88,10 @@ class FilasBotonesEtiquetas(ft.Column):
             ft.colors.GREEN_ACCENT_700,
             ft.colors.CYAN_800,        
             ft.colors.BLUE_800,           
-            ft.colors.PURPLE_800,      
-            ft.colors.BROWN_800,
             ]
         self.lista_colores_pasivo = [
+            ft.colors.PURPLE_100,      
+            ft.colors.BROWN_100,
             ft.colors.RED_100,
             ft.colors.ORANGE_100, 
             ft.colors.YELLOW_100,
@@ -98,8 +100,6 @@ class FilasBotonesEtiquetas(ft.Column):
             ft.colors.GREEN_ACCENT_100,
             ft.colors.CYAN_100,        
             ft.colors.BLUE_100,           
-            ft.colors.PURPLE_100,      
-            ft.colors.BROWN_100,
             ]
         self.funcion_etiquetas = nada
         self.funcion_grupo = nada

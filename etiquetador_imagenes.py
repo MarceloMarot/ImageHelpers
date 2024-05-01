@@ -22,6 +22,17 @@ class Tab(Enum):
     TAB_GALERIA = 0
     TAB_SELECCION = 1
 
+class Percentil(Enum):
+    UMBRAL_1 = 0.2
+    UMBRAL_2 = 0.4
+    UMBRAL_3 = 0.6
+    UMBRAL_4 = 0.8
+    UMBRAL_5 = 1
+
+
+
+
+
 
 
 def nada( e ):
@@ -326,7 +337,7 @@ def main(pagina: ft.Page):
 
     boton_filtrar_etiquetas = BotonBiestable("Mostrar panel filtrado", ft.colors.PURPLE_100, ft.colors.PURPLE_800)
     boton_filtrar_etiquetas.color = ft.colors.WHITE
-    boton_filtrar_etiquetas.tooltip = "Abre el panel de filtrado con todas las etiquetas detectadas."
+    boton_filtrar_etiquetas.tooltip = "Abre el panel de filtrado con todas las etiquetas detectadas.\nRequiere que haya al menos una imagen cargada."
 
     boton_guardar = ft.FloatingActionButton(
         icon=ft.icons.ADD, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todas las etiquetas cambiadas."
@@ -346,12 +357,14 @@ def main(pagina: ft.Page):
     filas_filtrado.altura = pagina.height - 200
 
     filas_filtrado.lista_colores_activo=[
+        ft.colors.BLUE_800,
         ft.colors.GREEN_800,
         ft.colors.YELLOW_800,
         ft.colors.ORANGE_800,
         ft.colors.RED_800,
         ]
     filas_filtrado.lista_colores_pasivo=[
+        ft.colors.BLUE_100,
         ft.colors.GREEN_100,
         ft.colors.YELLOW_100,
         ft.colors.ORANGE_100,
@@ -719,7 +732,7 @@ def main(pagina: ft.Page):
             columna_seleccion.update()
 
             # borrado y deshabilitado etiquetador 
-            dataset.leer_archivo()  
+            dataset.leer_archivo()                    
             etiquetador_imagen.leer_dataset(dataset) 
             etiquetador_imagen.habilitado = False
             etiquetador_imagen.update()
@@ -1085,28 +1098,37 @@ def main(pagina: ft.Page):
         etiquetas_marcadas = Etiquetas()
 
         tags_grupo = []
-        for i in range(0, int(nro_tags * 0.25)):
+
+
+        # reparto en grupos y coloreo de botones en base a percentiles del 20%
+        umbral_1 = int(nro_tags * Percentil.UMBRAL_1.value)
+        umbral_2 = int(nro_tags * Percentil.UMBRAL_2.value)
+        umbral_3 = int(nro_tags * Percentil.UMBRAL_3.value)
+        umbral_4 = int(nro_tags * Percentil.UMBRAL_4.value)
+        umbral_5 = int(nro_tags * Percentil.UMBRAL_5.value)
+
+        for i in range(0, umbral_1):
             tags_grupo.append(tags_contadas[i])
-
-        etiquetas_marcadas.agregar_tags(tags_grupo)
-
-        # reparto en grupos y coloreo de botones en base a percentiles
-        tags_grupo = []
-        for i in range(int(nro_tags * 0.25), int(nro_tags * 0.5)):
-            tags_grupo.append(tags_contadas[i])
-
-        etiquetas_marcadas.agregar_tags(tags_grupo)
-
-        tags_grupo = []
-        for i in range(int(nro_tags * 0.5), int(nro_tags * 0.75)):
-            tags_grupo.append(tags_contadas[i])
-
         etiquetas_marcadas.agregar_tags(tags_grupo)
 
         tags_grupo = []
-        for i in range(int(nro_tags * 0.75), int(nro_tags * 1)):
+        for i in range(umbral_1, umbral_2):
             tags_grupo.append(tags_contadas[i])
+        etiquetas_marcadas.agregar_tags(tags_grupo)
 
+        tags_grupo = []
+        for i in range(umbral_2, umbral_3):
+            tags_grupo.append(tags_contadas[i])
+        etiquetas_marcadas.agregar_tags(tags_grupo)
+
+        tags_grupo = []
+        for i in range(umbral_3, umbral_4):
+            tags_grupo.append(tags_contadas[i])
+        etiquetas_marcadas.agregar_tags(tags_grupo)
+
+        tags_grupo = []
+        for i in range(umbral_4, umbral_5):
+            tags_grupo.append(tags_contadas[i])
         etiquetas_marcadas.agregar_tags(tags_grupo)
 
         filas_filtrado.leer_dataset(etiquetas_marcadas, False)
