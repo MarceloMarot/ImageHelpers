@@ -41,6 +41,27 @@ class Etiquetas:
             return []
 
 
+    @property
+    def tags_grupos(self)->list[list[str]]:
+        """Devuelve una lista con las etiquetas agrupadas en listas internas, una por grupo. Puede estar vacía."""
+        if self.datos != None:
+            lista_total=[]
+            grupos = self.grupos
+            tags = self.tags
+
+            for _ in grupos:
+                lista_total.append([])
+
+            for tag in tags:
+                grupos = self.datos[tag]
+                for grupo in grupos:
+                    lista_total[grupo].append(tag)
+
+            return lista_total
+        else:
+            return []
+
+
     #lectura desde disco
     def leer_archivo(self, etiquetas_repetidas=True) -> None:
         """Lee las etiquetas desde archivo de texto. Si éste no existe la data interna queda vacía """
@@ -49,8 +70,13 @@ class Etiquetas:
 
 
     # escritura en disco
-    def guardar(self, etiquetas=[], modo: str="w", encoding='utf-8'):
-        """Conversion de lista de etiquetas a texto (añade comas y respeta saltos de renglón)"""
+    def guardar(self, etiquetas: list[str]=[], modo: str="w", encoding='utf-8'):
+        """Conversion de lista de etiquetas a texto (añade comas y respeta saltos de renglón)
+        Modos:
+        - "w": sobreescritura (por defecto)
+        - "a": agregado al final 
+        Codificacion UTF-8 por defecto
+        """       
         if len(etiquetas)>0:
             texto = etiquetas2texto(etiquetas)
         else:
@@ -171,18 +197,27 @@ if __name__ == "__main__":
     # agregado de etiquetas desde programa
     tags_nuevos = [ "diamante", "cuarzo", "esmeralda", "amatista", '1', '5', '7']
     etiqueta.agregar_tags(tags_nuevos)      # default: (numero grupo + 1)
-    etiqueta.agregar_tags(tags_nuevos, 999) # nro grupo arbitrario
+    etiqueta.agregar_tags(tags_nuevos, 10) # nro grupo arbitrario
     # etiqueta.agregar_tags(tags_nuevos, sobreescribir=True) # borrado data
 
     # # Muestra de resultados
     tags  = etiqueta.tags
     grupos = etiqueta.grupos 
 
-    print(f'[bold green] {tags }')
+    print(f'[bold green] {tags}')
     print(f'[bold yellow] {grupos}')
+    print(f'[bold cyan] {etiqueta.datos}')
 
     print(f'[bold green]Longitud etiquetas: {len(tags)}')
     print(f'[bold yellow]Longitud grupos: {len(grupos)}')
+
+    print(f'[bold blue]Data interna:')
+    # print(etiqueta.tags_grupos)
+
+    for lista in etiqueta.tags_grupos:
+        print(lista)
+
+    # print(set(etiqueta.tags_grupos)) # Error
 
     # Guardado en archivo aparte
     etiqueta.ruta = "demo/etiquetas_salida.txt"

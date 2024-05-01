@@ -4,7 +4,7 @@ from rich import print as print
 import flet as ft
 import pathlib
 
-from manejo_texto.procesar_etiquetas import Etiquetas , etiquetas2texto
+from manejo_texto.procesar_etiquetas import Etiquetas, guardar_archivo, etiquetas2texto
 
 from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
 from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable, FilasBotonesEtiquetas
@@ -14,6 +14,13 @@ from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista
 from sistema_archivos.buscar_extension import buscar_imagenes
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
+
+from enum import Enum
+
+class Tab(Enum):
+    TAB_GALERIA = 0
+    TAB_SELECCION = 1
+
 
 
 def nada( e ):
@@ -27,7 +34,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         ancho:int=768, 
         alto:int=768, 
         redondeo:int=0 , 
-        estilos: dict[str, Estilo_Contenedor] = estilos_galeria
+        estilos: dict[str, Estilo_Contenedor] = estilos_galeria,
         ):
         Etiquetas.__init__(self, ruta)
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
@@ -259,6 +266,9 @@ ruta_dataset = "imag_0"
 
 def main(pagina: ft.Page):
 
+    # estructura con data global
+    dataset = Etiquetas(ruta_dataset) 
+
 
     ############# COMPONENTES GRAFICOS ######################## 
 
@@ -288,36 +298,37 @@ def main(pagina: ft.Page):
         ),
         tooltip="Elige el archivo TXT con todas las etiquetas\n(cada renglon de archivo representa un 'grupo')"
     )
-
-    boton_agregar_archivo = ft.ElevatedButton(
-        text = f"Guardar/agregar a dataset...",
+    
+    boton_guardar_dataset = ft.ElevatedButton(
+        text = f"Guardar dataset como...",
         bgcolor = ft.colors.AMBER_800,
         icon=ft.icons.SAVE,
         color = ft.colors.WHITE,
         ## manejador
-        on_click=lambda _: dialogo_agregado_tags.save_file(
-            dialog_title = "Modificar archivo de dataset (formato .txt)",
+        on_click=lambda _: dialogo_guardado_tags.save_file(
+            dialog_title = "Guardar archivo de dataset (formato .txt)",
             allowed_extensions=["txt"],
             ),
-        tooltip="Guarda en archivo de texto las etiquetas encontradas. Si el archivo ya existe, las agrega al final.",
+        tooltip="Guarda en archivo de texto las etiquetas encontradas. Si el archivo ya existe lo sobreescribe.",
         )
 
     boton_reset_tags = ft.ElevatedButton(
         text = f"Deseleccionar todos...",
         bgcolor = ft.colors.BLUE_800,
         color = ft.colors.WHITE,
-        tooltip="Reinicia la selección de etiquetas encontradas"
+        tooltip="Reinicia la selección de etiquetas encontradas."
         )
-
 
     boton_filtrar_dimensiones = BotonBiestable("Filtrar por tamaño", ft.colors.BROWN_100, ft.colors.BROWN_800)
     boton_filtrar_dimensiones.color = ft.colors.WHITE
+    boton_filtrar_dimensiones.tooltip = "Selecciona las imágenes que cumplan con las dimensiones indicadas."
 
-    boton_filtrar_etiquetas = BotonBiestable("Filtrar por etiquetas", ft.colors.PURPLE_100, ft.colors.PURPLE_800)
+    boton_filtrar_etiquetas = BotonBiestable("Mostrar panel filtrado", ft.colors.PURPLE_100, ft.colors.PURPLE_800)
     boton_filtrar_etiquetas.color = ft.colors.WHITE
+    boton_filtrar_etiquetas.tooltip = "Abre el panel de filtrado con todas las etiquetas detectadas."
 
     boton_guardar = ft.FloatingActionButton(
-        icon=ft.icons.ADD, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todas las etiquetas cambiadas"
+        icon=ft.icons.ADD, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todas las etiquetas cambiadas."
     )
 
     # listas desplegable para elegir opciones de imagen 
@@ -349,10 +360,33 @@ def main(pagina: ft.Page):
     # textos
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
     texto_estados = ft.Text("Estado\netiquetado:")
-    texto_imagen= ft.Text("(Titulo)")
-    texto_ruta = ft.Text("(ruta))")
-    texto_tags = ft.Text("(tags)")
-
+    texto_imagen= ft.Text(
+        "(Titulo)",
+        size=20,
+        # height=30, 
+        weight=ft.FontWeight.BOLD,
+        text_align=ft.TextAlign.CENTER,
+        )
+    texto_ruta_titulo = ft.Text(
+        "(ruta))",
+        weight=ft.FontWeight.BOLD,
+        text_align=ft.TextAlign.CENTER,
+        )
+    texto_ruta_data = ft.Text(
+        "(ruta_completa))",
+        weight=ft.FontWeight.NORMAL,
+        text_align=ft.TextAlign.CENTER,
+        )
+    texto_tags_titulo = ft.Text(
+        "(nro tags)",
+        weight=ft.FontWeight.BOLD,
+        text_align=ft.TextAlign.CENTER,
+        )
+    texto_tags_data = ft.Text(
+        "(tags)",
+        weight=ft.FontWeight.NORMAL,
+        text_align=ft.TextAlign.CENTER,
+        )
     # contenedor visualizador de la imagen actual
     contenedor_seleccion = Contenedor_Imagen("",512,512)
     contenedor_seleccion.estilo(estilos_seleccion["predefinido"])
@@ -381,21 +415,11 @@ def main(pagina: ft.Page):
         wrap = False
         )
 
-    galeria.expand=1
-
-
-    # ft.Row(
-    #     [ boton_reset_tags, boton_agregar_archivo],
-    #     # alignment=ft.MainAxisAlignment.CENTER,
-    #     alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-    #     ),  
-    # ft.Divider(height=7, thickness=1) , 
-
-
+    galeria.expand = 1
 
     columna_etiquetas = ft.Column(
         controls=[    ft.Row(
-        [ boton_reset_tags, boton_agregar_archivo],
+        [ boton_reset_tags, boton_guardar_dataset],
         # alignment=ft.MainAxisAlignment.CENTER,
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
         ),  
@@ -440,7 +464,14 @@ def main(pagina: ft.Page):
 
 
     columna_seleccion = ft.Column(
-        [texto_imagen, contenedor_seleccion, texto_ruta, texto_tags],
+        [
+            texto_imagen, 
+            contenedor_seleccion, 
+            texto_ruta_titulo, 
+            texto_ruta_data, 
+            texto_tags_titulo,
+            texto_tags_data,
+            ],
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         expand=True,
@@ -467,7 +498,7 @@ def main(pagina: ft.Page):
 
     # organizacion en pestañas
     pestanias = ft.Tabs(
-        selected_index=0,
+        selected_index=Tab.TAB_GALERIA.value,
         animation_duration=500,
         tabs=[
             tab_galeria   ,
@@ -475,6 +506,8 @@ def main(pagina: ft.Page):
         ],
         expand=1,
     )
+
+
 
     # Añadido componentes (todos juntos)
     pagina.add(pestanias)
@@ -563,17 +596,31 @@ def main(pagina: ft.Page):
         """Crea los botones del etiquetador en base al archivo de texto indicado y a los tags ya presentes en las imagenes"""
 
         # lectura del archivo de dataset (si no existe el dataset queda vacio)
-        dataset = Etiquetas(ruta_dataset) 
+        # (borra data previa)
+        dataset.ruta = ruta_dataset
+        dataset.leer_archivo()
 
-        # busqueda de todas las etiquetas encontradas en las imagenes
-        conteo_etiquetas = estadisticas()
-        tags_encontradas = list(conteo_etiquetas.keys())
+        # lectura de todas las etiquetas encontradas en las imagenes
+        tags_grupos = filas_filtrado.dataset.tags_grupos
+        # borrado de numeros estadisticos
+        for lista in tags_grupos:
+            for tag in lista:
+                i = tags_grupos.index(lista)
+                j = lista.index(tag)
+                tag = tag.split("(")[0].strip()
+                tags_grupos[i][j] = tag
 
-        # se agregan al etiquetador las etiquetas faltantes encontradas
+        # descarte de etiquetas ya incluidas desde archivo     
         tags_archivo = dataset.tags
-        tags_faltantes = set(tags_encontradas).difference(tags_archivo)
-        tags_faltantes = list(tags_faltantes)
-        dataset.agregar_tags(tags_faltantes, sobreescribir=False)
+        for tags_lista  in tags_grupos:
+            i = tags_grupos.index(tags_lista )
+            tags_faltantes = set(tags_lista).difference(tags_archivo)
+            tags_faltantes = list(tags_faltantes)
+            tags_grupos[i] = tags_faltantes
+
+        # agregado de las etiquetas, un grupo por vez
+        for lista in tags_grupos:
+            dataset.agregar_tags(lista, sobreescribir=False)
 
         #carga al elemento grafico
         etiquetador_imagen.leer_dataset(dataset)
@@ -640,11 +687,13 @@ def main(pagina: ft.Page):
         # agregado de todas las etiquetas al editor
         crear_botones_etiquetador(ruta_dataset)
 
+        # Objeto galeria
+        galeria.cargar_imagenes( imagenes_galeria )
+        galeria.update()
+        
         if len(imagenes_galeria) > 0:
-            # Objeto galeria
-            galeria.cargar_imagenes( imagenes_galeria )
-            galeria.eventos(click = click_imagen_galeria)
             # estilos bordes
+            galeria.eventos(click = click_imagen_galeria)
             actualizar_estilo_estado( imagenes_galeria, estilos_galeria )
             galeria.update()
             # asigna la primera imagen a la pestaña de etiquetado
@@ -690,8 +739,6 @@ def main(pagina: ft.Page):
         contenedor_seleccion.estilo(estilos_seleccion[estilo]) 
         contenedor_seleccion.update()
         #textos informativos
-        # global directorio
-        # ruta = pathlib.Path(imagen.ruta).relative_to(directorio)
         ruta = pathlib.Path(imagen.ruta)
         nombre = ruta.name
         indice = imagenes_galeria.index(imagen)
@@ -699,13 +746,18 @@ def main(pagina: ft.Page):
         texto_imagen.value = f"{indice+1} - {nombre}"
         texto_imagen.visible = True 
         texto_imagen.update()
-        texto_ruta.value = f"Ruta archivo:\n{ruta}"
-        texto_ruta.visible = True
-        texto_ruta.update()
-        # texto_tags.value = etiquetas2texto(tags)
-        texto_tags.value = f"Tags imagen:\n{etiquetas2texto(tags)}"
-        texto_tags.visible = True
-        texto_tags.update()
+        texto_ruta_titulo.value = f"Ruta archivo:"
+        texto_ruta_titulo.visible = True
+        texto_ruta_titulo.update()
+        texto_ruta_data.value = f"{ruta}"
+        texto_ruta_data.visible = True
+        texto_ruta_data.update()
+        texto_tags_titulo.value = f"Tags imagen ({len(tags)}):"
+        texto_tags_titulo.visible = True
+        texto_tags_titulo.update()
+        texto_tags_data.value = f"{etiquetas2texto(tags)}"
+        texto_tags_data.visible = True
+        texto_tags_data.update()
 
 
     # Eventos galeria
@@ -717,7 +769,7 @@ def main(pagina: ft.Page):
         # asigna imagen y estilo de bordes a la pestaña de etiquetado
         asignar_imagen_edicion(clave)
         #cambio de pestaña
-        pestanias.selected_index = 1
+        pestanias.selected_index = Tab.TAB_SELECCION.value
         # actualizacion grafica
         pagina.update()
 
@@ -728,7 +780,7 @@ def main(pagina: ft.Page):
         global clave
         apuntar_galeria( clave)   
         #cambio de pestaña
-        pestanias.selected_index=0
+        pestanias.selected_index = Tab.TAB_GALERIA.value
         pagina.update()
 
 
@@ -758,9 +810,6 @@ def main(pagina: ft.Page):
         # marcado de bordes según las dimensiones requeridas 
         for imagen in imagenes_galeria:
             imagen.verificar_imagen(dimensiones_elegidas)
-
-        # busqueda de etiquetas presentes en imagenes
-        # tags = filas_filtrado.leer_botones() # FIX
 
         # reporte por snackbar
         ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(imagenes_galeria)} imagenes seleccionadas.")
@@ -809,7 +858,7 @@ def main(pagina: ft.Page):
     def actualizar_componentes( e: ft.ControlEvent | None):
         global imagenes_galeria
         global clave
-        if len(imagenes_galeria):
+        if len(imagenes_galeria)>0:
             # Objeto galeria
             galeria.cargar_imagenes( imagenes_galeria )
             galeria.update()
@@ -825,18 +874,12 @@ def main(pagina: ft.Page):
             imagen_seleccion(imagen_elegida)
 
 
+
     def filtrar_todas_etiquetas( e: ft.ControlEvent ):
         """Selecciona las imagenes con al menos una de las etiquetas activadas en la pestaña de estadisticas."""
     
         global imagenes_galeria
         global imagenes_galeria_filtradas_backup
-
-        # animacion: los  scrolls se mueven a la etiqueta clickeada
-        boton = e.control
-        texto_tag = boton.text.split("(")[0].strip()
-
-        etiquetador_imagen.mostrar_tag(texto_tag)
-        etiquetador_imagen.update()
 
         # extraccion del numero de repeticiones
         set_etiquetas = set()
@@ -852,6 +895,9 @@ def main(pagina: ft.Page):
             ventana_emergente(pagina, "Galeria vacía")
             boton_filtrar_dimensiones.estado = False
             boton_filtrar_dimensiones.update()
+        
+            boton_filtrar_etiquetas.estado = False
+
             return
 
         if boton_filtrar_etiquetas.estado == True:
@@ -880,6 +926,11 @@ def main(pagina: ft.Page):
             clave = imagenes_galeria[0].clave
         # actualizacion grafica
         actualizar_componentes(e)
+
+        # foco en la galeria
+        if boton_filtrar_etiquetas.estado:
+            pestanias.selected_index = Tab.TAB_GALERIA.value
+            pestanias.update()
 
 
     # manejador del teclado
@@ -933,7 +984,7 @@ def main(pagina: ft.Page):
         global imagenes_galeria
         global clave
         if len(imagenes_galeria)>0:
-            if pestanias.selected_index == 0:
+            if pestanias.selected_index == Tab.TAB_GALERIA.value:
                 apuntar_galeria(clave)
 
 
@@ -955,7 +1006,7 @@ def main(pagina: ft.Page):
 
     def apuntar_galeria(clave):
         """Funcion auxiliar para buscar y mostrar la imagen requerida en base a su numero ('key')."""
-        galeria.scroll_to(key=clave, duration=1000)
+        galeria.scroll_to(key=clave, duration=500)
 
 
     def reset_tags_filtros(e: ft.ControlEvent):
@@ -963,34 +1014,18 @@ def main(pagina: ft.Page):
         filas_filtrado.agregar_tags([], True)
         filtrar_todas_etiquetas(e)
 
-    def agregar_tags_archivo(e: ft.FilePickerResultEvent):
-        # texto = e.path if e.path else "Agregado de etiquetas a archivo cancelado"
+    def guardar_tags_archivo(e: ft.FilePickerResultEvent):
         if e.path :
             ruta = e.path
-            texto=f"Agregado de etiquetas a archivo\nRuta: {ruta}"
+            texto=f"Guardado de etiquetas en archivo\nRuta: {ruta}"
 
-            dataset_archivo = Etiquetas(ruta)
-
-            tags_dataset  = dataset_archivo.tags
-            tags_conteados = filas_filtrado.dataset.tags
-
-            # correccion formato
-            tags_imagenes = []
-            for tag in tags_conteados:
-                texto = tag.split("(")[0].strip()
-                tags_imagenes.append(texto)
-
-            set_tags_extra = set(tags_imagenes).difference(tags_dataset)
-            tags_extra = list(set_tags_extra)
-            
-            
-            texto = str(tags_extra)
-            print(tags_extra)
-
-            dataset_archivo.agregar_tags(tags_extra, sobreescribir=True)
-            guardado_exitoso = dataset_archivo.guardar(modo="a")
-
-            print(f"Guardado exitoso: {guardado_exitoso}")
+            # creación / borrado de archivo
+            guardar_archivo(ruta,"",modo="w" )
+            # escritura de archivo,un renglon por grupo
+            tags_grupos = dataset.tags_grupos
+            for lista in tags_grupos:
+                texto = etiquetas2texto(lista) + "\n"
+                guardar_archivo(ruta,texto,modo="a" )
 
         else :
             texto=f"Guardado cancelado"
@@ -1099,11 +1134,11 @@ def main(pagina: ft.Page):
     # Clase para manejar dialogos de archivo y de carpeta
     dialogo_directorio      = ft.FilePicker(on_result = resultado_directorio )
     dialogo_dataset         = ft.FilePicker(on_result = resultado_dataset)
-    dialogo_agregado_tags   = ft.FilePicker(on_result = agregar_tags_archivo)
+    dialogo_guardado_tags   = ft.FilePicker(on_result = guardar_tags_archivo)
 
     # Añadido de diálogos a la página
     pagina.overlay.extend([
-            dialogo_directorio, dialogo_dataset, dialogo_agregado_tags
+            dialogo_directorio, dialogo_dataset, dialogo_guardado_tags
         ])
 
 

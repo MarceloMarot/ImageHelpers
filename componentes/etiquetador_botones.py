@@ -14,12 +14,14 @@ class BotonBiestable(ft.ElevatedButton):
         self.color_false = color_false
         super().__init__(
             text = texto,
-            key=texto,          # asignacion automatica
+            # key=texto,          # asignacion automatica
+            key=texto.split("(")[0].strip(), # (acomoda la clave a ciertas entradas )
             bgcolor= self.color_false,
             on_click=self.click
             )
         # manejador opcional para el click 
         self.click_boton = nada
+
 
     # implementacion del biestable
     def click(self,e: ft.ControlEvent):
