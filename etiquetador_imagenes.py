@@ -1,5 +1,6 @@
 
 
+from re import I
 from rich import print as print
 import flet as ft
 import pathlib
@@ -678,7 +679,7 @@ def main(pagina: ft.Page):
     def cargar_galeria_componentes(  e: ft.ControlEvent | None = None ):
         """Muestra las imagenes encontradas y las asigna a los componentes de seleccion y etiquetado. Si no hay imágenes que mostra oculta y/o inhabilita componentes."""
         # acceso a elementos globales
-        global imagenes_galeria
+        global imagenes_galeria, imagenes_galeria_backup, imagenes_galeria_filtradas_backup
         global ruta_dataset
         global clave
         # si se encuentran imagenes se visibilizan y configuran los controles
@@ -690,7 +691,7 @@ def main(pagina: ft.Page):
         # Objeto galeria
         galeria.cargar_imagenes( imagenes_galeria )
         galeria.update()
-        
+
         if len(imagenes_galeria) > 0:
             # estilos bordes
             galeria.eventos(click = click_imagen_galeria)
@@ -705,11 +706,25 @@ def main(pagina: ft.Page):
             etiquetador_imagen.update()
 
         else:
-            ventana_emergente(pagina, f"Directorio de imagenes vacío.")
+
+            # Borrado de listas de imagenes
+            imagenes_galeria = []
+            imagenes_galeria_backup = [] 
+            imagenes_galeria_filtradas_backup = []
+
+            # ocultamiento de componentes graficos
+            columna_etiquetas.visible = False
+            columna_etiquetas.update()
             columna_seleccion.visible = False
             columna_seleccion.update()
+
+            # borrado y deshabilitado etiquetador 
+            dataset.leer_archivo()  
+            etiquetador_imagen.leer_dataset(dataset) 
             etiquetador_imagen.habilitado = False
             etiquetador_imagen.update()
+
+            ventana_emergente(pagina, f"Directorio de imagenes vacío.")
 
 
     def asignar_imagen_edicion(clave:str):
