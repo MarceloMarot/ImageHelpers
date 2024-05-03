@@ -33,7 +33,7 @@ class Estados(Enum):
     TODOS = "todas"
     GUARDADOS = "guardadas"
     MODIFICADOS = "modificadas"
-    NO_TAGGEADOS = "no etiquetadas"
+    NO_TAGGEADOS = "no etiquetadas" 
 
 tupla_estados = (
     Estados.TODOS.value,
@@ -44,7 +44,7 @@ tupla_estados = (
 
 
 texto_ayuda = """
-Color de Bordes:
+Color de bordes de imagen:
   Cada color de borde da informacion sobre el estado del etiquetado o de las dimensiones de cada imagen.
   Opciones:
   - Celeste: no etiquetado
@@ -52,31 +52,13 @@ Color de Bordes:
   - Amarillo: tags agregados o modificados
   - Rojo: dimensiones incorrectas
 
-Pestaña 'Galeria':
-  Muestra las imágenes encontradas en la carpeta elegida mediante el botón 'Abrir Carpeta'..
-  También incluye al panel de filtrado (oculto por defecto).
-
-Pestaña 'Etiquetado':
-  Permite ver la imagen seleccionada actualmente y proporciona los controles para modificar su etiquetado. 
-  Los tags se cargan desde un archivo .txt con el botón 'Abrir dataset'
-
-Botón 'Panel filtrado':
-  Despliega el panel de filtrado por tags, que ayuda a encontrar las imágenes que posean las etiquetas elegidas manualmente. 
-  También habilita el guardado en archivo de las etiquetas encontradas con ayuda del botón 'Guardar dataset'.
-  Requiere que se hayan cargado las imágenes primero.
-
-Listas desplegables:
-- Lista de dimensiones: permite marcar en rojo las imágenes con dimensiones distintas a la exigida. 
-  Si se habilita el botón 'Filtrar por dimensiones' se mostrará solamente las imágenes con dimensiones correctas.
-- Lista de estados: filtra las imágenes en base su estado de etiquetado: guardadas, modificadas, etc.
-
 Teclado: 
 Permite cambiar rápidamente la imagen seleccionada. 
 Teclas rápidas:
 - Home:  primera imagen;
 - RePag | A | Flecha Izquierda : imagen anterior;
 - AvPag | D | Flecha Derecha   : imagen siguiente;
-- End:   última imagen;
+- End:   última imagen.
 """
 
 
@@ -95,14 +77,13 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         ):
         Etiquetas.__init__(self, ruta)
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
-        self.__etiquetada = False
+        self.__modificada = False
         self.__guardada = False
         self.__defectuosa = False
         self.__dimensiones: tuple[int, ...]|None
         self.leer_dimensiones()
         self.verificar_imagen()   
-        self.verificar_etiquetado()
-        self.verificar_guardado()
+        self.verificar_guardado_tags()
         self.estilos = estilos
         self.tooltip = ruta
 
@@ -137,35 +118,23 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
             self.__defectuosa = False
             return True
 
-
     @property
     def defectuosa(self)->bool:
         return self.__defectuosa
 
-
-    def verificar_etiquetado(self)->bool:
-        """Verifica si hay etiquetas en la imagen, ya sea guardadas o sin guardar """
-        self.__etiquetada = True if len(self.tags) > 0 else False
-        return self.__etiquetada
-
+    # def verificar_guardado_tags(self , tags: list[str] | None = None):
+    def verificar_guardado_tags(self ):
+        """Comprueba si las etiquetas actuales son las mismas que las guardadas en archivo de texto"""
+        # verificacion guardado
+        tags_archivo  = self.tags_archivo 
+        self.__guardada = False if len(tags_archivo)==0 else True
+        # verificacion modificaciones de etiquetado
+        tags_imagen =  self.tags
+        self.__modificada = True if set(tags_imagen) != set(tags_archivo) else False 
 
     @property
-    def etiquetada(self)->bool:
-        return self.__etiquetada 
-
-
-    def verificar_guardado(self , tags: list[str] | None = None)->bool:
-        """Comprueba si las etiquetas actuales son las mismas que las guardas en archivo de texto"""
-        archivado = Etiquetas(self.ruta)
-        if tags == None:
-            guardado = True if set(self.tags) == set(archivado.tags) else False   # si los tags son iguales da True; en caso contrario da False
-        else:    
-            guardado = True if set(tags) == set(archivado.tags) else False   # si los tags son iguales da True; en caso contrario da False
-        # se lee cuantas etiquetas hay en archivo
-        etiquetado = True if len(archivado.tags) > 0 else False
-        self.__guardada = guardado  and etiquetado     # se descartan no etiquetados
-        return self.__guardada
-
+    def modificada(self)->bool:
+        return self.__modificada 
 
     @property
     def guardada(self)->bool:
@@ -174,15 +143,12 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
 
     def guardar_archivo(self)->bool:
         """
-        Escribe/rescribe el archivo de etiquetas si éstas no coinciden con las indicadas. 
+        Escribe/rescribe el archivo de etiquetas si éstas no coinciden con las guardadas en la estructura. 
         Si 'tags' es 'None' se usan las etiquetas almacenadas en el objeto imagen.
         """
         guardado_exitoso = False
-
-        self.verificar_guardado()
-        self.verificar_etiquetado()
-        
-        if (self.guardada == False) and self.etiquetada:
+        self.verificar_guardado_tags()
+        if self.modificada:
             guardado_exitoso = self.guardar(self.tags)
             self.__guardada = guardado_exitoso
         return guardado_exitoso
@@ -214,10 +180,10 @@ def actualizar_estilo_estado( contenedores: list[Contenedor_Etiquetado], estilos
     for contenedor in contenedores:
         if contenedor.defectuosa :
             estilo = estilos["erroneo"]     
+        elif contenedor.modificada :
+            estilo = estilos["modificado"]
         elif contenedor.guardada :
             estilo = estilos["guardado"]
-        elif contenedor.etiquetada :
-            estilo = estilos["modificado"]
         else: 
             estilo = estilos["predefinido"]
         contenedor.estilo( estilo )
@@ -284,19 +250,22 @@ def filtrar_estados(
     """Devuelve solamente los contenedores con el estado de etiquetado pedido."""
     imagen : Contenedor_Etiquetado
     imagenes_filtradas = []
+    # imagenes guardadas (sin cambios)
     if estado == Estados.GUARDADOS.value:
         for imagen in lista_imagenes: 
-            if imagen.guardada:    
+            if imagen.guardada and not imagen.modificada:    
                 imagenes_filtradas.append(imagen)
         return imagenes_filtradas
+    # imagenes tags modificados (todas)
     elif estado == Estados.MODIFICADOS.value:
-        for imagen in lista_imagenes: 
-            if imagen.etiquetada and not imagen.guardada:   # etiquetadas pero no guardadas  
+        for imagen in lista_imagenes:   
+            if imagen.modificada:    
                 imagenes_filtradas.append(imagen)
         return imagenes_filtradas
+    # no etiquetadas ni guardadas
     elif estado == Estados.NO_TAGGEADOS.value:
         for imagen in lista_imagenes: 
-            if not imagen.etiquetada:    
+            if not imagen.modificada and not imagen.guardada:    # FIX
                 imagenes_filtradas.append(imagen)
         return imagenes_filtradas
     else:
@@ -325,7 +294,7 @@ def main(pagina: ft.Page):
     # caja de ayuda
     ayuda_emergente = ft.Tooltip(
         message=texto_ayuda,
-        content=ft.Text("Ayuda",size=18, width=100),
+        content=ft.Text("Ayuda extra",size=18, width=100),
         padding=20,
         border_radius=10,
         text_style=ft.TextStyle(size=15, color=ft.colors.WHITE),
@@ -623,11 +592,10 @@ def main(pagina: ft.Page):
             imagen_seleccionada.agregar_tags(etiquetas_botones, sobreescribir=True)
 
             # actualizacion bordes galeria
-            imagen_seleccionada.verificar_etiquetado()
             imagen_seleccionada.verificar_imagen(dimensiones_elegidas)
-            imagen_seleccionada.verificar_guardado()
+            imagen_seleccionada.verificar_guardado_tags()
             imagen_seleccionada.actualizar_estilo_estado()
-            imagen_seleccionada.verificar_guardado(etiquetas_botones)
+
 
         # actualizacion grafica de todos los componentes
         actualizar_componentes() 
@@ -776,16 +744,29 @@ def main(pagina: ft.Page):
     def imagen_seleccion(imagen: Contenedor_Etiquetado):
         """Actualiza imagen y estilo de bordes del selector de imagen"""
         contenedor_seleccion.ruta_imagen = imagen.ruta
+
+        #  FIX
         # actualizacion de estilo de bordes
         if imagen.defectuosa :
             estilo = "erroneo"    
+            # estilo = Estados.ERRONEOS.value    
+        elif imagen.modificada :
+            estilo = "modificado"
+            # estilo = Estados.MODIFICADOS.value    
         elif imagen.guardada :
             estilo = "guardado"
-        elif imagen.etiquetada :
-            estilo = "modificado"
+            # estilo = Estados.GUARDADOS.value    
         else: 
             estilo = "predefinido"
+            # estilo = Estados.PREDEFINIDOS.value   
+        print(imagen_clave, estilo)    
+
+        print("guardada  :", imagen.guardada)    
+        print("modificada:", imagen.modificada)    
+        print("defectuosa:", imagen.defectuosa)    
+
         contenedor_seleccion.estilo(estilos_seleccion[estilo]) 
+
         contenedor_seleccion.update()
         #textos informativos
         ruta = pathlib.Path(imagen.ruta)
@@ -882,7 +863,7 @@ def main(pagina: ft.Page):
             if guardado :
                 i += 1 
         for imagen in imagenes_galeria:
-            imagen.verificar_guardado()
+            imagen.verificar_guardado_tags()
         # reporte por snackbar
         if i == 0:
             ventana_emergente(pagina,f"Etiquetas sin cambios")
@@ -1207,7 +1188,7 @@ def main(pagina: ft.Page):
 
     galeria.ancho = ancho_pagina 
     fila_controles.width = ancho_pagina 
-    
+
     etiquetador_imagen.altura = altura_tab_etiquetado
     etiquetador_imagen.base = 500
     etiquetador_imagen.expand = True

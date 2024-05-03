@@ -72,6 +72,7 @@ class FilasBotonesEtiquetas(ft.Column):
     def __init__(self):
         self.dataset: Etiquetas =  Etiquetas()
         self.etiquetas: Etiquetas =  Etiquetas()
+        # self.etiquetas_archivo: Etiquetas =  Etiquetas()
         self.botones_etiquetas = []
         self.botones_grupo = []
         self.__filas_botones = []
@@ -113,8 +114,8 @@ class FilasBotonesEtiquetas(ft.Column):
 
        
     def leer_dataset(self, dataset: Etiquetas, botones_grupo_visibles=True):
-        """Lee TODAS las etiquetas (el 'dataset') desde un archivo de texto y crea los botones de activacion de la interfaz gráfica.
-        El componente clasifica las etiquetas en distintos 'grupos' en base al renglón del archivo en que se encuentran.
+        """Lee TODAS las etiquetas (el 'dataset') desde la estructura de datos de entrada y crea los botones de activacion de la interfaz gráfica.
+        El componente clasifica las etiquetas en distintos 'grupos' que pueden activarse o desactivarse solidariamente.
         Permite dejar los botones de grupo ocultos.
         """
         self.dataset = dataset
@@ -170,6 +171,7 @@ class FilasBotonesEtiquetas(ft.Column):
 
 
     def deshabilitar_botones(self, valor: bool):
+        """Anula los botones del componente."""
         for boton in self.botones_grupo:
             boton.disabled = valor
 
@@ -216,6 +218,7 @@ class FilasBotonesEtiquetas(ft.Column):
 
     def leer_etiquetas_archivo(self):
         """Lee y carga las etiquetas ya guardadas en el archivo de salida"""
+        # lectura de disco
         self.etiquetas.leer_archivo()  
         
 
@@ -353,6 +356,7 @@ class EtiquetadorBotones(ft.Column):
         """Activa todas las etiquetas del dataset"""
         for boton in self.__filas_botones.botones_etiquetas:
             boton.estado = True
+        # funcionalidad externa al etiquetador
         self.click_botones(e)
 
 
@@ -360,33 +364,35 @@ class EtiquetadorBotones(ft.Column):
         """Descarta todas las etiquetas del dataset"""
         for boton in self.__filas_botones.botones_etiquetas:
             boton.estado = False
+        # funcionalidad externa al etiquetador
         self.click_botones(e)
 
 
     def restablecer_etiquetas(self, e):
         """Actualiza los botones de etiquetas a sus valores guardados en archivo"""
-        self.__filas_botones.leer_etiquetas_archivo()
+        # reestablecimiento de diccionario interno (sin relectura de archivo)
+        datos_archivo = self.__filas_botones.etiquetas.datos_archivo
+        self.__filas_botones.etiquetas.datos = datos_archivo
+        # actualizacion grafica
         self.__filas_botones.actualizar_botones()
+        # funcionalidad externa al etiquetador
         self.click_botones(e)
 
 
     def guardar_etiquetas(self, e):
         """Guarda todas las etiquetas seleccionadas en el archivo de texto asignado al componente. Se filtran las etiquetas repetidas."""
-        # lectura de etiquetas (elementos repetidos flitrados)
-        etiquetas = self.__filas_botones.leer_botones()
-        set_etiquetas = set(etiquetas) 
-        lista_etiquetas = list(set_etiquetas)
-        # relectura de etiquetas para prevenir relecturas inutiles
-        self.__filas_botones.leer_etiquetas_archivo()  
+        # lectura de botones activos (elementos repetidos flitrados)
+        tags_botones = self.__filas_botones.leer_botones()
+        # lectura de datos originales de archivo
+        tags_archivo = self.__filas_botones.etiquetas.tags_archivo
         # se intenta el guardado sólo si se detectan cambios de etiquetado 
-        if set(self.__filas_botones.etiquetas.tags) != set_etiquetas: 
-            # guardado de etiquetas 
-            self.__filas_botones.etiquetas.guardar(lista_etiquetas)
-        #funcionalidad opcional
+        if set(tags_botones) != set(tags_archivo): 
+            # guardado de etiquetas( relectura archivo intrinseca)
+            self.__filas_botones.etiquetas.guardar(tags_botones)
+        # funcionalidad externa al etiquetador
         self.click_botones(e)
         # actualizacion grafica y salida
         self.update()
-        # return retorno_guardado 
 
 
     @property
@@ -560,6 +566,11 @@ def main(page: ft.Page):
     etiquetador.base = 600
     # carga de archivos (sentido inverso)
     etiquetador.setear_salida( etiquetas )      # carga el estado de los botones desde archivo
+
+    
+    
+    
+    
     etiquetador.leer_dataset(   dataset   )     # crea los botones de etiquetado y de grupo
     # etiquetador.leer_dataset( dataset, False )     # crea sólo los botones de etiquetado
 

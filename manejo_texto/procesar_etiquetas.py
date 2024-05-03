@@ -11,6 +11,7 @@ class Etiquetas:
     def __init__(self, ruta: str=""):	
         self.ruta : str    = ruta      # ruta archivo
         self.datos : dict   = dict()      # etiquetas y grupos en formato diccionario
+        self.datos_archivo : dict   = dict()   # etiquetas y grupos (sólo de archivo)
         # lectura automatica
         try:
             self.leer_archivo()
@@ -23,6 +24,14 @@ class Etiquetas:
         """Devuelve la lista de etiquetas encontradas. Puede estar vacía."""
         if self.datos != None:
             return list( self.datos.keys() )
+        else:
+            return []
+
+    @property
+    def tags_archivo(self)->list[str]:
+        """Devuelve la lista de etiquetas de archivo encontradas. Puede estar vacía."""
+        if self.datos != None:
+            return list( self.datos_archivo.keys() )
         else:
             return []
 
@@ -67,7 +76,8 @@ class Etiquetas:
         """Lee las etiquetas desde archivo de texto. Si éste no existe la data interna queda vacía """
         renglones_listas = lectura_archivo(self.ruta)
         self.datos = separar_etiquetas(renglones_listas, etiquetas_repetidas)
-
+        # backup de data original (tags no repetidos)
+        self.datos_archivo = separar_etiquetas(renglones_listas, False) 
 
     # escritura en disco
     def guardar(self, etiquetas: list[str]=[], modo: str="w", encoding='utf-8'):
@@ -75,7 +85,8 @@ class Etiquetas:
         Modos:
         - "w": sobreescritura (por defecto)
         - "a": agregado al final 
-        Codificacion UTF-8 por defecto
+        Codificacion UTF-8 por defecto.
+        Relee los datos de archivo tras el guardado.
         """       
         if len(etiquetas)>0:
             texto = etiquetas2texto(etiquetas)
@@ -202,9 +213,11 @@ if __name__ == "__main__":
 
     # # Muestra de resultados
     tags  = etiqueta.tags
+    tags_archivo  = etiqueta.tags_archivo
     grupos = etiqueta.grupos 
 
     print(f'[bold green] {tags}')
+    print(f'[bold blue] {tags_archivo}')
     print(f'[bold yellow] {grupos}')
     print(f'[bold cyan] {etiqueta.datos}')
 
@@ -214,8 +227,8 @@ if __name__ == "__main__":
     print(f'[bold blue]Data interna:')
     # print(etiqueta.tags_grupos)
 
-    for lista in etiqueta.tags_grupos:
-        print(lista)
+    # for lista in etiqueta.tags_grupos:
+    #     print(lista)
 
     # print(set(etiqueta.tags_grupos)) # Error
 
