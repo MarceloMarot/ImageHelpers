@@ -265,7 +265,7 @@ def filtrar_estados(
     # no etiquetadas ni guardadas
     elif estado == Estados.NO_TAGGEADOS.value:
         for imagen in lista_imagenes: 
-            if not imagen.modificada and not imagen.guardada:    # FIX
+            if not imagen.modificada and not imagen.guardada: 
                 imagenes_filtradas.append(imagen)
         return imagenes_filtradas
     else:
@@ -580,27 +580,26 @@ def main(pagina: ft.Page):
         global clave
 
         if len(imagenes_galeria)>0:
-            imagen_seleccionada: Contenedor_Etiquetado|None
             # prevencion de errores por posible clave inexistente
-            indice = indice_clave(clave, imagenes_galeria)
-            if indice == None:
-                clave = imagenes_galeria[0].clave
-            imagen_seleccionada = imagen_clave(clave, imagenes_galeria) 
+            # (suele pasar al cambiar las condiciones de filtrado de imagenes)
+            try:
+                imagen_seleccionada = imagen_clave(clave, imagenes_galeria) 
 
-            # Se transfieren los tags de la botonera a las imagenes 
-            etiquetas_botones = etiquetador_imagen.leer_botones()
-            imagen_seleccionada.agregar_tags(etiquetas_botones, sobreescribir=True)
+                # Se transfieren los tags de la botonera a las imagenes 
+                etiquetas_botones = etiquetador_imagen.leer_botones()
+                imagen_seleccionada.agregar_tags(etiquetas_botones, sobreescribir=True)
 
-            # actualizacion bordes galeria
-            imagen_seleccionada.verificar_imagen(dimensiones_elegidas)
-            imagen_seleccionada.verificar_guardado_tags()
-            imagen_seleccionada.actualizar_estilo_estado()
+                # actualizacion bordes galeria
+                imagen_seleccionada.verificar_imagen(dimensiones_elegidas)
+                imagen_seleccionada.verificar_guardado_tags()
+                imagen_seleccionada.actualizar_estilo_estado()
+            except:
+                print(f"[bold red]Imagen '{clave}' no disponible en galeria")
 
 
         # actualizacion grafica de todos los componentes
         actualizar_componentes() 
             
-
         # renovar lista de etiquetas
         estadisticas()
    
@@ -625,13 +624,12 @@ def main(pagina: ft.Page):
         lista_dimensiones_desplegable.update()
 
 
-    def crear_botones_etiquetador(ruta_dataset: str = ""):
-        """Crea los botones del etiquetador en base al archivo de texto indicado y a los tags ya presentes en las imagenes"""
+    # def crear_botones_etiquetador(ruta_dataset: str = ""):
+    def crear_botones_etiquetador():
+        """Crea los botones del etiquetador en base al archivo de texto indicado y a los tags ya presentes en las imagenes actuales"""
 
-        # lectura del archivo de dataset (si no existe el dataset queda vacio)
-        # (borra data previa)
-        dataset.ruta = ruta_dataset
-        dataset.leer_archivo()
+        # reestablecimiento de la estructura de dataset (solo deja tags procedentes de archivo)
+        dataset.datos = dataset.datos_archivo
 
         # lectura de todas las etiquetas encontradas en las imagenes
         tags_grupos = filas_filtrado.dataset.tags_grupos
@@ -644,7 +642,7 @@ def main(pagina: ft.Page):
                 tags_grupos[i][j] = tag
 
         # descarte de etiquetas ya incluidas desde archivo     
-        tags_archivo = dataset.tags
+        tags_archivo = dataset.tags_archivo
         for tags_lista  in tags_grupos:
             i = tags_grupos.index(tags_lista )
             tags_faltantes = set(tags_lista).difference(tags_archivo)
@@ -655,7 +653,7 @@ def main(pagina: ft.Page):
         for lista in tags_grupos:
             dataset.agregar_tags(lista, sobreescribir=False)
 
-        #carga al elemento grafico
+        # crea la botonera de edicion
         etiquetador_imagen.leer_dataset(dataset)
 
         # Eventos de los botones
@@ -674,41 +672,52 @@ def main(pagina: ft.Page):
             global imagenes_galeria
             global imagenes_seleccion, imagenes_tags
             global directorio
+            global todas_imagenes
             # busqueda 
             directorio = e.path
             ventana_emergente(pagina, f"Buscando imágenes...\nRuta: {directorio} ")
             rutas_imagen = buscar_imagenes(directorio)
         
             # lectura de imagenes del directorio
-            imagenes_galeria = cargar_imagenes(rutas_imagen) 
+            todas_imagenes = cargar_imagenes(rutas_imagen) 
 
             # reinicio de las listas de imagenes
-            imagenes_seleccion = imagenes_galeria
-            imagenes_tags = imagenes_galeria
+            imagenes_seleccion = todas_imagenes
+            imagenes_tags = todas_imagenes
+            imagenes_galeria = todas_imagenes
 
             # asignacion de la primera imagen de la galeria 
             global clave
             if len(imagenes_galeria)>0:         
                 clave = imagenes_galeria[0].clave
+                # reporte por snackbar
+                ventana_emergente(pagina, f"Directorio de imagenes abierto.\nRuta: {directorio} \nNº imágenes: {len(imagenes_galeria)}")
+ 
             else:
                 clave = ""
+                # reporte por snackbar
+                ventana_emergente(pagina, f"Directorio de imagenes vacío.\nRuta: {directorio} ")
 
             # se descartan los tamaños de imagen no disponibles
             actualizar_lista_dimensiones() 
+            # relectura del archivo dataset (puede no existir)
+            global ruta_dataset
+            dataset.ruta = ruta_dataset
+            dataset.leer_archivo()
             # actualizacion de la app
             cargar_galeria_componentes()
 
-            # reporte por snackbar
-            ventana_emergente(pagina, f"Directorio de imagenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_galeria)}")
- 
 
     # Funcion de apertura de archivo con etiquetas (dataset)
     def resultado_dataset(e: ft.FilePickerResultEvent):
         """Carga el archivo de texto con las etiquetas del proyecto."""
         if e.files:
-            archivo = e.files[0]                   
+            archivo = e.files[0]    
+            # lectura del archivo de dataset               
             global ruta_dataset
             ruta_dataset = archivo.path
+            dataset.ruta = ruta_dataset
+            dataset.leer_archivo()
             cargar_galeria_componentes()
             # reporte por snackbar
             ventana_emergente(pagina, f"Archivo de  dataset abierto\nNombre archivo: {ruta_dataset}")
@@ -720,23 +729,13 @@ def main(pagina: ft.Page):
         global imagenes_galeria
         global ruta_dataset
         global clave
+
         # si se encuentran imagenes se visibilizan y configuran los controles
         filtrar_dimensiones_estados()   
-
         # agregado de todas las etiquetas al editor
-        crear_botones_etiquetador(ruta_dataset)
-
+        crear_botones_etiquetador()  
         # actualizar galeria
         actualizar_estilo_estado( imagenes_galeria, estilos_galeria )
-        # galeria.eventos(click = click_imagen_galeria) # FIX 
-
-        if len(imagenes_galeria) == 0:
-            # reestablecimiento del dataset 
-            dataset.leer_archivo()                    
-            etiquetador_imagen.leer_dataset(dataset) 
-
-            ventana_emergente(pagina, f"Directorio de imagenes vacío.")
-
         # actualizacion grafica
         actualizar_componentes()
 
@@ -744,30 +743,19 @@ def main(pagina: ft.Page):
     def imagen_seleccion(imagen: Contenedor_Etiquetado):
         """Actualiza imagen y estilo de bordes del selector de imagen"""
         contenedor_seleccion.ruta_imagen = imagen.ruta
-
-        #  FIX
-        # actualizacion de estilo de bordes
+        # FIX:  
         if imagen.defectuosa :
-            estilo = "erroneo"    
-            # estilo = Estados.ERRONEOS.value    
+            estilo = "erroneo"      
         elif imagen.modificada :
             estilo = "modificado"
-            # estilo = Estados.MODIFICADOS.value    
         elif imagen.guardada :
-            estilo = "guardado"
-            # estilo = Estados.GUARDADOS.value    
+            estilo = "guardado"  
         else: 
-            estilo = "predefinido"
-            # estilo = Estados.PREDEFINIDOS.value   
-        print(imagen_clave, estilo)    
-
-        print("guardada  :", imagen.guardada)    
-        print("modificada:", imagen.modificada)    
-        print("defectuosa:", imagen.defectuosa)    
+            estilo = "predefinido"  
 
         contenedor_seleccion.estilo(estilos_seleccion[estilo]) 
-
         contenedor_seleccion.update()
+
         #textos informativos
         ruta = pathlib.Path(imagen.ruta)
         nombre = ruta.name
@@ -818,10 +806,8 @@ def main(pagina: ft.Page):
     def filtrar_dimensiones_estados( e: ft.ControlEvent | None = None):
         """Selecciona solamente aquellas imagenes que cumplan con el tamaño y estado especificados."""
         global imagenes_galeria
-        global imagenes_seleccion
-
-        # inicializacion previa al filtrado 
-        imagenes_galeria = imagenes_seleccion
+        # global imagenes_seleccion
+        global todas_imagenes
 
         # conversion de texto a tupla numerica de dimensiones de imagen elegida
         global dimensiones_elegidas 
@@ -830,7 +816,7 @@ def main(pagina: ft.Page):
 
         # Filtrado en base a las dimensiones de imagen
         dimensiones = dimensiones_elegidas if boton_filtrar_dimensiones.estado else None
-        imagenes_galeria = filtrar_dimensiones(imagenes_galeria, dimensiones)
+        imagenes_galeria = filtrar_dimensiones(todas_imagenes, dimensiones)
 
         # Filtrado en base a los estados de las imagenes
         estado = lista_estados_desplegable.value
@@ -883,6 +869,7 @@ def main(pagina: ft.Page):
         """Asigna la imagen actual a los componentes de seleccion y etiquetado en base a la 'clave' global.
         Si ésta no se encuentra en la galeria actual busca la primera imagen disponible y actualiza la clave.
         Tambien carga las imagenes disponibles a la galeria gráfica.
+        Si la galeria queda vacia se ocultan los componentes graficos
         """
         global imagenes_galeria 
         global clave
@@ -895,15 +882,16 @@ def main(pagina: ft.Page):
         if len(imagenes_galeria)>0:
             # busqueda imagen
             indice = indice_clave(clave, imagenes_galeria)
-            # si la clave no se encuentra se toma la primera imagen disponible
+            # si la clave actual no se encuentra se toma la primera imagen disponible
             if indice == None:
+                print(f"clave inicial: {clave}")
                 imagen_elegida = imagenes_galeria[0] 
                 clave = imagen_elegida.clave 
+                print(f"clave final: {clave}")
 
             # seleccion imagen
             imagen_elegida = imagen_clave(clave, imagenes_galeria)
             etiquetador_imagen.setear_salida(imagen_elegida)
-            etiquetador_imagen.update()
             imagen_seleccion(imagen_elegida)
 
             columna_seleccion.visible = True
@@ -1096,7 +1084,6 @@ def main(pagina: ft.Page):
         etiquetas_marcadas = Etiquetas()
 
         tags_grupo = []
-
 
         # reparto en grupos y coloreo de botones en base a percentiles del 20%
         umbral_1 = int(nro_tags * Percentil.UMBRAL_1.value)
