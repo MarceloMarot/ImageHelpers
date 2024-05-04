@@ -59,6 +59,9 @@ Teclas rápidas:
 - RePag | A | Flecha Izquierda : imagen anterior;
 - AvPag | D | Flecha Derecha   : imagen siguiente;
 - End:   última imagen.
+- Space : restaurar etiquetas (imagen actual)
+-  W    : guardar etiquetas   (imagen actual)
+- ENTER : guardar etiquetas   (todas)
 """
 
 
@@ -620,12 +623,11 @@ def main(pagina: ft.Page):
         lista_dimensiones_desplegable.update()
 
 
-    # def crear_botones_etiquetador(ruta_dataset: str = ""):
     def crear_botones_etiquetador():
         """Crea los botones del etiquetador en base al archivo de texto indicado y a los tags ya presentes en las imagenes actuales"""
 
         # reestablecimiento de la estructura de dataset (solo deja tags procedentes de archivo)
-        dataset.datos = dataset.datos_archivo
+        dataset.datos = dataset.datos_archivo 
 
         # lectura de todas las etiquetas encontradas en las imagenes
         tags_grupos = filas_filtrado.dataset.tags_grupos
@@ -832,7 +834,7 @@ def main(pagina: ft.Page):
         imagenes_tags = imagenes_galeria
 
 
-    def guardar_cambios(e):
+    def guardar_cambios(e:ft.ControlEvent | None = None):
         """Guarda las etiquetas en archivo de todas las imagenes modificadas. También actualiza estados y graficas."""
         global imagenes_galeria
         if len(imagenes_galeria) == 0 : 
@@ -983,6 +985,15 @@ def main(pagina: ft.Page):
             elif tecla == "End":
                 indice = numero_imagenes - 1
                 cambiar_imagen = True
+            # restaurar imagen actual
+            elif tecla == " ":  #  barra espaciadora
+                etiquetador_imagen.restablecer_etiquetas("")
+            # guardar imagen actual
+            elif tecla == "W": 
+                etiquetador_imagen.guardar_etiquetas("")
+            # guardar todas las imagenes
+            elif tecla == "Enter": 
+                guardar_cambios()
             
             if cambiar_imagen:
                 imagen: Contenedor_Etiquetado

@@ -76,8 +76,9 @@ class Etiquetas:
         """Lee las etiquetas desde archivo de texto. Si éste no existe la data interna queda vacía """
         renglones_listas = lectura_archivo(self.ruta)
         self.datos = separar_etiquetas(renglones_listas, etiquetas_repetidas)
-        # backup de data original (tags no repetidos)
-        self.datos_archivo = separar_etiquetas(renglones_listas, False) 
+        # backup de data original , mismo formato
+        self.datos_archivo = self.datos 
+
 
     # escritura en disco
     def guardar(self, etiquetas: list[str]=[], modo: str="w", encoding='utf-8'):
