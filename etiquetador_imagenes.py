@@ -277,6 +277,7 @@ dimensiones_elegidas = None
 imagenes_galeria = []
 imagenes_seleccion = []
 imagenes_tags = []
+todas_imagenes = []
 
 
 
@@ -328,7 +329,7 @@ def main(pagina: ft.Page):
     )
     
     boton_guardar_dataset = ft.ElevatedButton(
-        text = f"Guardar dataset como...",
+        text = f"Guardar todas en archivo",
         bgcolor = ft.colors.AMBER_800,
         icon=ft.icons.SAVE,
         color = ft.colors.WHITE,
@@ -341,7 +342,7 @@ def main(pagina: ft.Page):
         )
 
     boton_reset_tags = ft.ElevatedButton(
-        text = f"Deseleccionar todos...",
+        text = f"Deseleccionar todas...",
         bgcolor = ft.colors.BLUE_800,
         color = ft.colors.WHITE,
         tooltip="Reinicia la selección de etiquetas encontradas."
@@ -365,7 +366,6 @@ def main(pagina: ft.Page):
 
     # Componentes especiales
     etiquetador_imagen = EtiquetadorBotones()
-    etiquetador_imagen.altura = pagina.height - 100
 
     galeria = GaleriaEtiquetado( estilos_galeria )
 
@@ -451,17 +451,14 @@ def main(pagina: ft.Page):
         controls=[    
             ft.Row(
                 [ boton_reset_tags, boton_guardar_dataset],
-                # alignment=ft.MainAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.SPACE_EVENLY,
             ),  
             ft.Divider(height=7, thickness=1) ,
             filas_filtrado,
-            ft.Divider(height=7, thickness=1) ,
-            ft.Divider(height=7, thickness=1) ,
         ],
         visible=False,
-        expand=True, 
-        scroll=ft.ScrollMode.AUTO, 
+        expand=1,
+        scroll=ft.ScrollMode.HIDDEN, 
         )
 
 
@@ -481,7 +478,6 @@ def main(pagina: ft.Page):
         ayuda_emergente,
         ],
         wrap=True,
-        # alignment=ft.MainAxisAlignment.END,
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
         )
 
@@ -1074,7 +1070,7 @@ def main(pagina: ft.Page):
         nro_tags = len(conteo_etiquetas.keys()) 
         lista_tags = list(conteo_etiquetas.keys()) 
 
-        boton_reset_tags.text = f"Deseleccionar todos  ({nro_tags} tags)"
+        boton_reset_tags.text = f"Deseleccionar todas  ({nro_tags} tags)"
 
         tags_contadas = []
         for tag in lista_tags:
@@ -1125,19 +1121,22 @@ def main(pagina: ft.Page):
         return conteo_etiquetas
 
 
-    def redimensionar_botonera(e):
+    def redimensionar_controles(e: ft.ControlEvent | None):
 
         # redimensionado etiquetador:
         etiquetador_imagen.base   = int(pagina.width/2)
-        etiquetador_imagen.altura = pagina.height - 100
-        filas_filtrado.altura = pagina.height - 200
+        etiquetador_imagen.altura = pagina.height - 180
+        filas_filtrado.altura = pagina.height - 240
+        columna_etiquetas.height = pagina.height - 180
+        columna_etiquetas.update()
         etiquetador_imagen.update()
         fila_controles.width = pagina.width 
+        fila_controles.update() 
 
 
     ###########  ASIGNACION HANDLERS #################
 
-    pagina.on_resize = redimensionar_botonera
+    pagina.on_resize = redimensionar_controles
     
     # 
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
@@ -1184,6 +1183,7 @@ def main(pagina: ft.Page):
     # Propiedades pagina 
     pagina.title = "Etiquetador Imágenes"
     pagina.window_width  = ancho_pagina
+    pagina.window_min_width  = 1024
     pagina.window_height = 900
     # pagina.theme_mode = ft.ThemeMode.DARK
     pagina.theme_mode = ft.ThemeMode.LIGHT

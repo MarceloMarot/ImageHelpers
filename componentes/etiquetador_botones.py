@@ -335,21 +335,24 @@ class EtiquetadorBotones(ft.Column):
         self.__f1 =ft.Row(
             controls= [ self.__boton_todos, self.__boton_nada ],
             wrap = True,    
-            alignment = ft.MainAxisAlignment.CENTER,
+            alignment = ft.MainAxisAlignment.SPACE_EVENLY,
             vertical_alignment = ft.CrossAxisAlignment.CENTER,
-            spacing = 100,
+            spacing = 50,
             height = self.__altura_filas,
+            width = 600,
             )
         self.__f2 = ft.Row(
             controls= [ self.__boton_descartar, self.__boton_guardar],
             wrap = True,
-            alignment = ft.MainAxisAlignment.CENTER,
+            alignment = ft.MainAxisAlignment.SPACE_EVENLY,
             vertical_alignment = ft.CrossAxisAlignment.CENTER,
-            spacing = 100,
+            spacing = 50,
             height = self.__altura_filas,
+            width = 600,
             )  
         self.controls=[self.__filas_botones, self.__divisor, self.__f1, self.__f2]
         self.click_botones = nada
+        self.alignment = ft.MainAxisAlignment.START
 
 
     def todas_etiquetas(self, e):
@@ -404,8 +407,8 @@ class EtiquetadorBotones(ft.Column):
     def base(self, valor):
         """Define el ancho total del componente grafico"""
         self.width = valor
-        self.__f1.width = valor
-        self.__f2.width = valor
+        # self.__f1.width = valor
+        # self.__f2.width = valor
         self.__filas_botones.width = valor
 
     @property
