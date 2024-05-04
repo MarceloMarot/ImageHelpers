@@ -56,13 +56,16 @@ Teclado:
 Permite cambiar rápidamente la imagen seleccionada. 
 Teclas rápidas:
 - Home:  primera imagen;
-- RePag | A | Flecha Izquierda : imagen anterior;
-- AvPag | D | Flecha Derecha   : imagen siguiente;
+- RePag | A : imagen anterior;
+- AvPag | D : imagen siguiente;
 - End:   última imagen.
 - Space : restaurar etiquetas (imagen actual)
 -  W    : guardar etiquetas   (imagen actual)
-- ENTER : guardar etiquetas   (todas)
+- Flechas : navegar por el menú
+- ENTER   : abrir ventanas y listas 
+- Escape  : salir de ventanas emergentes, deseleccionar opciones
 """
+
 
 
 def nada( e ):
@@ -838,6 +841,7 @@ def main(pagina: ft.Page):
 
     def guardar_cambios(e:ft.ControlEvent | None = None):
         """Guarda las etiquetas en archivo de todas las imagenes modificadas. También actualiza estados y graficas."""
+        
         global imagenes_galeria
         if len(imagenes_galeria) == 0 : 
             ventana_emergente(pagina,f"Galería vacía - sin cambios")
@@ -857,7 +861,94 @@ def main(pagina: ft.Page):
             ventana_emergente(pagina,f"¡Etiquetas guardadas! - {i} archivos modificados")
         # actualizacion grafica
         actualizar_componentes(e)    
+        cerrar_dialogo(e)  # FIX
 
+
+    # confirmar_cambios
+    def abrir_dialogo_guardado(e:ft.ControlEvent | None = None):
+
+        global imagenes_galeria
+        # conteo imagenes a guardar
+        j = 0
+        for imagen in imagenes_galeria:  
+            if imagen.modificada:
+                j += 1 
+
+        if j == 0:
+            # se ignora (nada que hacer)
+            ventana_emergente(pagina, "Sin cambios para guardar.")
+            return
+        else:
+            # pedido de confirmacion
+            pagina.dialog = ft.AlertDialog(
+                # modal=True,
+                modal=False,
+                title=ft.Text("¿Guardar cambios?"),
+                content=ft.Text(f"{j} imágenes modificadas."),
+                actions=[
+                    ft.ElevatedButton(
+                        "Sí", 
+                        on_click=guardar_cambios,
+                        autofocus=False,
+                        ),
+                    # ft.OutlinedButton("No", on_click=no_click),
+                    ft.OutlinedButton(
+                        "No", 
+                        on_click=cerrar_dialogo, 
+                        autofocus=True ),
+                ],
+            )
+            # mantener dialogo abierto
+            pagina.dialog.open = True
+            pagina.update()
+
+    def cerrar_dialogo(e):
+        pagina.dialog.open = False
+        pagina.update()
+
+
+    def confirmar_cierre_programa(e:ft.ControlEvent):
+        if e.data == "close":
+            global imagenes_galeria
+            # conteo imagenes con cambios sin guardar
+            j = 0
+            for imagen in imagenes_galeria:  
+                if imagen.modificada:
+                    j += 1 
+
+            # si no hay modificaciones realizadas se cierra directamente
+            if j==0:
+                cerrar_programa()
+            else:
+                pagina.dialog = ft.AlertDialog(
+                    modal=False,
+                    title=ft.Text("¿Descartar cambios y salir?"),
+                    content=ft.Text(f"Hay {j} imágenes con modificaciones sin guardar."),
+                    actions=[
+                        ft.ElevatedButton(
+                            "Sí", 
+                            on_click=cerrar_programa,
+                            autofocus=False,
+                            ),
+                        ft.OutlinedButton(
+                            "No", 
+                            on_click=cerrar_dialogo,
+                            autofocus=True 
+                            ),
+                    ],
+                    actions_alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                )
+                pagina.dialog.open = True
+                pagina.update()
+
+
+    def cerrar_programa(e:ft.ControlEvent | None = None):
+        pagina.window_destroy()
+
+
+    # prevencion decierre directo de aplicacion
+    pagina.window_prevent_close = True
+    pagina.on_window_event = confirmar_cierre_programa
 
     def ventana_emergente(pagina:ft.Page, texto: str):
         pagina.show_snack_bar(
@@ -971,12 +1062,12 @@ def main(pagina: ft.Page):
             # cambio de imagen seleccionada
             cambiar_imagen = False
             # avanzar
-            if tecla == "A" or tecla =="Page Up" or tecla == "Arrow Left":
+            if tecla == "A" or tecla =="Page Up":
                 indice -= 1 
                 indice = indice if indice>0 else 0
                 cambiar_imagen = True
             # retroceder
-            elif tecla == "D" or tecla=="Page Down" or tecla == "Arrow Right":
+            elif tecla == "D" or tecla=="Page Down":
                 indice += 1 
                 indice = indice if indice<numero_imagenes else numero_imagenes-1
                 cambiar_imagen = True
@@ -995,8 +1086,10 @@ def main(pagina: ft.Page):
             elif tecla == "W": 
                 etiquetador_imagen.guardar_etiquetas("")
             # guardar todas las imagenes
-            elif tecla == "Enter": 
-                guardar_cambios()
+        #     # ANULADO (puede accionar otros botones)
+            # elif tecla == "Enter": 
+            #     # guardar_cambios()  # FIX
+            #     abrir_dialogo_guardado()
             
             if cambiar_imagen:
                 imagen: Contenedor_Etiquetado
@@ -1178,7 +1271,8 @@ def main(pagina: ft.Page):
         ])
 
 
-    boton_guardar.on_click = guardar_cambios
+    # boton_guardar.on_click = guardar_cambios  # FIX
+    boton_guardar.on_click = abrir_dialogo_guardado
 
     contenedor_seleccion.on_click = click_imagen_seleccion
 
