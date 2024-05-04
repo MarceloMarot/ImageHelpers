@@ -284,7 +284,7 @@ todas_imagenes = []
 
 
 
-ruta_dataset = "imag_0"
+ruta_dataset = ""
 
 
 def main(pagina: ft.Page):
@@ -688,6 +688,7 @@ def main(pagina: ft.Page):
             global clave
             if len(imagenes_galeria)>0:         
                 clave = imagenes_galeria[0].clave
+                etiquetador_imagen.setear_salida(imagenes_galeria[0]) # Previene falsas modificaciones al cambiar de carpeta
                 # reporte por snackbar
                 ventana_emergente(pagina, f"Directorio de imagenes abierto.\nRuta: {directorio} \nNº imágenes: {len(imagenes_galeria)}")
  
@@ -824,8 +825,9 @@ def main(pagina: ft.Page):
         for imagen in imagenes_galeria:
             imagen.verificar_imagen(dimensiones_elegidas)
 
-        # reporte por snackbar
-        ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(imagenes_galeria)} imagenes seleccionadas.")
+        # reporte por snackbar 
+        if len(todas_imagenes) > 0 and estado != None:
+            ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(imagenes_galeria)} imagenes seleccionadas.")
         # actualizacion de las etiquetas encontradas
         estadisticas()
 
@@ -882,10 +884,11 @@ def main(pagina: ft.Page):
             indice = indice_clave(clave, imagenes_galeria)
             # si la clave actual no se encuentra se toma la primera imagen disponible
             if indice == None:
-                print(f"clave inicial: {clave}")
+                ci = clave
                 imagen_elegida = imagenes_galeria[0] 
                 clave = imagen_elegida.clave 
-                print(f"clave final: {clave}")
+                cf = clave
+                print(f"[bold yellow]cambio imagen: de '{ci}' a '{cf}'")
 
             # seleccion imagen
             imagen_elegida = imagen_clave(clave, imagenes_galeria)
