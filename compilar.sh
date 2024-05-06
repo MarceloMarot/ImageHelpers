@@ -30,8 +30,8 @@ then
     fi
 else    
     echo "Sistema Windows detectado"
-    source "$directorio_virtual"/Script/activate
-    if `source "$directorio_virtual"/Script/activate`   # caso Windows
+    source "$directorio_virtual"/Scripts/activate
+    if `source "$directorio_virtual"/Scripts/activate`   # caso Windows
     then
         echo "entorno virtual activado"
     else 

@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # creacion directorio para entorno virtual
-directorio_virtual='virtual_env/'
+directorio_virtual='virtual_env'
 
 
 if `test -d $directorio_virtual`
@@ -17,7 +17,7 @@ fi
 echo ""
 
 # creacion entorno virtual
-py -m venv "$directorio_virtual/"
+py -m venv "$directorio_virtual"
 
 
 
@@ -31,6 +31,8 @@ if [ $sistema = "linux" ]    # conversion a minusculas y comparacion
 then    
     echo "Sistema GNU/Linux detectado"
     source $directorio_virtual/bin/activate
+    # actualizar PIP
+    pip install --upgrade pip
     if `source "$directorio_virtual"/bin/activate`   # caso Linux
     then
         echo "entorno virtual activado"
@@ -39,8 +41,10 @@ then
     fi
 else    
     echo "Sistema Windows detectado"
-    source "$directorio_virtual"/Script/activate
-    if `source "$directorio_virtual"/Script/activate`   # caso Windows
+    source "$directorio_virtual"/Scripts/activate
+    # actualizar PIP
+    python.exe -m pip install --upgrade pip
+    if `source "$directorio_virtual"/Scripts/activate`   # caso Windows
     then
         echo "entorno virtual activado"
     else 
@@ -53,7 +57,7 @@ fi
 pip list   # debe dar una lista casi vacia 
 
 # actualizar PIP
-pip install --upgrade pip
+# pip install --upgrade pip
 
 # instalacion desde archivo
 pip  install -r requirements.txt
