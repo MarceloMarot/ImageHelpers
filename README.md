@@ -52,8 +52,16 @@ El código fuente de los programas está escrito casi totalmente en español y s
 
 El proyecto requiere que el sistema disponga de Python3 y GIT. Se recomienda asimismo el uso de la terminal Bash por ser ejecutable tanto en Windows como en GNU/Linux.
 
-El proyecto en sí mismo requiere un espacio en disco de alrededor de **1GB** para la instalación (sin incluir las dependencias previas).
-Este espacio puede reducirse a alrededor de **400 MB** al eliminar los archivos auxiliares (ver más adelante).
+Para comenzar la instalacion el repositorio se descarga desde GitHub:
+```bash
+# descarga del repositorio
+git clone https://github.com/MarceloMarot/ImageHelpers.git
+# entrada a la carpeta principal
+cd ImageHelpers/
+```
+
+El proyecto en sí mismo requiere un espacio en disco de alrededor de casi **1GB** para la instalación (sin incluir las dependencias previas).
+Este espacio puede reducirse a alrededor de **300 MB** al eliminar los archivos auxiliares (ver más adelante).
 
 ### Instalacion de paquetes
 
