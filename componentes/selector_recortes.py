@@ -23,7 +23,6 @@ class DataRecorte():
         self.coordenadas_absolutas: list[int] = [0,0,0,0]
         self.coordenadas_relativas: list[float] = [0,0,0,0]
         self.escala: int = 100
-        # self.dimensiones: list[int]
 
 
 class ImagenesTemporalesSelector:
@@ -61,26 +60,28 @@ class ImagenesTemporalesSelector:
         self.temporal_escalada : IO
         self.temporal_recorte  : IO
         self.temporal_seleccion  : IO
-
-        # self.archivo_descarte : IO
-
+        self.temporal_miniatura  : IO
 
     #COORDENADAS
     @property
     def xy_original(self):
         return self.__xy_original
 
+
     @property
     def xy_escalada(self):
         return self.__xy_escalada
+
 
     @property
     def xy_seleccion(self):
         return self.__xy_seleccion
 
+
     @property
     def xy_relativo(self):
         return self.__xy_relativo
+
 
     @xy_relativo.setter
     def xy_relativo(self, xy: list[float]):
@@ -96,29 +97,44 @@ class ImagenesTemporalesSelector:
         (b, h) = self.dimensiones_seleccion
         self.__xy_seleccion = [int(b*x), int(h*y)]
 
-    # DIMENSIONES
+
     @property
     def ruta_original(self) -> str:
         return self.temporal_original.ruta
+
+
     @property
     def ruta_escalada(self) -> str:
         return self.temporal_escalada.ruta
     
+
     @property
     def ruta_recorte(self) -> str:
         return self.temporal_recorte.ruta
     
+
     @property
     def ruta_seleccion(self) -> str:
         return self.temporal_seleccion.ruta
+
 
     @property
     def ruta_miniatura(self) -> str:
         return self.temporal_miniatura.ruta
 
+
     def cerrar(self):
         """Elimina la carpeta temporal y sus archivos internos"""
+        # borrado de todas las imagenes temporales
+        self.temporal_original.cerrar()
+        self.temporal_escalada.cerrar()
+        self.temporal_recorte.cerrar()
+        self.temporal_seleccion.cerrar()
+        self.temporal_miniatura.cerrar()
+        # borrado carpeta
         self.carpeta_temporal.cleanup()
+
+
 
 
     def abrir_imagen(self,ruta_archivo: str ):
@@ -148,20 +164,24 @@ class ImagenesTemporalesSelector:
         (h, b, _) = self.__imagen_original.shape 
         return [b, h]
 
+
     @property
     def dimensiones_escalada(self):
         (h, b, _) = self.__imagen_escalada.shape 
         return [b, h]
+
 
     @property
     def dimensiones_recorte(self):
         (h, b, _) = self.__imagen_recorte.shape  
         return [b, h]
 
+
     @property
     def dimensiones_miniatura(self):
         (h, b, _) = self.__imagen_miniatura.shape  
         return [b, h]
+
 
     @property
     def dimensiones_seleccion(self):
@@ -186,26 +206,17 @@ class ImagenesTemporalesSelector:
             interpolation = cv2.INTER_LANCZOS4
             ) 
         # archivo sustituto   
-
-
-        # self.archivo_descarte = self.temporal_escalada    
-        # self.temporal_escalada = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        # cv2.imwrite(self.ruta_escalada, self.__imagen_escalada)
         self.temporal_escalada.crear(self.__imagen_escalada)
-
         if escala != None:
             self.data_actual.escala = escala
-        # self.archivo_descarte.close()
+
 
 
     def cambiar_brillo(self, brillo, contraste):
 
         self.__imagen_seleccion = cv2.convertScaleAbs(self.__imagen_original, alpha=contraste, beta=brillo)
         # archivo sustituto
-        # self.temporal_seleccion.crear(self.ruta_seleccion)
-        # self.temporal_seleccion = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
         # actualizacion datos
-        # cv2.imwrite(self.ruta_seleccion, self.__imagen_seleccion)
         self.temporal_seleccion.subir(self.__imagen_seleccion)
 
 
@@ -245,10 +256,7 @@ class ImagenesTemporalesSelector:
 
         [xi, yi, xf, yf] = self.data_marcado.coordenadas_absolutas
         self.__imagen_recorte  = self.__imagen_escalada[yi:yf, xi:xf]
-        # archivo sustituto   
-        # self.archivo_descarte = self.temporal_recorte
-        # self.temporal_recorte  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        # cv2.imwrite(self.ruta_recorte, self.__imagen_recorte)    
+        # archivo sustituto     
         self.temporal_recorte.crear(self.__imagen_recorte)
 
 
@@ -262,11 +270,8 @@ class ImagenesTemporalesSelector:
         self.data_marcado.escala                = self.data_actual.escala
         [xi, yi, xf, yf] = self.data_guardado.coordenadas_absolutas
         self.__imagen_recorte  = self.__imagen_escalada[yi:yf, xi:xf]
-        # archivo sustituto   
-        # self.archivo_descarte = self.temporal_recorte    
-        self.temporal_recorte.subir(self.carpeta_temporal)
-        # self.temporal_recorte  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        # cv2.imwrite(self.ruta_recorte, self.__imagen_recorte)
+        # archivo sustituto     
+        self.temporal_recorte.crear(self.__imagen_recorte)
 
 
     def marcado_seleccion(self, error=False):
@@ -276,9 +281,7 @@ class ImagenesTemporalesSelector:
         contraste = self.contraste_ventana 
         # copia de salida con brillo y contraste cambiados
         copia = cv2.convertScaleAbs(self.__imagen_miniatura, alpha=contraste, beta=brillo)
-        
         [b, h] = self.dimensiones_miniatura
-
         # regiones brillo original ( se superponen)
         [xif, yif, xff, yff] = self.data_actual.coordenadas_relativas 
         coordenadas =  [int(xif*b), int(yif*h), int(xff*b), int(yff*h)]
@@ -332,9 +335,6 @@ class ImagenesTemporalesSelector:
 
         self.__imagen_seleccion = copia
         # archivo sustituto   
-        # self.archivo_descarte = self.temporal_seleccion   
-        # self.temporal_seleccion  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        # cv2.imwrite(self.ruta_seleccion, self.__imagen_seleccion)
         self.temporal_seleccion.crear(self.__imagen_seleccion)
 
 
@@ -358,14 +358,12 @@ class ImagenesTemporalesSelector:
             interpolation = cv2.INTER_LANCZOS4
             ) 
         # archivo sustituto   
-        # self.archivo_descarte = self.temporal_miniatura   
-        # self.temporal_miniatura = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal, extension=".jpg")
-        # cv2.imwrite(self.ruta_miniatura, self.__imagen_miniatura)
         self.temporal_miniatura.crear(self.__imagen_miniatura)
 
 
     def guardar_recorte_archivo(self, ruta_destino: str ):
         cv2.imwrite(ruta_destino, self.__imagen_recorte)
+
 
 
 class SelectorRecorte(ft.GestureDetector):
@@ -374,7 +372,6 @@ class SelectorRecorte(ft.GestureDetector):
         self.imagen = ft.Image(
             height=512,
             width=512,
-            # src = imagen_temporal.ruta_seleccion,
             fit = ft.ImageFit.CONTAIN,
             gapless_playback = True,        # transicion suave entre imagenes (retiene la version anterior hasta poder cambiar)
             )
@@ -384,7 +381,6 @@ class SelectorRecorte(ft.GestureDetector):
             content = self.imagen,
             padding=0,
             image_fit = ft.ImageFit.CONTAIN,
-            # animate=ft.animation.Animation(1000, ft.AnimationCurve.EASE),
             )
         super().__init__(
             height=512,
@@ -406,11 +402,11 @@ class SelectorRecorte(ft.GestureDetector):
         self.imagen.src = self.temporal.ruta_miniatura
         self.update()
 
+
     def ampliar(self, valor: int):
         self.temporal.ampliar(int(valor))
         self.imagen.src = self.temporal.ruta_miniatura
         self.update()
-        # self.temporal.archivo_descarte.close()
 
 
     def coordenadas(self, e: ft.ControlEvent | None = None):
@@ -432,23 +428,21 @@ class SelectorRecorte(ft.GestureDetector):
         y = y / altura
         self.temporal.xy_relativo = [x, y]
         self.temporal.calcular_recorte(self.dimensiones_recorte)
-        # imagen_temporal.calcular_recorte([256,256])
         self.temporal.crear_miniatura(1, base, altura)
-        # self.temporal.archivo_descarte.close()
         self.temporal.marcado_seleccion()
         self.imagen.src = self.temporal.ruta_seleccion
         self.imagen.update()
-        # self.temporal.archivo_descarte.close()
+
 
     def click_izquierdo(self, e: ft.ControlEvent):
         self.temporal.hacer_recorte_preliminar()
         self.funcion_click_izquierdo(e)
-        # self.temporal.archivo_descarte.close()
+
 
     def click_derecho(self, e: ft.ControlEvent):
         self.temporal.hacer_recorte_definitivo()
         self.funcion_click_derecho(e)
-        # self.temporal.archivo_descarte.close()
+
 
     def dimensiones_graficas(self, proporcion: float, base_max: int = 512 , altura_max: int = 512):
         # lectura de parametros entrada
@@ -481,9 +475,8 @@ class SelectorRecorte(ft.GestureDetector):
 
     def cerrar(self):
         """Elimina la carpeta temporal y sus archivos internos"""
-        self.temporal.carpeta_temporal.cleanup()
-
-
+        self.temporal.cerrar()
+        # self.temporal.carpeta_temporal.cleanup()
 
 
 def principal(page: ft.Page):
@@ -491,6 +484,7 @@ def principal(page: ft.Page):
     def click_izquierdo(e):
         selector_recorte.hacer_recorte_preliminar()
         imagen_miniatura.src = selector_recorte.ruta_recorte
+        imagen_miniatura.visible=True
         imagen_miniatura.update()
         print(f"dimensiones marcado: {selector_recorte.dimensiones_recorte}")
 
@@ -498,6 +492,7 @@ def principal(page: ft.Page):
     def click_derecho(e):
         selector_recorte.hacer_recorte_definitivo()
         imagen_miniatura.src = selector_recorte.ruta_recorte
+        imagen_miniatura.visible=True
         imagen_miniatura.update()
         print(f"dimensiones guardado: {selector_recorte.dimensiones_recorte}")
  
@@ -505,6 +500,15 @@ def principal(page: ft.Page):
     def escalar(e):
         valor = e.control.value
         selector_recorte.ampliar(int(valor))
+
+
+    def cierre(e:ft.ControlEvent):
+        # print(e.data)
+        if e.data=="close":
+            page.window_destroy()
+            time.sleep(0.5)
+            selector_recorte.cerrar()
+
 
 
     barra_escala = ft.Slider(
@@ -517,11 +521,12 @@ def principal(page: ft.Page):
         )
     barra_escala.on_change = escalar
 
-    selector_recorte = SelectorRecorte()
+    selector_recorte = SelectorRecorte("selector_recortes__")
 
     imagen_miniatura = ft.Image(
         height=256,
         width=256,
+        visible=False,
     )
 
     fila = ft.Row(
@@ -548,10 +553,8 @@ def principal(page: ft.Page):
     selector_recorte.funcion_click_derecho = click_derecho
 
     # selector_recorte.coordenadas()
-    # selector_recorte.hacer_recorte_preliminar()
     # click_izquierdo("")
 
-    # dimensiones_graficas(0.5)
     page.window_height = 700
     fila.height = 400
     page.window_width  = 1000
@@ -559,6 +562,9 @@ def principal(page: ft.Page):
 
     page.theme_mode = ft.ThemeMode.DARK
 
+
+    page.on_window_event = cierre
+    page.window_prevent_close = True
 
     page.update()
 
@@ -569,6 +575,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         ruta_archivo = sys.argv[1]
         ft.app(target=principal)
+
     else:
         print('uso programa: py -m componentes.selector_recortes  "ruta_archivo" ')
 
