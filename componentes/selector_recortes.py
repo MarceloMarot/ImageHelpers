@@ -64,22 +64,22 @@ class ImagenesTemporalesSelector:
 
     #COORDENADAS
     @property
-    def xy_original(self):
+    def xy_original(self)->list[int]:
         return self.__xy_original
 
 
     @property
-    def xy_escalada(self):
+    def xy_escalada(self)->list[int]:
         return self.__xy_escalada
 
 
     @property
-    def xy_seleccion(self):
+    def xy_seleccion(self)->list[int]:
         return self.__xy_seleccion
 
 
     @property
-    def xy_relativo(self):
+    def xy_relativo(self)->list[float]:
         return self.__xy_relativo
 
 
@@ -405,7 +405,8 @@ class SelectorRecorte(ft.GestureDetector):
 
     def ampliar(self, valor: int):
         self.temporal.ampliar(int(valor))
-        self.imagen.src = self.temporal.ruta_miniatura
+        self.imagen.src = self.temporal.ruta_miniatura # FIX
+        # self.imagen.src = self.temporal.ruta_seleccion
         self.update()
 
 
@@ -417,16 +418,17 @@ class SelectorRecorte(ft.GestureDetector):
         if e!=None:
             x = e.local_x if e.local_x < base else base
             y = e.local_y if e.local_y < altura else altura
-        else:
-            x = 0
-            y = 0
+            x = 0 if x <= 0 else x
+            y = 0 if y <= 0 else y
+            # conversion a valor relativo
+            x = x / base
+            y = y / altura
+            self.temporal.xy_relativo = [x, y]
+        # else:
+        #     x = 
+        #     y = 
+        #     self.coordenadas_relativas
 
-        x = 0 if x <= 0 else x
-        y = 0 if y <= 0 else y
-        # conversion a valor relativo
-        x = x / base
-        y = y / altura
-        self.temporal.xy_relativo = [x, y]
         self.temporal.calcular_recorte(self.dimensiones_recorte)
         self.temporal.crear_miniatura(1, base, altura)
         self.temporal.marcado_seleccion()
@@ -479,6 +481,16 @@ class SelectorRecorte(ft.GestureDetector):
         # self.temporal.carpeta_temporal.cleanup()
 
 
+    @property
+    def xy_relativo(self)->list[float]:
+        return self.temporal.xy_relativo
+
+
+    @xy_relativo.setter
+    def xy_relativo(self, xy: list[float]):
+        self.temporal.xy_relativo = xy
+
+
 def principal(page: ft.Page):
 
     def click_izquierdo(e):
@@ -499,7 +511,23 @@ def principal(page: ft.Page):
 
     def escalar(e):
         valor = e.control.value
+        xy = selector_recorte.xy_relativo
+        print(xy)
+
+        # barra_escala.disabled = True
+        # barra_escala.update()
+
+        # time.sleep(0.1)
+        
         selector_recorte.ampliar(int(valor))
+        selector_recorte.xy_relativo = xy
+
+        # barra_escala.disabled = False
+        # barra_escala.update()
+
+
+        selector_recorte.coordenadas()
+
 
 
     def cierre(e:ft.ControlEvent):
@@ -520,6 +548,7 @@ def principal(page: ft.Page):
         width=512
         )
     barra_escala.on_change = escalar
+    # barra_escala.on_change_end = escalar
 
     selector_recorte = SelectorRecorte("selector_recortes__")
 
@@ -545,6 +574,15 @@ def principal(page: ft.Page):
         expand=True,
         ))
 
+    page.window_height = 700
+    fila.height = 400
+    page.window_width  = 1000
+    fila.width  = 1000
+    page.theme_mode = ft.ThemeMode.DARK
+    page.on_window_event = cierre
+    page.window_prevent_close = True
+    page.update()
+
     selector_recorte.abrir_imagen(ruta_archivo)
 
     selector_recorte.dimensiones_graficas(0.5)
@@ -552,19 +590,12 @@ def principal(page: ft.Page):
     selector_recorte.funcion_click_izquierdo = click_izquierdo
     selector_recorte.funcion_click_derecho = click_derecho
 
-    # selector_recorte.coordenadas()
-    # click_izquierdo("")
 
-    page.window_height = 700
-    fila.height = 400
-    page.window_width  = 1000
-    fila.width  = 1000
+    time.sleep(0.5)
+    selector_recorte.xy_relativo = [0.5, 0.5]
+    selector_recorte.coordenadas()
+    click_izquierdo("")
 
-    page.theme_mode = ft.ThemeMode.DARK
-
-
-    page.on_window_event = cierre
-    page.window_prevent_close = True
 
     page.update()
 
