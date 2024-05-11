@@ -12,7 +12,7 @@ from . archivos_temporales import crear_directorio_temporal
 
 def crear_imagen_temporal(
     ruta_archivo_disco: str, 
-    directorio_virtual: tempfile.TemporaryDirectory | None = None,
+    directorio: str|None = None,
     extension: str = ".bmp"
     )-> IO:
     """Esta funcion crea una imagen temporal con la extensión indicada. 
@@ -23,7 +23,7 @@ def crear_imagen_temporal(
     nombre = pathlib.Path(ruta_archivo_disco).stem
     nombre = str(nombre)
 
-    dir = None if directorio_virtual == None else directorio_virtual.name
+    dir = None if directorio == None else directorio
     archivo_temporal = tempfile.NamedTemporaryFile( 
             prefix = nombre,    # parte del nombre de archivo
             suffix = extension,    # extensión añadida de archivo
@@ -44,43 +44,47 @@ def crear_imagen_temporal(
 
 if __name__ == "__main__":
 
-    ruta_archivo = "manejo_imagenes/ejemplo2.jpg"
-    ruta_archivo = "manejo_imagenes/ejemplo.jpg"
-    
-    extensiones = [
-        ".jpg",
-        ".png",
-        ".webp", # extremadamente lento
-        ".bmp", # el más veloz y el más pesado
-        ]
+    import sys
+    if len(sys.argv) == 2:
+        ruta_archivo = sys.argv[1]
 
-    carpeta_temporal = crear_directorio_temporal("ensayo")
-    print("carpeta temporal: ", carpeta_temporal.name)
-    archivos = []
+        extensiones = [
+            ".jpg",
+            ".png",
+            ".webp", # extremadamente lento, pesado
+            ".bmp", # el más veloz y  a la vez el más pesado de todos
+            ]
 
-    for ext in extensiones:
-        inicio = time.time()
-        archivo_temporal = crear_imagen_temporal(ruta_archivo, carpeta_temporal, ext) #imagenes en carpeta
-        # archivo_temporal = crear_imagen_temporal(ruta_archivo, extension=ext) # imagenes sueltas
-        archivos.append(archivo_temporal)
-        fin = time.time()
+        carpeta_temporal = crear_directorio_temporal("ensayo")
+        print("carpeta temporal: ", carpeta_temporal.name)
+        archivos = []
 
-        print("archivo temporal: ",archivo_temporal.name)
-        print(f"tiempo {(fin - inicio)*1e3 :4.3} mseg.")
+        for ext in extensiones:
+            inicio = time.time()
+            archivo_temporal = crear_imagen_temporal(ruta_archivo, carpeta_temporal.name, ext) #imagenes en carpeta
+            # archivo_temporal = crear_imagen_temporal(ruta_archivo, extension=ext) # imagenes sueltas
+            archivos.append(archivo_temporal)
+            fin = time.time()
+
+            print("archivo temporal: ",archivo_temporal.name)
+            print(f"tiempo {int((fin - inicio)*1e3) :6} mseg.")
 
 
-    # apertura de una imagen temporal y espera
-    ventana = "imagenes temporales"
-    cv2.namedWindow(ventana)
-    img = cv2.imread(archivo_temporal.name)
-    cv2.imshow(ventana, img)
-    cv2.waitKey(0)
+        # apertura de una imagen temporal y espera
+        ventana = "imagenes temporales"
+        cv2.namedWindow(ventana)
+        img = cv2.imread(archivo_temporal.name)
+        cv2.imshow(ventana, img)
+        cv2.waitKey(0)
 
-    # elimina archivos temporales sueltos
-    for archivo in archivos:
-         archivo.close()
+        # elimina archivos temporales sueltos
+        for archivo in archivos:
+            archivo.close()
 
-    # elimina la carpeta temporal y sus archivos internos
-    carpeta_temporal.cleanup()
+        # elimina la carpeta temporal y sus archivos internos
+        carpeta_temporal.cleanup()
 
+
+    else:
+        print('uso programa: py -m componentes.selector_recortes  "ruta_archivo" ')
 

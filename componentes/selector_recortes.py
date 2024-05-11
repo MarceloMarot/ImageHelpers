@@ -11,6 +11,7 @@ from typing import IO
 
 from sistema_archivos.archivos_temporales import  crear_directorio_temporal
 from sistema_archivos.imagen_temporal import crear_imagen_temporal
+from sistema_archivos.imagen_editable import ImagenEditable
 
 
 def nada(x):
@@ -25,7 +26,8 @@ class DataRecorte():
         # self.dimensiones: list[int]
 
 
-class ImagenTemporal:
+class ImagenesTemporalesSelector:
+    """Crea los archivos temporales de seleccion, recorte, etc de la imagen de entrada."""
     def __init__( self, nombre_directorio="recortador" ):
         self.clave : str = "---"
 
@@ -60,7 +62,7 @@ class ImagenTemporal:
         self.temporal_recorte  : IO
         self.temporal_seleccion  : IO
 
-        self.archivo_descarte : IO
+        # self.archivo_descarte : IO
 
 
     #COORDENADAS
@@ -97,23 +99,22 @@ class ImagenTemporal:
     # DIMENSIONES
     @property
     def ruta_original(self) -> str:
-        return self.temporal_original.name
-
+        return self.temporal_original.ruta
     @property
     def ruta_escalada(self) -> str:
-        return self.temporal_escalada.name
+        return self.temporal_escalada.ruta
     
     @property
     def ruta_recorte(self) -> str:
-        return self.temporal_recorte.name
+        return self.temporal_recorte.ruta
     
     @property
     def ruta_seleccion(self) -> str:
-        return self.temporal_seleccion.name
+        return self.temporal_seleccion.ruta
 
     @property
     def ruta_miniatura(self) -> str:
-        return self.temporal_miniatura.name
+        return self.temporal_miniatura.ruta
 
     def cerrar(self):
         """Elimina la carpeta temporal y sus archivos internos"""
@@ -123,12 +124,17 @@ class ImagenTemporal:
     def abrir_imagen(self,ruta_archivo: str ):
         """Carga de los archivos temporales y su primera version"""
         # copia temporal desde archivo fisico
-        self.temporal_original = crear_imagen_temporal(ruta_archivo, self.carpeta_temporal)
+        self.temporal_original = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_original.subir(ruta_archivo)
         # copias hechas desde el archivo temporal
-        self.temporal_escalada  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        self.temporal_recorte   = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        self.temporal_miniatura = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        self.temporal_seleccion = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        self.temporal_escalada  = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_recorte   = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_miniatura = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_seleccion = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_escalada .subir(ruta_archivo)
+        self.temporal_recorte  .subir(ruta_archivo)
+        self.temporal_miniatura.subir(ruta_archivo)
+        self.temporal_seleccion.subir(ruta_archivo)
         # # objetos matriciales de OpenCV representando las imagenes    
         self.__imagen_original  = cv2.imread(self.ruta_original)
         self.__imagen_escalada  = cv2.imread(self.ruta_original)
@@ -180,9 +186,13 @@ class ImagenTemporal:
             interpolation = cv2.INTER_LANCZOS4
             ) 
         # archivo sustituto   
-        self.archivo_descarte = self.temporal_escalada    
-        self.temporal_escalada = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        cv2.imwrite(self.ruta_escalada, self.__imagen_escalada)
+
+
+        # self.archivo_descarte = self.temporal_escalada    
+        # self.temporal_escalada = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        # cv2.imwrite(self.ruta_escalada, self.__imagen_escalada)
+        self.temporal_escalada.crear(self.__imagen_escalada)
+
         if escala != None:
             self.data_actual.escala = escala
         # self.archivo_descarte.close()
@@ -192,9 +202,11 @@ class ImagenTemporal:
 
         self.__imagen_seleccion = cv2.convertScaleAbs(self.__imagen_original, alpha=contraste, beta=brillo)
         # archivo sustituto
-        self.temporal_seleccion = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        # self.temporal_seleccion.crear(self.ruta_seleccion)
+        # self.temporal_seleccion = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
         # actualizacion datos
-        cv2.imwrite(self.ruta_seleccion, self.__imagen_seleccion)
+        # cv2.imwrite(self.ruta_seleccion, self.__imagen_seleccion)
+        self.temporal_seleccion.subir(self.__imagen_seleccion)
 
 
     def calcular_recorte(self, dimensiones_recorte):  
@@ -234,9 +246,10 @@ class ImagenTemporal:
         [xi, yi, xf, yf] = self.data_marcado.coordenadas_absolutas
         self.__imagen_recorte  = self.__imagen_escalada[yi:yf, xi:xf]
         # archivo sustituto   
-        self.archivo_descarte = self.temporal_recorte
-        self.temporal_recorte  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        cv2.imwrite(self.ruta_recorte, self.__imagen_recorte)    
+        # self.archivo_descarte = self.temporal_recorte
+        # self.temporal_recorte  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        # cv2.imwrite(self.ruta_recorte, self.__imagen_recorte)    
+        self.temporal_recorte.crear(self.__imagen_recorte)
 
 
     def hacer_recorte_definitivo(self):
@@ -250,9 +263,10 @@ class ImagenTemporal:
         [xi, yi, xf, yf] = self.data_guardado.coordenadas_absolutas
         self.__imagen_recorte  = self.__imagen_escalada[yi:yf, xi:xf]
         # archivo sustituto   
-        self.archivo_descarte = self.temporal_recorte    
-        self.temporal_recorte  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        cv2.imwrite(self.ruta_recorte, self.__imagen_recorte)
+        # self.archivo_descarte = self.temporal_recorte    
+        self.temporal_recorte.subir(self.carpeta_temporal)
+        # self.temporal_recorte  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        # cv2.imwrite(self.ruta_recorte, self.__imagen_recorte)
 
 
     def marcado_seleccion(self, error=False):
@@ -318,9 +332,10 @@ class ImagenTemporal:
 
         self.__imagen_seleccion = copia
         # archivo sustituto   
-        self.archivo_descarte = self.temporal_seleccion   
-        self.temporal_seleccion  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        cv2.imwrite(self.ruta_seleccion, self.__imagen_seleccion)
+        # self.archivo_descarte = self.temporal_seleccion   
+        # self.temporal_seleccion  = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
+        # cv2.imwrite(self.ruta_seleccion, self.__imagen_seleccion)
+        self.temporal_seleccion.crear(self.__imagen_seleccion)
 
 
     def crear_miniatura(self, proporcion: float, base_max: int = 512 , altura_max: int = 512):
@@ -343,9 +358,10 @@ class ImagenTemporal:
             interpolation = cv2.INTER_LANCZOS4
             ) 
         # archivo sustituto   
-        self.archivo_descarte = self.temporal_miniatura   
-        self.temporal_miniatura = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal)
-        cv2.imwrite(self.ruta_miniatura, self.__imagen_miniatura)
+        # self.archivo_descarte = self.temporal_miniatura   
+        # self.temporal_miniatura = crear_imagen_temporal(self.ruta_original, self.carpeta_temporal, extension=".jpg")
+        # cv2.imwrite(self.ruta_miniatura, self.__imagen_miniatura)
+        self.temporal_miniatura.crear(self.__imagen_miniatura)
 
 
     def guardar_recorte_archivo(self, ruta_destino: str ):
@@ -377,10 +393,10 @@ class SelectorRecorte(ft.GestureDetector):
             on_tap  = self.click_izquierdo,
             on_secondary_tap = self.click_derecho,
             on_hover = self.coordenadas,
-            hover_interval = 50  # retardo minimo entre eventos 
+            hover_interval = 100  # retardo minimo entre eventos 
             ) 
         self.dimensiones_recorte = [256, 256]  
-        self.temporal = ImagenTemporal(carpeta_temporal) 
+        self.temporal = ImagenesTemporalesSelector(carpeta_temporal) 
         self.funcion_click_izquierdo    = nada
         self.funcion_click_derecho      = nada
 
@@ -394,7 +410,7 @@ class SelectorRecorte(ft.GestureDetector):
         self.temporal.ampliar(int(valor))
         self.imagen.src = self.temporal.ruta_miniatura
         self.update()
-        self.temporal.archivo_descarte.close()
+        # self.temporal.archivo_descarte.close()
 
 
     def coordenadas(self, e: ft.ControlEvent | None = None):
@@ -418,20 +434,21 @@ class SelectorRecorte(ft.GestureDetector):
         self.temporal.calcular_recorte(self.dimensiones_recorte)
         # imagen_temporal.calcular_recorte([256,256])
         self.temporal.crear_miniatura(1, base, altura)
+        # self.temporal.archivo_descarte.close()
         self.temporal.marcado_seleccion()
         self.imagen.src = self.temporal.ruta_seleccion
         self.imagen.update()
-        self.temporal.archivo_descarte.close()
+        # self.temporal.archivo_descarte.close()
 
     def click_izquierdo(self, e: ft.ControlEvent):
         self.temporal.hacer_recorte_preliminar()
         self.funcion_click_izquierdo(e)
-        self.temporal.archivo_descarte.close()
+        # self.temporal.archivo_descarte.close()
 
     def click_derecho(self, e: ft.ControlEvent):
         self.temporal.hacer_recorte_definitivo()
         self.funcion_click_derecho(e)
-        self.temporal.archivo_descarte.close()
+        # self.temporal.archivo_descarte.close()
 
     def dimensiones_graficas(self, proporcion: float, base_max: int = 512 , altura_max: int = 512):
         # lectura de parametros entrada
@@ -530,9 +547,9 @@ def principal(page: ft.Page):
     selector_recorte.funcion_click_izquierdo = click_izquierdo
     selector_recorte.funcion_click_derecho = click_derecho
 
-    selector_recorte.coordenadas()
-    selector_recorte.hacer_recorte_preliminar()
-    click_izquierdo("")
+    # selector_recorte.coordenadas()
+    # selector_recorte.hacer_recorte_preliminar()
+    # click_izquierdo("")
 
     # dimensiones_graficas(0.5)
     page.window_height = 700
