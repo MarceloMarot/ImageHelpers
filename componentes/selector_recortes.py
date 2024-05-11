@@ -6,6 +6,7 @@ import numpy as np
 import flet as ft
 import pathlib
 import time
+import json
 
 from typing import IO
 
@@ -34,17 +35,19 @@ class ImagenesTemporalesSelector:
         self.data_marcado = DataRecorte()
         self.data_guardado = DataRecorte()
 
-        self.__xy_relativo  = [0, 0]
-        self.__xy_original  = [0, 0]
-        self.__xy_escalada  = [0, 0]
-        self.__xy_seleccion = [0, 0]
+        self.__xy_relativo  : list[float] = [0.0, 0.0]
+        self.__xy_original  : list[int] = [0, 0]
+        self.__xy_escalada  : list[int] = [0, 0]
+        self.__xy_seleccion : list[int] = [0, 0]
 
-        self.__imagen_original = None | np.ndarray
-        self.__imagen_escalada = None | np.ndarray
-        self.__imagen_recorte = None | np.ndarray
-        self.__imagen_seleccion = None | np.ndarray
-        self.__imagen_miniatura = None | np.ndarray
+        self.__imagen_original  : None | np.ndarray
+        self.__imagen_escalada  : None | np.ndarray
+        self.__imagen_recorte   : None | np.ndarray
+        self.__imagen_seleccion : None | np.ndarray
+        self.__imagen_miniatura : None | np.ndarray
 
+        self.__escala_actual    : int = 100
+        self.incremento_escala  : int = 1
 
         self.BGR_seleccion = (200,0,150)  # magenta
         self.BGR_marcado   = (0,200,200)  # amarillo
@@ -54,13 +57,21 @@ class ImagenesTemporalesSelector:
         self.brillo_ventana: int = 100
         self.contraste_ventana: float = 0.5 
 
-        self.carpeta_temporal = crear_directorio_temporal(nombre_directorio)
+        # ruta RAM habitual en Linux
+        ruta = "/dev/shm/"
+        if pathlib.Path(ruta).exists():
+            ruta_temporal = ruta
+        # ruta TEMP designada por sistema operativo ( en disco rigido)
+        else:
+            ruta_temporal = None        
 
-        self.temporal_original : IO
-        self.temporal_escalada : IO
-        self.temporal_recorte  : IO
-        self.temporal_seleccion  : IO
-        self.temporal_miniatura  : IO
+        self.carpeta_temporal = crear_directorio_temporal(nombre_directorio, ruta_temporal)
+
+        self.temporal_original : ImagenEditable
+        self.temporal_escalada : ImagenEditable
+        self.temporal_recorte  : ImagenEditable
+        self.temporal_seleccion  : ImagenEditable
+        self.temporal_miniatura  : ImagenEditable
 
     #COORDENADAS
     @property
@@ -189,7 +200,7 @@ class ImagenesTemporalesSelector:
         return [b, h]
 
 
-    def ampliar(self, escala: int|None = None):
+    def escalar(self, escala: int|None = None):
         """Crea una copia ampliada de la imagen de entrada en base al porcentaje indicado."""
         [base, altura] = self.dimensiones_original
         if escala == None:
@@ -201,15 +212,19 @@ class ImagenesTemporalesSelector:
         base = int(base * proporcion)
 
         self.__imagen_escalada = cv2.resize(
-            self.__imagen_original, 
-            dsize=[base, altura], 
-            interpolation = cv2.INTER_LANCZOS4
+            src=self.__imagen_original, 
+            dsize=(base, altura), 
+            interpolation=cv2.INTER_LANCZOS4,
             ) 
         # archivo sustituto   
         self.temporal_escalada.crear(self.__imagen_escalada)
         if escala != None:
             self.data_actual.escala = escala
 
+
+    @property
+    def escala_actual(self)->int:
+        return self.__escala_actual
 
 
     def cambiar_brillo(self, brillo, contraste):
@@ -389,12 +404,16 @@ class SelectorRecorte(ft.GestureDetector):
             on_tap  = self.click_izquierdo,
             on_secondary_tap = self.click_derecho,
             on_hover = self.coordenadas,
-            hover_interval = 100  # retardo minimo entre eventos 
+            on_scroll= self.scrollear_mouse,
+            hover_interval = 100,  # retardo minimo entre eventos 
+            drag_interval  = 100,  # retardo minimo entre eventos 
             ) 
         self.dimensiones_recorte = [256, 256]  
         self.temporal = ImagenesTemporalesSelector(carpeta_temporal) 
         self.funcion_click_izquierdo    = nada
         self.funcion_click_derecho      = nada
+        self.funcion_scroll_mouse       = nada
+
 
 
     def abrir_imagen(self, ruta_archivo: str):
@@ -403,18 +422,57 @@ class SelectorRecorte(ft.GestureDetector):
         self.update()
 
 
-    def ampliar(self, valor: int):
-        self.temporal.ampliar(int(valor))
-        self.imagen.src = self.temporal.ruta_miniatura # FIX
-        # self.imagen.src = self.temporal.ruta_seleccion
-        self.update()
+    def escalar(self, porcentaje: int):
+        """Amplia o reduce el archivo de imagen en base al factor de escala indicado"""
+        # copia de coordenadas relativas del punto central de seleccion actual
+        xy = self.xy_relativo
+        # ampliacion de imagen
+        self.temporal.escalar(int(porcentaje))
+        # reestablecimiento de punto central de seleccion
+        self.xy_relativo = xy 
+        # actualizacion grafica con la seleccion actual
+        self.coordenadas()
+
+    @property
+    def escala_actual(self)->int:
+        return self.temporal.escala_actual
+
+    @property
+    def incremento_escala(self)->int:
+        return self.temporal.incremento_escala
+
+    @incremento_escala.setter
+    def incremento_escala(self, valor: int):
+        self.temporal.incremento_escala = valor
+
+    def scrollear_mouse(self, e: ft.ScrollEvent):
+        """cambio de zoom de imagen basado en el deslizamiento de la rueda del mouse """
+        # lectura de datos y conversion a diccionario
+        texto_diccionario = e.data
+        data = json.loads(texto_diccionario)
+        # lectura de numero deslizamiento vertical
+        valor = int(data["dy"])  
+        escala = self.escala_actual
+        if valor < 0:
+            # deslizamiento abajo -> reducir
+            escala -= self.incremento_escala
+            self.escalar(escala)
+            print(self.escala_actual)
+        else:
+            # deslizamiento abajo -> ampliar
+            escala += self.incremento_escala
+            self.escalar(escala)
+            print(self.escala_actual)
+        # funcion opcional externa
+        self.funcion_scroll_mouse(e)
 
 
     def coordenadas(self, e: ft.ControlEvent | None = None):
+        """Lee las coordenadas del puntero del mouse, calcula el rectangulo de seleccion y actualiza la miniatura de la imagen."""
         # coordenadas relativas al contenedor
         base   = int(self.contenedor.width)
         altura = int(self.contenedor.height)
-        # confinamiento de las coordenadas obtenidas
+        # confinamiento de las coordenadas obtenidas 
         if e!=None:
             x = e.local_x if e.local_x < base else base
             y = e.local_y if e.local_y < altura else altura
@@ -424,10 +482,6 @@ class SelectorRecorte(ft.GestureDetector):
             x = x / base
             y = y / altura
             self.temporal.xy_relativo = [x, y]
-        # else:
-        #     x = 
-        #     y = 
-        #     self.coordenadas_relativas
 
         self.temporal.calcular_recorte(self.dimensiones_recorte)
         self.temporal.crear_miniatura(1, base, altura)
@@ -511,23 +565,13 @@ def principal(page: ft.Page):
 
     def escalar(e):
         valor = e.control.value
-        xy = selector_recorte.xy_relativo
-        print(xy)
-
-        # barra_escala.disabled = True
-        # barra_escala.update()
-
-        # time.sleep(0.1)
-        
-        selector_recorte.ampliar(int(valor))
-        selector_recorte.xy_relativo = xy
-
-        # barra_escala.disabled = False
-        # barra_escala.update()
+        selector_recorte.escalar(int(valor))
 
 
-        selector_recorte.coordenadas()
-
+    def actualizar_barra(e):
+        # actualizacion grafica de la barra deslizante
+        barra_escala.value = selector_recorte.escala_actual
+        barra_escala.update()
 
 
     def cierre(e:ft.ControlEvent):
@@ -548,7 +592,6 @@ def principal(page: ft.Page):
         width=512
         )
     barra_escala.on_change = escalar
-    # barra_escala.on_change_end = escalar
 
     selector_recorte = SelectorRecorte("selector_recortes__")
 
@@ -589,6 +632,7 @@ def principal(page: ft.Page):
     selector_recorte.dimensiones_recorte = [512, 512]
     selector_recorte.funcion_click_izquierdo = click_izquierdo
     selector_recorte.funcion_click_derecho = click_derecho
+    selector_recorte.funcion_scroll_mouse = actualizar_barra
 
 
     time.sleep(0.5)
