@@ -166,7 +166,7 @@ def actualizar_estilo_estado(
 
 
 texto_ayuda = """
-Color de bordes:
+Bordes de Imagen:
 Cada color de borde da informacion sobre el estado del recorte de cada imagen.
 Opciones:
 - Celeste: no recortado
@@ -280,7 +280,7 @@ def pagina_galeria(page: ft.Page):
     galeria = GaleriaRecortes(estilos_galeria)
     
     boton_guardar = ft.FloatingActionButton(
-        icon=ft.icons.SAVE, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todos los recortes marcados"
+        icon=ft.icons.SAVE, bgcolor=ft.colors.YELLOW_600, tooltip="Guarda todos los recortes marcados"
     )
 
     # boton para guardar cambios 

@@ -44,7 +44,7 @@ tupla_estados = (
 
 
 texto_ayuda = """
-Color de bordes de imagen:
+Bordes de imagen:
   Cada color de borde da informacion sobre el estado del etiquetado o de las dimensiones de cada imagen.
   Opciones:
   - Celeste: no etiquetado
@@ -363,7 +363,7 @@ def main(pagina: ft.Page):
     boton_filtrar_etiquetas.tooltip = "Abre el panel de filtrado con todas las etiquetas detectadas.\nRequiere que haya al menos una imagen cargada."
 
     boton_guardar = ft.FloatingActionButton(
-        icon=ft.icons.ADD, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todas las etiquetas cambiadas."
+        icon=ft.icons.SAVE, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todas las etiquetas cambiadas."
     )
 
     # listas desplegable para elegir opciones de imagen 
@@ -745,7 +745,7 @@ def main(pagina: ft.Page):
     def imagen_seleccion(imagen: Contenedor_Etiquetado):
         """Actualiza imagen y estilo de bordes del selector de imagen"""
         contenedor_seleccion.ruta_imagen = imagen.ruta
-        # FIX:  
+ 
         if imagen.defectuosa :
             estilo = "erroneo"      
         elif imagen.modificada :
@@ -861,7 +861,7 @@ def main(pagina: ft.Page):
             ventana_emergente(pagina,f"¡Etiquetas guardadas! - {i} archivos modificados")
         # actualizacion grafica
         actualizar_componentes(e)    
-        cerrar_dialogo(e)  # FIX
+        cerrar_dialogo(e)  
 
 
     # confirmar_cambios
@@ -1085,11 +1085,6 @@ def main(pagina: ft.Page):
             # guardar imagen actual
             elif tecla == "W": 
                 etiquetador_imagen.guardar_etiquetas("")
-            # guardar todas las imagenes
-        #     # ANULADO (puede accionar otros botones)
-            # elif tecla == "Enter": 
-            #     # guardar_cambios()  # FIX
-            #     abrir_dialogo_guardado()
             
             if cambiar_imagen:
                 imagen: Contenedor_Etiquetado
@@ -1270,8 +1265,6 @@ def main(pagina: ft.Page):
             dialogo_directorio, dialogo_dataset, dialogo_guardado_tags
         ])
 
-
-    # boton_guardar.on_click = guardar_cambios  # FIX
     boton_guardar.on_click = abrir_dialogo_guardado
 
     contenedor_seleccion.on_click = click_imagen_seleccion
