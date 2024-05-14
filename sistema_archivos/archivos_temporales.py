@@ -5,7 +5,7 @@ import pathlib
 def crear_directorio_temporal(
     prefijo: str, 
     ruta_relativa: str | None = None
-    ):
+    )->tempfile.TemporaryDirectory:
     """Esta funcion crea una carpeta temporal con nombre. 
     Opcionalmente se puede indicar una carpeta para alojarla (ésta debe ser preexistente).
     """

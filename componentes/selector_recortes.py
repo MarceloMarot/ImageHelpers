@@ -12,7 +12,7 @@ from typing import IO
 
 from sistema_archivos.archivos_temporales import  crear_directorio_temporal
 from sistema_archivos.imagen_temporal import crear_imagen_temporal
-from sistema_archivos.imagen_editable import ImagenEditable
+from sistema_archivos.imagen_editable import ImagenEditable, crear_directorio_RAM
 
 from componentes.galeria_imagenes import Contenedor , Contenedor_Imagen
 
@@ -66,16 +66,9 @@ class ImagenesTemporalesSelector:
         self.brillo_ventana: int = 100
         self.contraste_ventana: float = 0.5 
 
-        # ruta RAM habitual en Linux
-        ruta = "/dev/shm/"
-        if pathlib.Path(ruta).exists():
-            ruta_temporal = ruta
-        # ruta TEMP designada por sistema operativo ( en disco rigido)
-        else:
-            ruta_temporal = None        
-
-        self.carpeta_temporal = crear_directorio_temporal(nombre_directorio, ruta_temporal)
-
+        # se crea un directorio en RAM si es posible
+        self.carpeta_temporal = crear_directorio_RAM(nombre_directorio)
+        # se crean las imagenes temporales dentro del directorio de trabajo
         self.temporal_original = ImagenEditable(self.carpeta_temporal.name)
         self.temporal_escalada  = ImagenEditable(self.carpeta_temporal.name)
         self.temporal_recorte   = ImagenEditable(self.carpeta_temporal.name)

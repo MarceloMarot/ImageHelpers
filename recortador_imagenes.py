@@ -12,6 +12,7 @@ from sistema_archivos.buscar_extension import buscar_imagenes
 from componentes.estilos_contenedores import estilos_galeria, estilos_seleccion, Estilo_Contenedor
 from componentes.selector_recortes import SelectorRecorte, DataRecorte
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
+from sistema_archivos.imagen_editable import ImagenEditable, crear_directorio_RAM
 
 
 def nada( e ):
@@ -19,6 +20,12 @@ def nada( e ):
 
 
 directorio_recortes = "recortes/"
+
+prefijo_directorio_temporal = "recortador_imagenes_"
+prefijo_directorio_miniaturas = "recortador_miniaturas_"
+
+# carpeta auxiliar para contener las miniaturas de los recortes, de ser posible en RAM
+directorio_miniaturas = crear_directorio_RAM(prefijo_directorio_miniaturas)
 
 
 class ContenedorRecortes( Contenedor_Imagen):
@@ -31,17 +38,23 @@ class ContenedorRecortes( Contenedor_Imagen):
         # datos de la ventana emergente
         self.clave = clave 
         self.ruta_origen = ruta
+        # carpeta destino dentro de la carpeta de ejecutable
         self.directorio_recortes = directorio_recortes
 
-        # carpeta destino dentro de la carpeta de ejecutable
+        # resuelve la ruta predefinida para el archivo de recorte
         self.ruta_destino : str
         self.ruta_recorte(self.directorio_recortes)
 
+        # data auxiliar para las coordenadas y escalas de seleccion
         self.data_actual   = DataRecorte()
         self.data_marcado  = DataRecorte()
         self.data_guardado = DataRecorte()
-        # archivo temporal con la imagen recortada
-        self.recorte_imagen = None
+
+        # archivo temporal (en RAM si es posible) con la imagen recortada
+        self.recorte_temporal = ImagenEditable(
+            directorio = directorio_miniaturas.name,
+            extension = ".jpg"
+            )
         self.tooltip = "Click izquierdo para seleccionar esta imagen."
 
 
@@ -57,6 +70,14 @@ class ContenedorRecortes( Contenedor_Imagen):
         ruta_archivo = pathlib.Path(directorio, nombre_archivo)
         # asignacion de ruta de salida
         self.ruta_destino = str(ruta_archivo)
+
+
+    def asignar_miniatura(self, ruta_origen):
+        """Copia la imagen de entrada como archivo temporal y la asigna al componente grafico."""
+        # copia a carpeta temporal
+        self.recorte_temporal.subir(ruta_origen)  
+        # asignacion grafica
+        self.ruta_imagen = self.recorte_temporal.ruta  
 
 
 
@@ -122,7 +143,15 @@ def actualizar_estilo_estado(
 
 
 
-texto_ayuda = """Selector de recortes:
+texto_ayuda = """
+Color de bordes:
+Cada color de borde da informacion sobre el estado del recorte de cada imagen.
+Opciones:
+- Celeste: no recortado
+- Verde: archivo de recorte guardado
+- Amarillo: recorte marcado pero sin guardar en disco
+
+Selector de recortes:
 - Click derecho sobre la imagen ampliada para guardar el recorte marcado;
 - Click izquierdo para marcado provisional (no se guarda);
 - Rueda del mouse: cambio del zoom de imagen.
@@ -222,11 +251,9 @@ def pagina_galeria(page: ft.Page):
         text_style=ft.TextStyle(size=15, color=ft.colors.WHITE),
     )
 
-
-    selector_recorte = SelectorRecorte("recortador_imagenes_")
+    selector_recorte = SelectorRecorte(prefijo_directorio_temporal)
     selector_recorte.height = 768
     selector_recorte.width  = 768
-    # selector_recorte.tooltip = "Click derecho para guardar el recorte\nClick izquierdo para marcado provisional."
 
     galeria = GaleriaRecortes(estilos_galeria)
     
@@ -548,6 +575,11 @@ def pagina_galeria(page: ft.Page):
         imagen.data_marcado .leer(selector_recorte.temporal.data_marcado )
         imagen.data_guardado.leer(selector_recorte.temporal.data_guardado)     
         
+        # asignacion miniatura
+        archivo_recorte = selector_recorte.ruta_recorte
+        imagen.asignar_miniatura(archivo_recorte)
+        imagen.update()
+
         if guardar:
             # guardado en disco
             ruta_archivo = imagen.ruta_destino
@@ -581,12 +613,21 @@ def pagina_galeria(page: ft.Page):
         texto_zoom.value = f"Zoom: {int(barra_escala.value) } %"
         texto_zoom.update()
 
+        
+        # global imagenes_galeria, clave_actual
+        # if indice_clave(str(clave_actual), imagenes_galeria)!=None:
+        #     g = selector_recorte.temporal.data_guardado.escala
+        #     m = selector_recorte.temporal.data_marcado.escala
+        # texto_zoom.value = f"Zoom: {int(barra_escala.value)}% {int(m)}% {int(g)}%"
+        # texto_zoom.update()
+
 
     def cierre_programa(e:ft.ControlEvent):
         if e.data=="close":
             page.window_destroy()
             time.sleep(0.5)
             selector_recorte.cerrar()
+            directorio_miniaturas.cleanup()
 
 
     def redimensionar_selector(e):

@@ -11,8 +11,30 @@ from . archivos_temporales import crear_directorio_temporal
 from . imagen_temporal import crear_imagen_temporal
 
 
+def crear_directorio_RAM(nombre_directorio)->tempfile.TemporaryDirectory:
+    """Crea una carpeta temporal dentro de la memoria RAM si es posible. 
+    Si no es posible, devuelve una carpeta temporal dentro de la carpeta temporal definida por el sistema operativo"""
+
+    # ruta RAM habitual en Linux
+    ruta = "/dev/shm/"
+    if pathlib.Path(ruta).exists():
+        ruta_temporal = ruta
+    # ruta TEMP designada por sistema operativo ( en disco rigido)
+    else:
+        ruta_temporal = None   
+
+    directorio = crear_directorio_temporal(
+        nombre_directorio, 
+        ruta_temporal
+        )
+    return directorio
+
+
+
 class ImagenEditable:
-    """Imagen creada como archivo temporal actualizable. Al cambiar su contenido se elimina el archivo temporal original y se crea uno nuevo como sustituto."""
+    """Imagen creada como archivo temporal actualizable. 
+    Al cambiar su contenido se elimina el archivo temporal original y se crea uno nuevo como sustituto.
+    Esta clase está pensada para bypassear la caché de imagen que crean los objetos ft.Image de FLET."""
     def __init__(self,
         directorio: str|None = None,
         extension : str =".bmp"
@@ -122,7 +144,8 @@ if __name__ == "__main__":
 
         rutas = [sys.argv[1],  sys.argv[2]]
 
-        carpeta_temporal = crear_directorio_temporal("ensayo")
+        # carpeta_temporal = crear_directorio_temporal("ensayo")
+        carpeta_temporal = crear_directorio_RAM("ensayo")
         print("carpeta temporal: ", carpeta_temporal.name)
         archivos = []
 
