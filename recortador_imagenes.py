@@ -18,6 +18,9 @@ def nada( e ):
     pass
 
 
+directorio_recortes = "recortes/"
+
+
 class ContenedorRecortes( Contenedor_Imagen):
     def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0,):
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
@@ -28,11 +31,10 @@ class ContenedorRecortes( Contenedor_Imagen):
         # datos de la ventana emergente
         self.clave = clave 
         self.ruta_origen = ruta
-        self.directorio_recortes = "recortes"
+        self.directorio_recortes = directorio_recortes
 
         # carpeta destino dentro de la carpeta de ejecutable
         self.ruta_destino : str
-        # self.ruta_destino = "recorte.jpg"
         self.ruta_recorte(self.directorio_recortes)
 
         self.data_actual   = DataRecorte()
@@ -82,14 +84,14 @@ class GaleriaRecortes( Galeria):
 
         for contenedor in self.controls:
             contenedor: ContenedorRecortes
-            contenedor.ruta_recorte(ruta_directorio)    
+            contenedor.ruta_recorte(ruta_directorio)   
 
 
     def actualizar_estilos(self):
         actualizar_estilo_estado( self.imagenes, self.estilos)    
 
 
-def leer_imagenes_recortes(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0):
+def cargar_imagenes_galeria(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0):
     """Esta funcion crea lee imagenes desde archivo y crea una lista de objetos ft.Image.
     También asigna una clave ('key') a cada una.
     """
@@ -101,18 +103,6 @@ def leer_imagenes_recortes(rutas_imagen: list[str], ancho=1024, alto=1024, redon
         contenedores.append(contenedor)
 
     return contenedores
-
-
-def cargar_imagenes_recortes(rutas: list[str]):
-    # replica de imagenes para la galeria - menor resolucion
-    galeria = []
-    galeria = leer_imagenes_recortes(
-        rutas,
-        ancho=128,
-        alto=128, 
-        redondeo=10
-        )
-    return galeria
 
 
 def actualizar_estilo_estado(
@@ -302,11 +292,11 @@ def pagina_galeria(page: ft.Page):
     page.add( fila_controles )
     page.add(fila_galeria)
 
-    ####################### HANDLERS ##################################
+    ####################### HANDLERS Y FUNCIONES ##################################
 
 
     def ventana_emergente(pagina:ft.Page, texto: str):
-        page.show_snack_bar(
+        pagina.show_snack_bar(
             ft.SnackBar(ft.Text(texto), open=True, show_close_icon=True)
         )
 
@@ -318,7 +308,6 @@ def pagina_galeria(page: ft.Page):
         dimensiones_recorte = [dimensiones[1], dimensiones[0]]
         selector_recorte.dimensiones_recorte = dimensiones_recorte
 
-    lista_dimensiones_desplegable.on_change = cambio_dimensiones_recorte
 
     def escalar_imagen(e: ft.ControlEvent | int):
         if type(e)==int:
@@ -328,14 +317,14 @@ def pagina_galeria(page: ft.Page):
         selector_recorte.escalar(int(valor))
         actualizar_barra_zoom(valor)
 
-    barra_escala.on_change = escalar_imagen
-
 
     # Funcion de apertura de directorio
     def resultado_directorio_origen(e: ft.FilePickerResultEvent):
+        """Elige la carpeta de las imagenes originales."""
         if e.path:
             # acceso a elementos globales
             global imagenes_galeria
+            global directorio_recortes
             # ruta de directorio elegido
             directorio = e.path
              # reporte por snackbar
@@ -343,60 +332,71 @@ def pagina_galeria(page: ft.Page):
             # busqueda de imagenes
             rutas_imagen = buscar_imagenes(directorio)
             # Creacion y carga de imagenes del directorio
-            imagenes_galeria = cargar_imagenes_recortes(rutas_imagen)
+            imagenes_galeria = cargar_imagenes_galeria(rutas_imagen,128,128)
             galeria.cargar_imagenes( imagenes_galeria )
             galeria.eventos(click = click_galeria)
             galeria.estilo(estilos_galeria["predefinido"])
             galeria.update()
             # desbloquea el boton de recortes
-            boton_carpeta_destino.disabled=False
+            boton_carpeta_destino.disabled = False 
             boton_carpeta_destino.update()
-
             # ocultamiento del recortador de imagenes
             columna_selector.visible = False
             columna_selector.update()
-
+            # carga de recortes preexistentes
+            buscar_archivos_recortes(directorio_recortes)  
             # reporte por snackbar
             ventana_emergente(page,f"Directorio de imágenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_galeria)}")
 
 
     def resultado_directorio_destino(e: ft.FilePickerResultEvent):
+        """Cambia la ruta de destino para los recortes de imagen."""
         if e.path:
             directorio = e.path
             # asignacion de rutas de salida
             galeria.ruta_recortes(directorio)
-            # busqueda de recortes preexistentes
-            rutas_recortes = buscar_imagenes(directorio)
-            nombres_recortes = []
-            for recorte in rutas_recortes:
-                nombres_recortes.append(str(pathlib.Path(recorte).name))
-            global imagenes_galeria
-
-            
-            nombres_imagen = []
-            for imagen in imagenes_galeria:
-                ruta_imagen = imagen.ruta_imagen
-                nombres_imagen.append(str(pathlib.Path(ruta_imagen).name))
-
-            # asignacion de recortes ya hechos y marcado de estado 'guardado'
-            for nombre in nombres_imagen:
-                if nombre in nombres_recortes:
-                    imagen_seleccionada = imagen_nombre(nombre, imagenes_galeria)
-                    indice = nombres_recortes.index(nombre)
-                    imagen_seleccionada.guardada = True
-                    imagen_seleccionada.ruta_imagen = rutas_recortes[indice]
-                    imagen_seleccionada.update()
-
-            # actualizar graficas con los recortes 
-            galeria.actualizar_estilos()
-            galeria.update()
-
+            # carga de recortes preexistentes
+            buscar_archivos_recortes(directorio)
             # ocultamiento del recortador de imagenes
             columna_selector.visible = False
             columna_selector.update()
-
             # reporte por snackbar
             ventana_emergente(page,f"Directorio de recortes elegido\nRuta: {directorio} ")
+
+
+    def buscar_archivos_recortes(directorio: str):
+        """ASigna los recortes ya hechos a la galeria de imagenes"""
+
+        rutas_recortes = buscar_imagenes(directorio)
+        nombres_recortes = []
+        for recorte in rutas_recortes:
+            nombres_recortes.append(str(pathlib.Path(recorte).name))
+
+        global imagenes_galeria
+
+        # lectura de todas las rutas de imagen originales
+        nombres_imagen = []
+        for imagen in imagenes_galeria:
+            ruta_imagen = imagen.ruta_imagen
+            nombres_imagen.append(str(pathlib.Path(ruta_imagen).name))
+
+        # asignacion de recortes ya hechos y marcado de estado 'guardado'
+        for nombre in nombres_imagen:
+            if nombre in nombres_recortes:
+                imagen_seleccionada = imagen_nombre(nombre, imagenes_galeria)
+                indice = nombres_recortes.index(nombre)
+                imagen_seleccionada.guardada = True
+                imagen_seleccionada.ruta_imagen = rutas_recortes[indice]
+                imagen_seleccionada.update()
+            else:
+                imagen_seleccionada = imagen_nombre(nombre, imagenes_galeria)
+                # indice = nombres_recortes.index(nombre)
+                imagen_seleccionada.guardada = False
+                imagen_seleccionada.ruta_imagen = imagen_seleccionada.ruta_origen
+                imagen_seleccionada.update()
+        # actualizar graficas con los recortes 
+        galeria.actualizar_estilos()
+        galeria.update()
 
 
     def cargar_selector(imagen: ContenedorRecortes):
@@ -437,7 +437,6 @@ def pagina_galeria(page: ft.Page):
         # 
         galeria.actualizar_estilos()
 
-
         # reestablecimiento de bordes para todas las imagenes de galeria
         actualizar_estilo_estado(
             imagenes_galeria, 
@@ -457,8 +456,8 @@ def pagina_galeria(page: ft.Page):
         texto_imagen.update()
 
 
-
     def click_galeria(e: ft.ControlEvent):
+        """Abre la imagen seleccionada por click en el selector de recortes."""
 
         # visibilizacion del recortador de imagenes
         columna_selector.visible = True
@@ -474,10 +473,7 @@ def pagina_galeria(page: ft.Page):
         imagen = imagen_clave(clave_actual, imagenes_galeria)
         cargar_selector(imagen)
 
-
-        galeria.scroll_to(key=clave_actual, duration=5000)
-
-
+        galeria.scroll_to(key=clave_actual, duration=1000)
 
 
     # manejador del teclado
@@ -519,7 +515,7 @@ def pagina_galeria(page: ft.Page):
                 # actualizacion de parametros
                 imagen = imagenes_galeria[indice]
                 clave_actual = imagen.clave 
-                galeria.scroll_to(key=clave_actual, duration=5000)
+                galeria.scroll_to(key=clave_actual, duration=1000)
                 cargar_selector(imagen)
 
             # cambio de zoom
@@ -533,12 +529,6 @@ def pagina_galeria(page: ft.Page):
                 valor -= selector_recorte.incremento_escala
                 escalar_imagen(int(valor))
                 selector_recorte.escalar(int(valor))
-
-
-    # propiedad de pagina: handler del teclado elegido
-    page.on_keyboard_event = teclado_galeria
-
-
 
 
     def marcar_recorte(guardar:bool=False):
@@ -570,10 +560,12 @@ def pagina_galeria(page: ft.Page):
 
 
     def click_izquierdo_selector(e):
+        """"Click izquierdo para crear recorte provisorio"""
         marcar_recorte(guardar=False)
 
 
     def click_derecho_selector(e):
+        """Click derecho para crear recorte definitivo."""
         marcar_recorte(guardar=True)
 
 
@@ -588,12 +580,6 @@ def pagina_galeria(page: ft.Page):
         # actualiacion de texto
         texto_zoom.value = f"Zoom: {int(barra_escala.value) } %"
         texto_zoom.update()
-
-
-    selector_recorte.dimensiones_recorte = [512, 512]
-    selector_recorte.funcion_click_izquierdo = click_izquierdo_selector
-    selector_recorte.funcion_click_derecho = click_derecho_selector
-    selector_recorte.funcion_scroll_mouse = actualizar_barra_zoom
 
 
     def cierre_programa(e:ft.ControlEvent):
@@ -612,6 +598,14 @@ def pagina_galeria(page: ft.Page):
         fila_galeria.width = page.window_width
         fila_galeria.update()
 
+    ##################### ASIGNACION HANDLERS ##################
+
+    lista_dimensiones_desplegable.on_change = cambio_dimensiones_recorte
+    barra_escala.on_change = escalar_imagen
+
+    # propiedad de pagina: handler del teclado elegido
+    page.on_keyboard_event = teclado_galeria
+
     # Clase para manejar dialogos de archivo y de carpeta
     dialogo_directorio_origen   = ft.FilePicker(on_result = resultado_directorio_origen )
     dialogo_directorio_destino  = ft.FilePicker(on_result = resultado_directorio_destino )
@@ -620,6 +614,11 @@ def pagina_galeria(page: ft.Page):
     page.overlay.extend([
             dialogo_directorio_origen, dialogo_directorio_destino
         ])
+
+    selector_recorte.dimensiones_recorte = [512, 512]
+    selector_recorte.funcion_click_izquierdo = click_izquierdo_selector
+    selector_recorte.funcion_click_derecho = click_derecho_selector
+    selector_recorte.funcion_scroll_mouse = actualizar_barra_zoom
 
     # rutina para liberar archivos temporales
     page.window_prevent_close = True
