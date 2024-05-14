@@ -14,16 +14,25 @@ from sistema_archivos.archivos_temporales import  crear_directorio_temporal
 from sistema_archivos.imagen_temporal import crear_imagen_temporal
 from sistema_archivos.imagen_editable import ImagenEditable
 
+from componentes.galeria_imagenes import Contenedor , Contenedor_Imagen
+
 
 def nada(x):
     pass
 
 
 class DataRecorte():
+    """Estructura auxiliar para los datos de recortes."""
     def __init__(self):
         self.coordenadas_absolutas: list[int] = [0,0,0,0]
         self.coordenadas_relativas: list[float] = [0,0,0,0]
         self.escala: int = 100
+
+    def leer(self, data):
+        """Lee los datos desde otra estructura 'DataRecorte' """
+        self.coordenadas_absolutas  = data.coordenadas_absolutas
+        self.coordenadas_relativas  = data.coordenadas_relativas
+        self.escala                 = data.escala
 
 
 class ImagenesTemporalesSelector:
@@ -67,11 +76,11 @@ class ImagenesTemporalesSelector:
 
         self.carpeta_temporal = crear_directorio_temporal(nombre_directorio, ruta_temporal)
 
-        self.temporal_original : ImagenEditable
-        self.temporal_escalada : ImagenEditable
-        self.temporal_recorte  : ImagenEditable
-        self.temporal_seleccion  : ImagenEditable
-        self.temporal_miniatura  : ImagenEditable
+        self.temporal_original = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_escalada  = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_recorte   = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_miniatura = ImagenEditable(self.carpeta_temporal.name)
+        self.temporal_seleccion = ImagenEditable(self.carpeta_temporal.name)
 
     #COORDENADAS
     @property
@@ -151,13 +160,8 @@ class ImagenesTemporalesSelector:
     def abrir_imagen(self,ruta_archivo: str ):
         """Carga de los archivos temporales y su primera version"""
         # copia temporal desde archivo fisico
-        self.temporal_original = ImagenEditable(self.carpeta_temporal.name)
         self.temporal_original.subir(ruta_archivo)
-        # copias hechas desde el archivo temporal
-        self.temporal_escalada  = ImagenEditable(self.carpeta_temporal.name)
-        self.temporal_recorte   = ImagenEditable(self.carpeta_temporal.name)
-        self.temporal_miniatura = ImagenEditable(self.carpeta_temporal.name)
-        self.temporal_seleccion = ImagenEditable(self.carpeta_temporal.name)
+        # # copias hechas desde el archivo temporal
         self.temporal_escalada .subir(ruta_archivo)
         self.temporal_recorte  .subir(ruta_archivo)
         self.temporal_miniatura.subir(ruta_archivo)
@@ -265,9 +269,7 @@ class ImagenesTemporalesSelector:
 
 
     def hacer_recorte_preliminar(self):
-        self.data_marcado.coordenadas_absolutas = self.data_actual.coordenadas_absolutas
-        self.data_marcado.coordenadas_relativas = self.data_actual.coordenadas_relativas
-        self.data_marcado.escala                = self.data_actual.escala
+        self.data_marcado.leer(self.data_actual)
 
         [xi, yi, xf, yf] = self.data_marcado.coordenadas_absolutas
         self.__imagen_recorte  = self.__imagen_escalada[yi:yf, xi:xf]
@@ -276,9 +278,8 @@ class ImagenesTemporalesSelector:
 
 
     def hacer_recorte_definitivo(self):
-        self.data_guardado.coordenadas_absolutas = self.data_actual.coordenadas_absolutas
-        self.data_guardado.coordenadas_relativas = self.data_actual.coordenadas_relativas
-        self.data_guardado.escala                = self.data_actual.escala
+        self.data_guardado.leer(self.data_actual)
+
         # borrado del marcado antiguo
         self.data_marcado.coordenadas_absolutas = [0, 0, 0, 0]
         self.data_marcado.coordenadas_relativas = [0, 0, 0, 0]
@@ -390,13 +391,14 @@ class SelectorRecorte(ft.GestureDetector):
             fit = ft.ImageFit.CONTAIN,
             gapless_playback = True,        # transicion suave entre imagenes (retiene la version anterior hasta poder cambiar)
             )
-        self.contenedor = ft.Container(
-            height=512,
-            width=512,
-            content = self.imagen,
-            padding=0,
-            image_fit = ft.ImageFit.CONTAIN,
-            )
+
+        self.contenedor = Contenedor( ancho=512, alto=512 )
+        self.contenedor.content = self.imagen
+        self.contenedor.padding = 0
+        self.contenedor.margin = 0
+        self.contenedor.border=ft.border.all(0, ft.colors.BLACK12)
+        self.contenedor.image_fit = ft.ImageFit.CONTAIN
+
         super().__init__(
             height=512,
             width=512,
@@ -457,12 +459,11 @@ class SelectorRecorte(ft.GestureDetector):
             # deslizamiento abajo -> reducir
             escala -= self.incremento_escala
             self.escalar(escala)
-            print(self.escala_actual)
         else:
             # deslizamiento abajo -> ampliar
             escala += self.incremento_escala
             self.escalar(escala)
-            print(self.escala_actual)
+
         # funcion opcional externa
         self.funcion_scroll_mouse(e)
 
@@ -575,7 +576,6 @@ def principal(page: ft.Page):
 
 
     def cierre(e:ft.ControlEvent):
-        # print(e.data)
         if e.data=="close":
             page.window_destroy()
             time.sleep(0.5)

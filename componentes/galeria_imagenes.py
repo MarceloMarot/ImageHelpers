@@ -16,12 +16,16 @@ class Estilo_Contenedor:
         height=256,
         border_radius=0, 
         bgcolor=ft.colors.WHITE, 
+        margin=10,
+        padding=10,
         border=ft.border.all(0, ft.colors.WHITE),
         ):
         self.width = width
         self.height = height
         self.border_radius = border_radius
         self.bgcolor = bgcolor
+        self.margin  = margin
+        self.padding = padding
         self.border = border
 
 
@@ -71,6 +75,8 @@ class Contenedor(ft.Container):
         self.border_radius = estilo.border_radius
         self.bgcolor = estilo.bgcolor
         self.border = estilo.border
+        self.margin  = estilo.margin
+        self.padding = estilo.padding
 
 
     def eventos(self, click=None, hover=None, longpress=None):
