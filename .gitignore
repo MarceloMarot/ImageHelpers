@@ -10,8 +10,10 @@ pruebas/
 build/
 dist/
 distribuibles/
-
 virtual_env/
+recortes/
+
+
 
 ensayo.py
 

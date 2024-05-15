@@ -7,12 +7,12 @@ directorio_virtual='virtual_env'
 if `test -d $directorio_virtual`
 then
     echo "Directorio virtual preexistente"
-    echo "Ruta: $directorio_virtual"
+    echo "Nombre: $directorio_virtual"
 
 else
     mkdir $directorio_virtual
     echo "Directorio virtual creado"
-    echo "Ruta: $directorio_virtual"
+    echo "Nombre: $directorio_virtual"
 fi
 echo ""
 
