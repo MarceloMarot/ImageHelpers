@@ -9,6 +9,7 @@ pruebas/
 
 build/
 dist/
+distribuibles/
 
 virtual_env/
 

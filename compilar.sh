@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # configuraciones
-carpeta_destino='dist'
+carpeta_destino='distribuibles'
 carpeta_union='temporal'
 carpeta_traducciones='traducciones'
 

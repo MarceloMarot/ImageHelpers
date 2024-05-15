@@ -16,9 +16,14 @@ def crear_directorio_RAM(nombre_directorio)->tempfile.TemporaryDirectory:
     Si no es posible, devuelve una carpeta temporal dentro de la carpeta temporal definida por el sistema operativo"""
 
     # ruta RAM habitual en Linux
-    ruta = "/dev/shm/"
-    if pathlib.Path(ruta).exists():
-        ruta_temporal = ruta
+    ruta_linux = "/dev/shm/"
+    # disco virtual 'R:\' en Windows (requiere ImDIsk o similar)
+    ruta_ramdisk = "R:\\"
+    #seleccion automatica de ruta RAM si se se encuentra
+    if pathlib.Path(ruta_linux).exists():
+        ruta_temporal = ruta_linux
+    elif pathlib.Path(ruta_ramdisk).exists():
+        ruta_temporal = ruta_ramdisk
     # ruta TEMP designada por sistema operativo ( en disco rigido)
     else:
         ruta_temporal = None   
