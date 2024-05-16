@@ -6,13 +6,13 @@ directorio_virtual='virtual_env'
 
 if `test -d $directorio_virtual`
 then
-    echo "Directorio virtual preexistente"
-    echo "Nombre: $directorio_virtual"
+    echo "Entorno virtual preexistente"
+    echo "Directorio: $directorio_virtual"
 
 else
     mkdir $directorio_virtual
-    echo "Directorio virtual creado"
-    echo "Nombre: $directorio_virtual"
+    echo "Entorno virtual creado"
+    echo "Directorio: $directorio_virtual"
 fi
 echo ""
 
@@ -72,5 +72,5 @@ deactivate # cerrado del entorno virtual
 echo ""
 echo ""
 echo "Instalacion de entorno virtual completada"
-
+echo "Directorio: $directorio_virtual"
 

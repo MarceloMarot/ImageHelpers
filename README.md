@@ -54,6 +54,10 @@ El código fuente de los programas está escrito casi totalmente en español y s
 
 El proyecto requiere que el sistema disponga de Python3 y GIT. Se recomienda asimismo el uso de la terminal Bash por ser ejecutable tanto en Windows como en GNU/Linux.
 
+[Descargar Python](https://www.python.org/downloads/)
+
+[Descargar Git+Bash](https://git-scm.com/downloads)
+
 #### Clonar repositorio
 
 Para comenzar la instalacion del repositorio se abre una terminal de Bash y se copian en ella los comandos:
@@ -70,20 +74,28 @@ Los comandos se ejecutan al **pulsar** **ENTER**.
 El proyecto en sí mismo requiere un espacio en disco de alrededor de casi **1GB** para la instalación (sin incluir las dependencias previas). Este espacio puede reducirse a alrededor de **300 MB** al eliminar los archivos auxiliares (ver más adelante).
 
 
-#### Ramdisk (opcional)
+#### Ramdisk (sólo Windows)
 
-El recortador de imagenes funciona creando imagenes temporales cada vez que se selecciona un recorte de imagen. Por ello el programa funciona mejor si el equipo dispone de algun directorio en memoria RAM, esto le permite editar los recortes mucho más rápido y minimizar las escrituras en disco.
+El recortador de imagenes funciona creando archivos temporales de las imágenes cada vez que se selecciona un recorte de imagen. Por ello el programa funciona mejor si el equipo dispone de algun directorio en memoria RAM donde alojarlos, esto le permite editar los recortes mucho más rápido y minimizar las escrituras en disco.
 
-- En equipos **Windows** es recomendable instalar un creador de discos RAM (*ramdisk*) como por ejemplo **ImDisk**. Con él hay que crear un disco RAM con ruta **'R:\\'** y montarlo para su uso. Se recomienda que dicho disco tenga al menos 500MB de RAM disponibles para un funcionamiento cómodo. **Aclaración importante:** no hace falta modificar la ubicación de las rutas TEMP.
+Para ello en **equipos Windows** es recomendable instalar un creador de discos RAM (*ramdisk*) como por ejemplo **ImDisk**.
 
-- En equipos **GNU/Linux** se usa directamente la ruta RAM ubicada en ***'/dev/shm'***, presente en las distribuciones más habituales. Por ello no se requiere software adicional.
+[Descargar ImDisk Toolkit para Windows](https://sourceforge.net/projects/imdisk-toolkit/)
 
-Si el programa recortador no puede acceder a las rutas RAM especificadas usará la carpeta TEMP del usuario actual (carpeta oculta) con recortes e imagenes temporales que usa el programa y que elimina al cerrarse. 
+Instrucciones de uso:
+- Instalar el toolkit.
+- Crear una unidad RAM con letra R y espacio de al menos 256MB. Ruta equivalente: **'R:\\'**
+- Montar la unidad R **antes** de iniciar el recortador de imágenes.
 
-La carpeta TEMP en Windows 10 se encuentra habitualmente en:
+Si el programa recortador no puede acceder a la ruta RAM especificada usará la carpeta TEMP del usuario actual (carpeta oculta, disco SDD o HDD) con recortes e imagenes temporales que usa el programa y que elimina al cerrarse. 
+
+La carpeta TEMP del usuario actual en Windows 10 se encuentra habitualmente en:
 ```bash
 C:\Users\USUARIO_ACTUAL\AppData\Local\Temp
 ``` 
+
+Como contrapartida, en **equipos GNU/Linux** se usa directamente la ruta RAM ubicada en ***'/dev/shm'***, presente en las distribuciones más habituales. Por ello normalmente **no se requiere software adicional.** Si */dev/shm* no existe entonces los archivos temporales se cargarán a la *carpeta TMP* del sistema, la cual es análoga a TEMP.
+
 
 ### Instalacion de paquetes
 
@@ -106,7 +118,6 @@ chmod +x compilar.sh    # permiso ejecucion asignado
 Esta rutina crea la carpeta ***'distribuibles'*** donde aloja juntos a todos los ejecutables de los programas creados y sus dependencias. Esta carpeta puede reubicarse para su uso.
 
 También crea la carpeta *'build'* donde se crean archivos auxiliares para la construccion de los ejecutables.
-
 
 ### Actualización de software
 
