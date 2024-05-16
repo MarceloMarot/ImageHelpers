@@ -5,7 +5,7 @@ carpeta_destino='distribuibles'
 carpeta_union='temporal'
 carpeta_traducciones='traducciones'
 
-
+carpeta_iconos='iconos'
 
 carpeta_dependencias='_internal' # valor por defecto
 
@@ -92,7 +92,11 @@ for elemento in ${lista_programas[*]}
 do 
     # compilacion ejecutable
     echo "Compilando $elemento..."
-    pyinstaller $elemento.py --distpath $carpeta_destino --noconfirm --noconsole --add-data $carpeta_traducciones/:$carpeta_destino/$carpeta_traducciones
+    pyinstaller $elemento.py \
+        --distpath $carpeta_destino \
+        --noconfirm --noconsole \
+        --add-data $carpeta_traducciones/:$carpeta_destino/$carpeta_traducciones \
+        # --icon $carpeta_iconos/$elemento.ico 
     # compactado en directorio unico
     cd $carpeta_destino
     if `test -f "$elemento/$elemento"`

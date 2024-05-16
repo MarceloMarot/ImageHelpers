@@ -159,7 +159,7 @@ def main(page: ft.Page):
         anillo_reporte.valor_anillo = 1
         anillo_reporte.update()
         exti = str(extensiones_entrada.value)
-        extf = str(extensiones_entrada.value)
+        extf = str(extensiones_salida.value)
         anillo_reporte.texto_reporte(
             f"Imagenes {exti} convertidas a {extf}",
             f"Imagenes totales: {total}",
