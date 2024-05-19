@@ -161,7 +161,8 @@ def main(page: ft.Page):
         exti = str(extensiones_entrada.value)
         extf = str(extensiones_salida.value)
         anillo_reporte.texto_reporte(
-            f"Imagenes {exti} convertidas a {extf}",
+            f"Conversión de .{exti} a .{extf}",
+            # f"Imagenes {exti} convertidas a {extf}",
             f"Imagenes totales: {total}",
             f"Convertidas: {convertidos}",
             f"Repetidas: {repetidos}",

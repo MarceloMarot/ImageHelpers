@@ -1,5 +1,5 @@
 en:
-  window_name:  'file mover'
+  window_name:  'File Mover'
   title_text: 'File Mover'
   # botones
   source_dir_button: 'Source Folder'
@@ -9,8 +9,9 @@ en:
   ext_reset_button: 'Reset Extensions'
   file_move_button: 'Move Files'
   # checkboxes
-  check_year: 'Order by year'
-  check_month: 'Order by month'
+  check_none: 'Do not sort'
+  check_year: 'Sort by year'
+  check_month: 'Sort by year and month'
   # cajas de texto
   search_progress_text: '
     File search: 

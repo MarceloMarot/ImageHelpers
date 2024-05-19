@@ -1,6 +1,6 @@
 es:
-  window_name:  "file mover"
-  title_text: "Movedor de Archivos"
+  window_name:  "Organizador de Archivos"
+  title_text: "Organizador de Archivos"
   # botones
   source_dir_button: "Carpeta Origen"
   target_dir_button: "Carpeta Destino"
@@ -9,8 +9,9 @@ es:
   ext_reset_button: "Restablecer Extensiones"
   file_move_button: "Mover Archivos"
   # checkboxes
+  check_none: "No ordenar"
   check_year: "Ordenar por año"
-  check_month: "Ordenar por mes"
+  check_month: "Ordenar por año y mes"
   # cajas de texto
   search_progress_text: '
     Búsqueda de archivos: 

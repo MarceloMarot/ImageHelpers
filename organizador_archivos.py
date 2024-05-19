@@ -370,7 +370,8 @@ def main(page: ft.Page):
     )
 
     grupo_radio = ft.RadioGroup(content=ft.Row([
-        ft.Radio(value="0", label="(No ordenar)"),
+        # ft.Radio(value="0", label="(No ordenar)"),
+        ft.Radio(value="0", label=i18n.t('filemover.check_none')),
         ft.Radio(value="1", label=i18n.t('filemover.check_year')),
         ft.Radio(value="2", label=i18n.t('filemover.check_month'))
         ],

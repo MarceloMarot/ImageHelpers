@@ -309,15 +309,16 @@ def main(pagina: ft.Page):
 
     # Botones apertura de ventana emergente
     boton_carpeta = ft.ElevatedButton(
-        text = "Abrir carpeta",
-        icon=ft.icons.FOLDER_OPEN,
+        text = "Abrir imágenes",
+        # icon=ft.icons.FOLDER_OPEN,
+        icon=ft.icons.FOLDER,
         bgcolor=ft.colors.RED,
         color= ft.colors.WHITE,
         ## manejador
         on_click=lambda _: dialogo_directorio.get_directory_path(
             dialog_title="Elegir carpeta con todas las imágenes"
         ),
-        tooltip="Abre la carpeta con todas las imágenes a etiquetar",
+        tooltip="Abre la carpeta con todas las imágenes a etiquetar.",
     )
 
     boton_dataset = ft.ElevatedButton(
@@ -331,7 +332,7 @@ def main(pagina: ft.Page):
             allowed_extensions=["txt"],
             allow_multiple=False,
         ),
-        tooltip="Elige el archivo TXT con todas las etiquetas\n(cada renglon de archivo representa un 'grupo')"
+        tooltip="Elige el archivo TXT con las etiquetas a agregar.\nCada renglón se interpreta como un 'grupo' de tags."
     )
     
     boton_guardar_dataset = ft.ElevatedButton(
