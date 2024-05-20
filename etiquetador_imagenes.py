@@ -336,7 +336,7 @@ def main(pagina: ft.Page):
     )
     
     boton_guardar_dataset = ft.ElevatedButton(
-        text = f"Guardar todas en archivo",
+        text = f"Guardar como dataset",
         bgcolor = ft.colors.AMBER_800,
         icon=ft.icons.SAVE,
         color = ft.colors.WHITE,
@@ -349,7 +349,7 @@ def main(pagina: ft.Page):
         )
 
     boton_reset_tags = ft.ElevatedButton(
-        text = f"Deseleccionar todas...",
+        text = f"Deseleccionar etiquetas...",
         bgcolor = ft.colors.BLUE_800,
         color = ft.colors.WHITE,
         tooltip="Reinicia la selección de etiquetas encontradas."
@@ -424,6 +424,14 @@ def main(pagina: ft.Page):
         weight=ft.FontWeight.NORMAL,
         text_align=ft.TextAlign.CENTER,
         )
+    
+    texto_contador_tags= ft.Text(
+        "Tags encontados:",
+        size=15,
+        weight=ft.FontWeight.BOLD,
+        text_align=ft.TextAlign.START,
+        )
+    
     # contenedor visualizador de la imagen actual
     contenedor_seleccion = Contenedor_Imagen("",512,512)
     contenedor_seleccion.estilo(estilos_seleccion["predefinido"])
@@ -457,8 +465,11 @@ def main(pagina: ft.Page):
     columna_etiquetas = ft.Column(
         controls=[    
             ft.Row(
-                [ boton_reset_tags, boton_guardar_dataset],
+                [ texto_contador_tags, 
+                boton_reset_tags, 
+                boton_guardar_dataset],
                 alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER
             ),  
             ft.Divider(height=7, thickness=1) ,
             filas_filtrado,
@@ -1173,7 +1184,10 @@ def main(pagina: ft.Page):
         nro_tags = len(conteo_etiquetas.keys()) 
         lista_tags = list(conteo_etiquetas.keys()) 
 
-        boton_reset_tags.text = f"Deseleccionar todas  ({nro_tags} tags)"
+        texto_contador_tags.value = f"Etiquetas encontadas: {nro_tags}"
+
+        boton_reset_tags.text = f"Deseleccionar tags"
+        # boton_reset_tags.text = f"Deseleccionar etiquetas ({nro_tags} en total)"
 
         tags_contadas = []
         for tag in lista_tags:

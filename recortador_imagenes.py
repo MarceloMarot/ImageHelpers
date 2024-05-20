@@ -173,6 +173,10 @@ Opciones:
 - Verde: archivo de recorte guardado
 - Amarillo: recorte marcado pero sin guardar en disco
 
+Galería de imágenes:
+- Click izquierdo sobre cualquier imagen para seleccionarla.
+  Se abrirá el selector de recortes a la derecha.
+
 Selector de recortes:
 - Click derecho sobre la imagen ampliada para guardar el recorte marcado;
 - Click izquierdo para marcado provisional (no se guarda);
