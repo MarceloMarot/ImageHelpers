@@ -40,9 +40,13 @@ El código fuente de los programas está escrito casi totalmente **en español**
     -  webp;
     -  bmp;
 
+    No reescribe imágenes en el lugar de destino.
+
 
 - ### Organizador de Archivos
     Un asistente para mover archivos en masa según su extensión al directorio destino, con opción de ordenar por año y mes de creación o modificación. 
+
+    Si hay un archivo en destino con igual nombre y extensión no lo reescribe.
 
     Pensado para uso general.
 
@@ -60,20 +64,10 @@ El proyecto requiere que el sistema disponga de Python3 y GIT. Se recomienda asi
 
 [Descargar Git+Bash](https://git-scm.com/downloads)
 
-#### Clonar repositorio
-
-Para comenzar la instalacion del repositorio se abre una terminal de Bash y se copian en ella los comandos:
-```bash
-# descarga del repositorio
-git clone https://github.com/MarceloMarot/ImageHelpers.git
-# entrada a la carpeta principal
-cd ImageHelpers/
-```
-Los comandos se ejecutan al **pulsar** **ENTER**.
 
 #### Espacio en disco
 
-El proyecto en sí mismo requiere un espacio en disco de alrededor de casi **1GB** para la instalación (sin incluir las dependencias previas). Este espacio puede reducirse a alrededor de **300 MB** al eliminar los archivos auxiliares (ver más adelante).
+El proyecto en sí mismo requiere un espacio en disco de alrededor de casi **1GB** para la instalación (sin incluir las dependencias previas). Este espacio puede reducirse poco más de **300 MB** luego de eliminar los archivos auxiliares (ver más adelante).
 
 
 #### Ramdisk (sólo Windows)
@@ -98,6 +92,16 @@ C:\Users\USUARIO_ACTUAL\AppData\Local\Temp
 
 Como contrapartida, en **equipos GNU/Linux** se usa directamente la ruta RAM ubicada en ***'/dev/shm'***, presente en las distribuciones más habituales. Por ello normalmente **no se requiere software adicional.** Si */dev/shm* no existe entonces los archivos temporales se cargarán a la *carpeta TMP* del sistema, la cual es análoga a TEMP.
 
+### Clonar repositorio
+
+Para comenzar la instalacion del software hay que descargar el repositorio. Para ello abrir una terminal de Bash y copiar en ella los comandos:
+```bash
+# descarga del repositorio
+git clone https://github.com/MarceloMarot/ImageHelpers.git
+# entrada a la carpeta principal
+cd ImageHelpers/
+```
+Los comandos se ejecutan al **pulsar** **ENTER**.
 
 ### Instalacion de paquetes
 
@@ -106,9 +110,11 @@ Los paquetes de Python necesarios se instalan automáticamente ejecutando una si
 chmod +x instalar.sh    # permiso ejecucion asignado
 ./instalar.sh           # descarga e instalacion paquetes
 ```
-Esta rutina crea un *entorno virtual* dentro de la subcaroeta llamada *'virtual_env'* donde se descargan todos los paquetes de Python requeridos. 
+Esta rutina crea un *entorno virtual* dentro de la subcarpeta llamada *'virtual_env'* donde se descargan todos los paquetes de Python requeridos. 
 
-### Interpretado
+La alternativa al copy-paste sobre la terminal es seleccionar al archivo ***instalar.sh*** con el mouse, hacer click derecho y seleccionar la opción de ejecutar como programa.
+
+### Interpretado (opcional)
 
 Los programas se pueden interpretar con ayuda del intérprete de Python. Esto permite probar y usar los programas sin necesidad de compilarlos; no obstante el funcionamiento de los mismos será más lento.
 
@@ -167,7 +173,7 @@ git pull        # descarga de actualizaciones desde GitHub
 ```
 En la carpeta ***'distribuibles'*** se encontrarán los programas actualizados al terminar.
 
-### Borrado de archivos
+### Borrado de archivos auxiliares
 
 La rutina *'vaciar.sh'* elimina las carpetas *'build'* y *'virtual_env'* juntas:
 
@@ -180,7 +186,7 @@ Esto ahorra de espacio en disco alrededor de 600MB; sin embargo también obliga 
 
 ### Problemas conocidos
 
-#### Windows
+#### Windows Defender
 
 - Los antivirus (particularmente: Windows Defender),al intentar construir los ejecutables, pueden dar alerta de troyanos  y hacer fracasar la compilación. Esto se debe al acceso del programa recortador de imagenes a la carpeta de archivos temporales, lo cual es un mecanismo habitual de los troyanos. 
 
