@@ -11,7 +11,7 @@ from . archivos_temporales import crear_directorio_temporal
 from . imagen_temporal import crear_imagen_temporal
 
 
-def crear_directorio_RAM(nombre_directorio)->tempfile.TemporaryDirectory:
+def crear_directorio_RAM(nombre_directorio: str)->tempfile.TemporaryDirectory:
     """Crea una carpeta temporal dentro de la memoria RAM si es posible. 
     Si no es posible, devuelve una carpeta temporal dentro de la carpeta temporal definida por el sistema operativo"""
 
@@ -42,12 +42,14 @@ class ImagenEditable:
     Esta clase está pensada para bypassear la caché de imagen que crean los objetos ft.Image de FLET."""
     def __init__(self,
         directorio: str|None = None,
-        extension : str =".bmp"
+        extension : str =".bmp",
+        prefijo: str = "img_"
         ):
         self.imagen_actual: IO|None = None
         self.imagen_vieja : IO|None = None
         self.directorio = directorio
         self.extension  = extension
+        self.prefijo  = prefijo     # lo usa el metodo crear()
 
     @property
     def ruta(self):
@@ -65,14 +67,14 @@ class ImagenEditable:
                 self.imagen_vieja.close()
                 pathlib.Path(self.imagen_vieja.name).unlink()
 
-    def crear(self, opencv_data: np.ndarray, extension:str=".bmp"):
+    def crear(self, opencv_data: np.ndarray):
         """Crea una imagen temporal desde objetos de OpenCV y elimina el anterior."""
         # reemplazo de contenido
         self.imagen_vieja = self.imagen_actual
         # cracion archivo vacio
         self.imagen_actual = tempfile.NamedTemporaryFile( 
-            prefix = "img_",    # parte del nombre de archivo
-            suffix = extension,    # extensión añadida de archivo
+            prefix = self.prefijo,    # parte del nombre de archivo
+            suffix = self.extension,    # extensión añadida de archivo
             dir = self.directorio,
             # configuracion recomendada Windows (en POSIX no molesta)
             delete = True,
