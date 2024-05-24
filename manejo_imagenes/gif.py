@@ -175,5 +175,5 @@ if __name__=="__main__":
 
     else:
         print("Modo de uso:")
-        print('py video_gif.py <ruta_video> <factor diezmado [veces]>')
+        print('py gif.py <ruta_video> <factor diezmado [veces]>')
         
