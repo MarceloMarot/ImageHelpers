@@ -41,7 +41,7 @@ def main(page: ft.Page):
 
     # dimensiones de referencia para el diseño de la app
     ancho_filas = 500
-    altura_columnas =  800
+    altura_columnas =  600
 
 
     ################# FUNCIONES ############################
@@ -161,7 +161,7 @@ def main(page: ft.Page):
         exti = str(extensiones_entrada.value)
         extf = str(extensiones_salida.value)
         anillo_reporte.texto_reporte(
-            f"Conversión de .{exti} a .{extf}",
+            f"Conversión de {exti} a {extf}",
             # f"Imagenes {exti} convertidas a {extf}",
             f"Imagenes totales: {total}",
             f"Convertidas: {convertidos}",

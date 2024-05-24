@@ -34,13 +34,13 @@ El código fuente de los programas está escrito casi totalmente **en español**
     Un convertidor de imágenes que convierte las imagenes de un formato a otro en grupo, respetando las dimensiones originales. 
     
     Formatos de salida disponibles:
-    -  jpg;
+    -  jpg: recomendado para fotos, dibujos, etc;
     -  jpeg;
-    -  png;
+    -  png: recomendado para diagramas de bloques, capturas de ventanas, etc;
     -  webp;
     -  bmp;
 
-    No reescribe imágenes en el lugar de destino.
+    Este programa no reescribe imágenes preexistentes en la carpeta de destino.
 
 
 - ### Organizador de Archivos
@@ -50,9 +50,6 @@ El código fuente de los programas está escrito casi totalmente **en español**
 
     Pensado para uso general.
 
-
-
-## Instalación
 
 ### Requisitos del sistema
 
@@ -65,12 +62,8 @@ El proyecto requiere que el sistema disponga de Python3 y GIT. Se recomienda asi
 [Descargar Git+Bash](https://git-scm.com/downloads)
 
 
-#### Espacio en disco
 
-El proyecto en sí mismo requiere un espacio en disco de alrededor de casi **1GB** para la instalación (sin incluir las dependencias previas). Este espacio puede reducirse poco más de **300 MB** luego de eliminar los archivos auxiliares (ver más adelante).
-
-
-#### Ramdisk (sólo Windows)
+#### Ramdisk (sólo en sistemas Windows)
 
 El recortador de imagenes funciona creando archivos temporales de las imágenes cada vez que se selecciona un recorte de imagen. Por ello el programa funciona mejor si el equipo dispone de algun directorio en memoria RAM donde alojarlos, esto le permite editar los recortes mucho más rápido y minimizar las escrituras en disco.
 
@@ -92,88 +85,47 @@ C:\Users\USUARIO_ACTUAL\AppData\Local\Temp
 
 Como contrapartida, en **equipos GNU/Linux** se usa directamente la ruta RAM ubicada en ***'/dev/shm'***, presente en las distribuciones más habituales. Por ello normalmente **no se requiere software adicional.** Si */dev/shm* no existe entonces los archivos temporales se cargarán a la *carpeta TMP* del sistema, la cual es análoga a TEMP.
 
-### Clonar repositorio
+#### Espacio en disco
 
-Para comenzar la instalacion del software hay que descargar el repositorio. Para ello abrir una terminal de Bash y copiar en ella los comandos:
+El proyecto en sí mismo requiere un espacio en disco de alrededor de casi **1GB** para la instalación (sin incluir las dependencias previas). Este espacio puede reducirse poco más de **300 MB** luego de eliminar los archivos auxiliares (ver más adelante).
+
+
+
+## Instalación
+
+### Instrucciones:
+
+#### 1 - Clonar repositorio
+
+Para comenzar la instalacion del software hay que descargar el repositorio. Para ello abrir una terminal de Bash, copiar en ella esta rutina :
 ```bash
 # descarga del repositorio
 git clone https://github.com/MarceloMarot/ImageHelpers.git
 # entrada a la carpeta principal
 cd ImageHelpers/
 ```
-Los comandos se ejecutan al **pulsar** **ENTER**.
+y presionar ENTER.
 
-### Instalacion de paquetes
+#### 2 - Instalar paquetes y compilar
 
-Los paquetes de Python necesarios se instalan automáticamente ejecutando una simple rutina en Bash:
-```bash
-chmod +x instalar.sh    # permiso ejecucion asignado
-./instalar.sh           # descarga e instalacion paquetes
-```
-Esta rutina crea un *entorno virtual* dentro de la subcarpeta llamada *'virtual_env'* donde se descargan todos los paquetes de Python requeridos. 
+ara ello 
 
-La alternativa al copy-paste sobre la terminal es seleccionar al archivo ***instalar.sh*** con el mouse, hacer click derecho y seleccionar la opción de ejecutar como programa.
-
-### Interpretado (opcional)
-
-Los programas se pueden interpretar con ayuda del intérprete de Python. Esto permite probar y usar los programas sin necesidad de compilarlos; no obstante el funcionamiento de los mismos será más lento.
-
-El primer paso para el interpretado es activar el entorno virtual:
+Abrir una terminal de Bash dentro de la carpeta del proyecto, copiar en ella esta rutina:
 
 ```bash
-# activacion entorno virtual
-source virtual_env/Scripts/activate  # sistema Windows
-source virtual_env/bin/activate      # sistema GNU/Linux
-```
-
-Luego se llama al intérprete de Python con el nombre del programa indicado :
-
-```bash
-py etiquetador_imagenes.py  
-py recortador_imagenes.py
-py convertidor_imagenes.py
-py organizador_archivos.py  
-```
-
-En algunos sistemas el intérprete de Python tiene el alias *'py3'*, en tal caso usar estas instrucciones:
-
-```bash
-py3 etiquetador_imagenes.py  
-py3 recortador_imagenes.py
-py3 convertidor_imagenes.py
-py3 organizador_archivos.py  
-```
-**Importante:**: es posible que estos programas se ***"tilden"*** al intentar ejecutarlos por primera vez. En tal caso conviene forzar la detención y llamar de nuevo al intérprete.
-
-
-### Creación de ejecutables
-
-Los programas se pueden construir por compilación, lo cual permite crear ejecutables que se abrirán con un simple doble click del mouse y que funcionarán más rápidamente.
-
-Los ejecutables de cada programa se pueden construir automáticamente ejecutando la rutina *'compilar.sh'*:
-
-```bash
-chmod +x compilar.sh    # permiso ejecucion asignado
+chmod +x instalar.sh  compilar.sh  vaciar.sh # permiso ejecucion asignado
+git pull                # descarga de actualizaciones desde GitHub
+./instalar.sh           # descarga e instalacion paquetes --> crea entorno virtual interno
 ./compilar.sh           # creacion de ejecutables
 ```
-Esta rutina crea la carpeta ***'distribuibles'*** donde aloja juntos a todos los ejecutables de los programas creados y sus dependencias. Esta carpeta puede reubicarse para su uso.
+y presionar ENTER.
 
-También crea la carpeta auxiliar *'build'* donde se crean archivos auxiliares para la construccion de los ejecutables.
+Esta rutina crea la carpeta ***'distribuibles'*** donde aloja juntos a todos los ejecutables de los programas creados y sus dependencias. Esta carpeta puede reubicarse en otra carpeta para su uso.
 
 La compilación puede tardar en completarse varios minutos, pero sólo se requiere hacerla una vez.
 
-### Actualización de software
 
-El software se puede actualizar fácilmente con la rutina:
-
-```bash
-git pull        # descarga de actualizaciones desde GitHub
-./instalar.sh   # actualizacion paquetes de Python
-./compilar.sh   # creacion ejecutables actualizados
-```
-En la carpeta ***'distribuibles'*** se encontrarán los programas actualizados al terminar.
-
-### Borrado de archivos auxiliares
+#### 3 - Borrado de archivos auxiliares (opcional)
 
 La rutina *'vaciar.sh'* elimina las carpetas *'build'* y *'virtual_env'* juntas:
 
@@ -182,6 +134,7 @@ chmod +x vaciar.sh    # permiso ejecucion asignado
 ./vaciar.sh           # eliminacion carpetas auxiliares
 ```
 Esto ahorra de espacio en disco alrededor de 600MB; sin embargo también obliga a descargar y reinstalar los paquetes en caso de requerirse la reconstrucción o actualización de los ejecutables.
+
 
 
 ### Problemas conocidos
