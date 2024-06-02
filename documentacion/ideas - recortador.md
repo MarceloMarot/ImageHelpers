@@ -8,6 +8,9 @@
 - reordenar y compactar código 
 - traduccion i18n
 - agregar filtrado de imagenes por estado actual: marcada, guardada, etc.
+- pasar las dimensiones de recorte a un archivo de configuración
+- BUG: cargar una carpeta de imágenes reestablece la carpeta de salida
+- BUG: Si el zoom de la imagen actual es muy bajo el recorte será de dimensiones incorrectas.
 
 
 ## Hecho / corregido:
