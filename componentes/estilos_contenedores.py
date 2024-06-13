@@ -1,6 +1,15 @@
 import flet as ft
 from . galeria_imagenes import Estilo_Contenedor 
 
+from enum import Enum
+
+class Estilos(Enum):
+    "Eumeracion de estilos para contenedores"
+    DEFAULT     = "predefinido" 
+    MODIFICADO  = "modificado" 
+    GUARDADO    = "guardado" 
+    ERRONEO     = "erroneo" 
+    ACTUAL      = "actual"  
 
 # estilos para contenedores 
 estilo_galeria_defecto = Estilo_Contenedor(
@@ -44,11 +53,11 @@ estilo_galeria_actual = Estilo_Contenedor(
     )
 
 estilos_galeria = {
-    "predefinido" : estilo_galeria_defecto,
-    "modificado" : estilo_galeria_modificado,
-    "guardado" : estilo_galeria_guardado,
-    "erroneo" : estilo_galeria_erroneo,
-    "actual"  : estilo_galeria_actual,
+    Estilos.DEFAULT.value    : estilo_galeria_defecto,
+    Estilos.MODIFICADO.value : estilo_galeria_modificado,
+    Estilos.GUARDADO.value   : estilo_galeria_guardado,
+    Estilos.ERRONEO.value    : estilo_galeria_erroneo,
+    Estilos.ACTUAL.value     : estilo_galeria_actual,
     }
 
 
@@ -95,9 +104,9 @@ estilo_seleccion_actual = Estilo_Contenedor(
 
 
 estilos_seleccion = {
-    "predefinido" : estilo_seleccion_defecto,
-    "modificado" : estilo_seleccion_modificado,
-    "guardado" : estilo_seleccion_guardado,
-    "erroneo" : estilo_seleccion_erroneo,
-    "actual" : estilo_seleccion_actual,
+    Estilos.DEFAULT.value    : estilo_seleccion_defecto,
+    Estilos.MODIFICADO.value : estilo_seleccion_modificado,
+    Estilos.GUARDADO.value   : estilo_seleccion_guardado,
+    Estilos.ERRONEO.value    : estilo_seleccion_erroneo,
+    Estilos.ACTUAL.value     : estilo_seleccion_actual,
     }

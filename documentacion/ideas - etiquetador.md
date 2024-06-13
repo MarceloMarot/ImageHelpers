@@ -16,6 +16,9 @@
 - dividir codigo en varias partes - modularizar
 - crear más constantes de diseño (refactorizar)
 
+- BUG: al transicionar entre estados de imagenes modificadas la primera imagen pierde sus mods.
+
+
 
 ## Hecho / corregido:
 
