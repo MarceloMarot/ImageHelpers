@@ -199,12 +199,12 @@ def actualizar_estilo_estado( contenedores: list[Contenedor_Etiquetado], estilos
         contenedor.estilo( estilo )
 
 
-def leer_imagenes_etiquetadas(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0):
+def leer_imagenes_etiquetadas(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0, nro_inicial=0):
     """Esta funcion crea lee imagenes desde archivo y crea una lista de objetos ft.Image.
     También asigna una clave ('key') a cada una.
     """
     contenedores = [] 
-    for i in range( len(rutas_imagen)):
+    for i in range(nro_inicial, nro_inicial + len(rutas_imagen)):
         contenedor = Contenedor_Etiquetado(rutas_imagen[i], ancho, alto, redondeo)
         contenedor.clave = f"imag_{i}"
         contenedores.append(contenedor)
@@ -289,7 +289,7 @@ def filtrar_estados(
         return lista_imagenes
 
 
-dimensiones_elegidas = None
+
 imagenes_tags = []
 
 
@@ -310,17 +310,65 @@ class ListaImagenes:
         self.ruta_directorio : str = ""
         self.ruta_dataset : str = ""
 
+        self.dimensiones_elegidas :tuple[int, int, int]|None = None
+
+
+    def cargar_imagenes(self, 
+        rutas_imagen: list[str], 
+        estilo=estilos_galeria[Estilos.DEFAULT.value],
+        agregado=False
+        ):
+
+        nro_inicial = 0 if agregado==False else len(self.total)
+        lista = []
+        lista = leer_imagenes_etiquetadas(
+            rutas_imagen,
+            ancho    = estilo.width,
+            alto     = estilo.height, 
+            redondeo = estilo.border_radius,
+            nro_inicial=nro_inicial
+            )
+        if agregado:
+            # modo agregado
+            self.total.append(lista)
+        else:
+            # modo reinicio
+            self.total = lista
+
+
+    def verificar_imagenes(self):
+        """Marca como defectuosas aquellas imágenes que no cumplan con los requisitos."""
+        # marcado de imagenes defectuosas según las dimensiones requeridas 
+        for imagen in self.total:
+            imagen.verificar_imagen(self.dimensiones_elegidas)
 
 
     def clasificar_estados(self):
         """Reparte las imagenes de la estructura en base a sus banderines de estado."""
 
+        # actualizacion de posibles imagenes defectuosas
+        self.verificar_imagenes()
+
+        # creacion de listas internas
         self.guardadas    = filtrar_estados(self.total, Estados.GUARDADOS   .value)
         self.modificados  = filtrar_estados(self.total, Estados.MODIFICADOS .value)
         self.no_alteradas = filtrar_estados(self.total, Estados.NO_ALTERADOS.value)
         self.defectuosas  = filtrar_estados(self.total, Estados.DEFECTUOSOS .value)
 
 
+    def seleccionar_estado(self, estado)->list:
+        """Selecciona las imágenes de una de las categorías internas. Actualiza las listas antes de asignar"""
+        self.clasificar_estados()
+        if estado == Estados.MODIFICADOS.value:
+            self.seleccion = self.modificadas
+        elif estado == Estados.GUARDADOS.value:
+            self.seleccion = self.guardadas
+        elif estado == Estados.NO_ALTERADOS.value:
+            self.seleccion = self.no_alteradas
+        elif estado == Estados.DEFECTUOSOS.value:
+            self.seleccion = self.defectuosas
+
+        return self.seleccion
 
 
 
@@ -640,11 +688,8 @@ def main(pagina: ft.Page):
 
     def click_botones_etiquetador( e: ft.ControlEvent | None ):
         """Actualiza etiquetas, estado, estadisticas y estilo de bordes de las imagenes en base al boton del etiquetador accionado."""
-        # acceso a elementos globales
 
-        global dimensiones_elegidas 
         clave = lista_imagenes.clave_actual
-
 
         ## FIX
         ## BUG: Si la clave no está en la seleccion se produce un cambio de tags descontrolado
@@ -660,7 +705,7 @@ def main(pagina: ft.Page):
                 imagen_seleccionada.agregar_tags(etiquetas_botones, sobreescribir=True)
 
                 # actualizacion bordes galeria
-                imagen_seleccionada.verificar_imagen(dimensiones_elegidas)
+                imagen_seleccionada.verificar_imagen(lista_imagenes.dimensiones_elegidas)
                 imagen_seleccionada.verificar_guardado_tags()
                 imagen_seleccionada.actualizar_estilo_estado()
             except:
@@ -748,7 +793,8 @@ def main(pagina: ft.Page):
             rutas_imagen = buscar_imagenes(directorio)
         
             # lectura de imagenes del directorio
-            lista_imagenes.total = cargar_imagenes(rutas_imagen) 
+            lista_imagenes.cargar_imagenes(rutas_imagen) 
+            # lista_imagenes.total = cargar_imagenes(rutas_imagen) 
 
             # reinicio de las listas de imagenes
             imagenes_tags = lista_imagenes.total
@@ -872,9 +918,10 @@ def main(pagina: ft.Page):
 
 
         # conversion de texto a tupla numerica de dimensiones de imagen elegida
-        global dimensiones_elegidas 
         opcion = lista_dimensiones_desplegable.value
         dimensiones_elegidas = convertir_dimensiones_opencv(str(opcion))
+
+        lista_imagenes.dimensiones_elegidas = dimensiones_elegidas
 
         # Filtrado en base a las dimensiones de imagen
         dimensiones = dimensiones_elegidas if boton_filtrar_dimensiones.estado else None
@@ -885,26 +932,14 @@ def main(pagina: ft.Page):
         # lista_imagenes.seleccion = filtrar_estados(lista_imagenes.seleccion, estado)       # FIX (original)
 
 
-        lista_imagenes.clasificar_estados()
+        # lista_imagenes.clasificar_estados()
+        lista_imagenes.seleccionar_estado( estado )
+        print(f"[bold yellow]CAMBIO")
         print(f"[bold green]guardadas: {len(lista_imagenes.guardadas)}")
         print(f"[bold green]modificadas: {len(lista_imagenes.modificadas)}")
         print(f"[bold green]no_alteradas: {len(lista_imagenes.no_alteradas)}")
         print(f"[bold green]defectuosas: {len(lista_imagenes.defectuosas)}")
 
-        # seleccion por estado                  # FIX
-        if estado == Estados.GUARDADOS.value:
-            lista_imagenes.seleccion = lista_imagenes.guardadas
-        elif estado == Estados.MODIFICADOS.value:
-            lista_imagenes.seleccion = lista_imagenes.modificadas
-        elif estado == Estados.NO_ALTERADOS.value:
-            lista_imagenes.seleccion = lista_imagenes.no_alteradas
-        elif estado == Estados.DEFECTUOSOS.value:
-            lista_imagenes.seleccion = lista_imagenes.defectuosas
-
-
-        # marcado de bordes según las dimensiones requeridas 
-        for imagen in lista_imagenes.seleccion:
-            imagen.verificar_imagen(dimensiones_elegidas)
 
         # reporte por snackbar 
         if len(lista_imagenes.total) > 0 and estado != None:
@@ -1182,16 +1217,16 @@ def main(pagina: ft.Page):
 
     # Creacion de imagenes con su propio contenedor por duplicado con distintas resoluciones
     # (Compartir una misma imagen en distintos contenedores funciona mal)
-    def cargar_imagenes(rutas: list[str]):
-        # Imagenes - objetos ft.Image con etiquetas leidas desde archivo TXT- baja resolucion
-        galeria = []
-        galeria = leer_imagenes_etiquetadas(
-            rutas,
-            ancho=128,
-            alto=128, 
-            redondeo=10
-            )
-        return galeria
+    # def cargar_imagenes(rutas: list[str]):
+    #     # Imagenes - objetos ft.Image con etiquetas leidas desde archivo TXT- baja resolucion
+    #     galeria = []
+    #     galeria = leer_imagenes_etiquetadas(
+    #         rutas,
+    #         ancho=128,
+    #         alto=128, 
+    #         redondeo=10
+    #         )
+    #     return galeria
 
 
     def apuntar_galeria(clave: str):
