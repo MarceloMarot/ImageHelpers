@@ -342,7 +342,6 @@ class ListaImagenes:
         # marcado de imagenes defectuosas según las dimensiones requeridas 
         for imagen in self.total:
             imagen.verificar_imagen(self.dimensiones_elegidas)
-            # print(f"{imagen.clave} {imagen.modificada}")  # BIEN  
 
 
     def clasificar_estados(self):
@@ -357,17 +356,12 @@ class ListaImagenes:
         self.no_alteradas = filtrar_estados(self.total, Estados.NO_ALTERADOS.value)
         self.defectuosas  = filtrar_estados(self.total, Estados.DEFECTUOSOS .value)
 
-        print("moddded: ",len(self.modificadas))  # bien
-
 
     def seleccionar_estado(self, estado)->list:
         """Selecciona las imágenes de una de las categorías internas. Actualiza las listas antes de asignar"""
         self.clasificar_estados()
 
-        print(f"[bold magenta]Opcion: '{estado}'")
-        print(f"[bold magenta]CTE   : '{Estados.MODIFICADOS.value}'")
         if estado == Estados.MODIFICADOS.value:
-            "opcion MODIFICADOS elegida"
             self.seleccion = self.modificadas
         elif estado == Estados.GUARDADOS.value:
             self.seleccion = self.guardadas
@@ -375,9 +369,6 @@ class ListaImagenes:
             self.seleccion = self.no_alteradas
         elif estado == Estados.DEFECTUOSOS.value:
             self.seleccion = self.defectuosas
-
-        if estado != Estados.MODIFICADOS.value:
-            print("OTRA opcion elegida")
 
         return self.seleccion
 
@@ -708,7 +699,10 @@ def main(pagina: ft.Page):
         if len(lista_imagenes.seleccion)>0:
             # prevencion de errores por posible clave inexistente
             # (suele pasar al cambiar las condiciones de filtrado de imagenes)
-            try:
+
+            indice = indice_clave(clave, lista_imagenes.seleccion)
+            # si la clave actual existe se transfiere la informacion de la botonera la imagen
+            if indice != None:
                 imagen_seleccionada = imagen_clave(clave, lista_imagenes.seleccion) 
 
                 # Se transfieren los tags de la botonera a las imagenes 
@@ -719,8 +713,14 @@ def main(pagina: ft.Page):
                 imagen_seleccionada.verificar_imagen(lista_imagenes.dimensiones_elegidas)
                 imagen_seleccionada.verificar_guardado_tags()
                 imagen_seleccionada.actualizar_estilo_estado()
-            except:
-                print(f"[bold red]Imagen '{clave}' no disponible en galeria")
+
+            # si dicha clave no se encuentra entonces se elige la primera calve de la lista actual
+            else:
+                
+                print(f"[bold green]Imagen '[bold yellow]{clave}' [bold green]no disponible en galeria")
+                clave = lista_imagenes.seleccion[0].clave
+                lista_imagenes.clave_actual = clave
+                print(f"[bold green]Imagen '[bold yellow]{clave}' [bold green]como sustituto\n")
 
 
         # actualizacion grafica de todos los componentes
@@ -852,6 +852,9 @@ def main(pagina: ft.Page):
 
     def cargar_galeria_componentes(  e: ft.ControlEvent | None = None ):
         """Muestra las imagenes encontradas y las asigna a los componentes de seleccion y etiquetado. Si no hay imágenes que mostra oculta y/o inhabilita componentes."""
+        
+        print("cargar_galeria_componentes")
+        
         # si se encuentran imagenes se visibilizan y configuran los controles
         filtrar_dimensiones_estados()   
         # agregado de todas las etiquetas al editor
@@ -905,6 +908,8 @@ def main(pagina: ft.Page):
     # Eventos galeria
     def click_imagen_galeria(e: ft.ControlEvent):
         """Este handler permite elegir una imagen desde la galeria y pasarla al selector de imagenes al tiempo que carga las etiquetas de archivo."""
+        
+        print("click_imagen_galeria")
         contenedor = e.control
         lista_imagenes.clave_actual = contenedor.clave
         # asigna imagen y estilo de bordes a la pestaña de etiquetado
@@ -927,7 +932,6 @@ def main(pagina: ft.Page):
     def filtrar_dimensiones_estados( e: ft.ControlEvent | None = None):
         """Selecciona solamente aquellas imagenes que cumplan con el tamaño y estado especificados."""
 
-
         # conversion de texto a tupla numerica de dimensiones de imagen elegida
         opcion = lista_dimensiones_desplegable.value
         dimensiones_elegidas = convertir_dimensiones_opencv(str(opcion))
@@ -940,17 +944,7 @@ def main(pagina: ft.Page):
 
         # Filtrado en base a los estados de las imagenes
         estado = lista_estados_desplegable.value
-        # lista_imagenes.seleccion = filtrar_estados(lista_imagenes.seleccion, estado)       # FIX (original)
-
-
-        # lista_imagenes.clasificar_estados()
         lista_imagenes.seleccionar_estado( estado )
-        print(f"[bold yellow]CAMBIO")
-        print(f"[bold green]guardadas: {len(lista_imagenes.guardadas)}")
-        print(f"[bold green]modificadas: {len(lista_imagenes.modificadas)}")
-        print(f"[bold green]no_alteradas: {len(lista_imagenes.no_alteradas)}")
-        print(f"[bold green]defectuosas: {len(lista_imagenes.defectuosas)}")
-
 
         # reporte por snackbar 
         if len(lista_imagenes.total) > 0 and estado != None:
@@ -1094,15 +1088,17 @@ def main(pagina: ft.Page):
             indice = indice_clave(clave, lista_imagenes.seleccion)
             # si la clave actual no se encuentra se toma la primera imagen disponible
             if indice == None:
-                ci = clave
-                imagen_elegida = lista_imagenes.seleccion[0] 
-                clave = imagen_elegida.clave 
-                cf = clave
-                print(f"[bold yellow]cambio imagen: de '{ci}' a '{cf}'")
+
+                print(f"[bold magenta]Imagen '[bold yellow]{clave}' [bold magenta]no disponible en galeria")
+                clave = lista_imagenes.seleccion[0].clave
+                lista_imagenes.clave_actual = clave
+                print(f"[bold magenta]Imagen '[bold yellow]{clave}' [bold magenta]como sustituto\n")
+
 
             # seleccion imagen
             imagen_elegida = imagen_clave(clave, lista_imagenes.seleccion)
-            etiquetador_imagen.setear_salida(imagen_elegida)
+
+            etiquetador_imagen.setear_salida(imagen_elegida) # original
             imagen_seleccion(imagen_elegida)
 
             columna_seleccion.visible = True
