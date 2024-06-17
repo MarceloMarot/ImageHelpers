@@ -309,6 +309,7 @@ class ListaImagenes:
 
         self.ruta_directorio : str = ""
         self.ruta_dataset : str = ""
+        self.ruta_descarte : str = "descartados/"
 
         self.dimensiones_elegidas :tuple[int, int, int]|None = None
 
@@ -341,6 +342,7 @@ class ListaImagenes:
         # marcado de imagenes defectuosas según las dimensiones requeridas 
         for imagen in self.total:
             imagen.verificar_imagen(self.dimensiones_elegidas)
+            # print(f"{imagen.clave} {imagen.modificada}")  # BIEN  
 
 
     def clasificar_estados(self):
@@ -351,15 +353,21 @@ class ListaImagenes:
 
         # creacion de listas internas
         self.guardadas    = filtrar_estados(self.total, Estados.GUARDADOS   .value)
-        self.modificados  = filtrar_estados(self.total, Estados.MODIFICADOS .value)
+        self.modificadas  = filtrar_estados(self.total, Estados.MODIFICADOS .value)
         self.no_alteradas = filtrar_estados(self.total, Estados.NO_ALTERADOS.value)
         self.defectuosas  = filtrar_estados(self.total, Estados.DEFECTUOSOS .value)
+
+        print("moddded: ",len(self.modificadas))  # bien
 
 
     def seleccionar_estado(self, estado)->list:
         """Selecciona las imágenes de una de las categorías internas. Actualiza las listas antes de asignar"""
         self.clasificar_estados()
+
+        print(f"[bold magenta]Opcion: '{estado}'")
+        print(f"[bold magenta]CTE   : '{Estados.MODIFICADOS.value}'")
         if estado == Estados.MODIFICADOS.value:
+            "opcion MODIFICADOS elegida"
             self.seleccion = self.modificadas
         elif estado == Estados.GUARDADOS.value:
             self.seleccion = self.guardadas
@@ -367,6 +375,9 @@ class ListaImagenes:
             self.seleccion = self.no_alteradas
         elif estado == Estados.DEFECTUOSOS.value:
             self.seleccion = self.defectuosas
+
+        if estado != Estados.MODIFICADOS.value:
+            print("OTRA opcion elegida")
 
         return self.seleccion
 
