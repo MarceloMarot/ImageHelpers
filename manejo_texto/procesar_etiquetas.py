@@ -22,7 +22,7 @@ class Etiquetas:
     @property
     def tags(self)->list[str]:
         """Devuelve la lista de etiquetas encontradas. Puede estar vacía."""
-        if self.datos != None:
+        if self.datos != None:                      # FIX
             return list( self.datos.keys() )
         else:
             return []
@@ -30,7 +30,7 @@ class Etiquetas:
     @property
     def tags_archivo(self)->list[str]:
         """Devuelve la lista de etiquetas de archivo encontradas. Puede estar vacía."""
-        if self.datos != None:
+        if self.datos_archivo != None:              # FIX
             return list( self.datos_archivo.keys() )
         else:
             return []
@@ -77,7 +77,7 @@ class Etiquetas:
         renglones_listas = lectura_archivo(self.ruta)
         self.datos = separar_etiquetas(renglones_listas, etiquetas_repetidas)
         # backup de data original , mismo formato
-        self.datos_archivo = self.datos 
+        self.datos_archivo = self.datos.copy()   #copia de datos 
 
 
     # escritura en disco
@@ -115,6 +115,18 @@ class Etiquetas:
                 self.datos[tag].append(nro_grupo)
             else:
                 self.datos[tag]=[nro_grupo]
+
+
+    def quitar_tags(self, tags: list[str]):
+        """Elimina las etiquetas indicadas desde el programa"""
+
+        
+        for tag in tags:
+            if tag in set(self.tags): 
+                del self.datos[tag]
+
+
+
 
 
 

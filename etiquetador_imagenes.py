@@ -5,7 +5,7 @@ from rich import print as print
 import flet as ft
 import pathlib
 
-from manejo_texto.procesar_etiquetas import Etiquetas, guardar_archivo, etiquetas2texto
+from manejo_texto.procesar_etiquetas import Etiquetas, guardar_archivo, etiquetas2texto, separar_etiquetas
 
 from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
 from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable, FilasBotonesEtiquetas
@@ -21,6 +21,7 @@ from enum import Enum
 class Tab(Enum):
     TAB_GALERIA = 0
     TAB_SELECCION = 1
+    TAB_GLOBAL = 2
 
 class Percentil(Enum):
     UMBRAL_1 = 0.2
@@ -131,7 +132,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
     def defectuosa(self)->bool:
         return self.__defectuosa
 
-    # def verificar_guardado_tags(self , tags: list[str] | None = None):
+
     def verificar_guardado_tags(self ):
         """Comprueba si las etiquetas actuales son las mismas que las guardadas en archivo de texto"""
         # verificacion guardado
@@ -140,6 +141,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         # verificacion modificaciones de etiquetado
         tags_imagen =  self.tags
         self.__modificada = True if set(tags_imagen) != set(tags_archivo) else False 
+
 
     @property
     def modificada(self)->bool:
@@ -380,6 +382,8 @@ def main(pagina: ft.Page):
 
     # estructura con data global
     dataset = Etiquetas("") 
+
+    tags_teclado = Etiquetas("") 
 
     lista_imagenes = ListaImagenes()
 
@@ -647,6 +651,121 @@ def main(pagina: ft.Page):
         icon = ft.icons.TAG_OUTLINED,
     )
 
+    ###################### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ###########################
+
+
+    def agregar_tags_seleccion(e):
+        # texto = e.control.value
+        texto = entrada_tags_agregar.value
+
+        # conversion a lista de etiquetas
+        texto = separar_etiquetas([texto])
+        # descarte de entradas vacias
+        if len(texto)== 0:
+            return
+
+        tags_teclado.agregar_tags(texto ,sobreescribir=True)
+        lista_tags = tags_teclado.tags
+
+        # agregado de tags a imagenes            
+        for imagen in lista_imagenes.seleccion:
+
+            imagen.agregar_tags(lista_tags)
+
+            # actualizacion bordes galeria
+            imagen.verificar_imagen(lista_imagenes.dimensiones_elegidas)
+            imagen.verificar_guardado_tags()
+            imagen.actualizar_estilo_estado()
+
+        # actualizacion grafica de todos los componentes
+        actualizar_componentes() 
+            
+        # renovar lista de etiquetas
+        estadisticas()
+
+
+
+    entrada_tags_agregar = ft.TextField(
+        label="Agregar tags a la seleccion - pulsar 'ENTER' para confirmar",
+        # on_change=textbox_changed,
+        on_submit=agregar_tags_seleccion,
+    )
+
+
+    def quitar_tags_seleccion(e):
+        # texto = e.control.value
+        texto = entrada_tags_quitar.value
+
+        # conversion a lista de etiquetas
+        texto = separar_etiquetas([texto])
+        # descarte de entradas vacias
+        if len(texto)== 0:
+            return
+
+        tags_teclado.agregar_tags(texto ,sobreescribir=True)
+        lista_tags = tags_teclado.tags
+
+        # quita de tags a imagenes        
+        for imagen in lista_imagenes.seleccion:
+
+            imagen.quitar_tags(lista_tags)
+
+            # actualizacion bordes galeria
+            imagen.verificar_imagen(lista_imagenes.dimensiones_elegidas)
+            imagen.verificar_guardado_tags()
+            imagen.actualizar_estilo_estado()
+
+        # actualizacion grafica de todos los componentes
+        actualizar_componentes() 
+            
+        # renovar lista de etiquetas
+        estadisticas()
+
+
+    entrada_tags_quitar = ft.TextField(
+        label="Quitar tags a la seleccion - pulsar 'ENTER' para confirmar",
+        # on_change=textbox_changed,
+        on_submit=quitar_tags_seleccion,
+    )
+
+
+    columna_edicion_seleccion = ft.Column(
+        controls=[
+            entrada_tags_agregar,
+            entrada_tags_quitar,
+            ],
+        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        expand=1,
+        visible=True,
+    )
+
+
+
+    fila_edicion_seleccion= ft.Row(
+        controls = [ 
+            # galeria, 
+            ft.VerticalDivider(), 
+            columna_edicion_seleccion,
+            ], 
+        spacing = 10, 
+        height = altura_tab_etiquetado
+    ) 
+
+
+    tab_global = ft.Tab(
+        text="Edicion global",
+        # content=fila_etiquetado_navegacion,
+        content=fila_edicion_seleccion,
+        visible=True,    
+        # icon = ft.icon.,
+    )
+
+
+    ###################### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ###########################
+
+
+
     # organizacion en pestañas
     pestanias = ft.Tabs(
         selected_index=Tab.TAB_GALERIA.value,
@@ -654,6 +773,7 @@ def main(pagina: ft.Page):
         tabs=[
             tab_galeria   ,
             tab_etiquetado,
+            tab_global
         ],
         expand=1,
     )
@@ -853,7 +973,7 @@ def main(pagina: ft.Page):
     def cargar_galeria_componentes(  e: ft.ControlEvent | None = None ):
         """Muestra las imagenes encontradas y las asigna a los componentes de seleccion y etiquetado. Si no hay imágenes que mostra oculta y/o inhabilita componentes."""
         
-        print("cargar_galeria_componentes")
+        # print("cargar_galeria_componentes")
         
         # si se encuentran imagenes se visibilizan y configuran los controles
         filtrar_dimensiones_estados()   
@@ -909,7 +1029,7 @@ def main(pagina: ft.Page):
     def click_imagen_galeria(e: ft.ControlEvent):
         """Este handler permite elegir una imagen desde la galeria y pasarla al selector de imagenes al tiempo que carga las etiquetas de archivo."""
         
-        print("click_imagen_galeria")
+        # print("click_imagen_galeria")
         contenedor = e.control
         lista_imagenes.clave_actual = contenedor.clave
         # asigna imagen y estilo de bordes a la pestaña de etiquetado
