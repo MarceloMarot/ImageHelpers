@@ -238,6 +238,12 @@ class FilasBotonesEtiquetas(ft.Column):
         boton_grupo.estado = True if activados >= desactivados else False
         # cambio de estado lógico de todo el grupo
         boton_grupo.estado = True if boton_grupo.estado == False else False 
+        # cambio de icono
+        if boton_grupo.estado :
+            boton_grupo.icon = ft.icons.DESELECT_ROUNDED
+        else:
+            boton_grupo.icon = ft.icons.SELECT_ALL_ROUNDED 
+
         for boton in self.__filas_botones[grupo].controls:
             boton.estado = boton_grupo.estado
         # actualizacion

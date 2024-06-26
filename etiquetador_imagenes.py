@@ -481,7 +481,8 @@ def main(pagina: ft.Page):
     galeria = GaleriaEtiquetado( estilos_galeria )
 
     filas_filtrado = FilasBotonesEtiquetas()
-    filas_filtrado.altura = pagina.height - 200
+    # filas_filtrado.altura = pagina.height - 200
+    filas_filtrado.altura = pagina.height - 330     #FIX
 
     filas_filtrado.lista_colores_activo=[
         ft.colors.BLUE_800,
@@ -542,6 +543,28 @@ def main(pagina: ft.Page):
     # contenedor_seleccion.estilo(estilos_seleccion[Estilos.ACTUAL.value])          # FIX
     contenedor_seleccion.bgcolor = ft.colors.LIGHT_BLUE
 
+
+    # Entradas de texto
+    entrada_tags_agregar = ft.TextField(
+        label="Agregar tags a las imágenes - pulsar 'ENTER' para confirmar",
+        # on_change=textbox_changed,
+        # on_submit=agregar_tags_seleccion,
+        height=50,
+        width=400
+    )
+
+    entrada_tags_quitar = ft.TextField(
+        label="Quitar tags a las imágenes - pulsar 'ENTER' para confirmar",
+        # on_change=textbox_changed,
+        # on_submit=quitar_tags_seleccion,
+        height=50,
+        width=400
+    )
+
+
+
+
+
     #############  MAQUETADO ############################
 
     # componentes repartidos en segmentos horizontales
@@ -566,23 +589,33 @@ def main(pagina: ft.Page):
         wrap = False
         )
 
-    galeria.expand = 1
+    galeria.expand = 2
+
 
     columna_etiquetas = ft.Column(
         controls=[    
             ft.Row(
-                [ texto_contador_tags, 
-                boton_reset_tags, 
+                [ texto_contador_tags],
+                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER
+            ),  
+            ft.Row(
+                [boton_reset_tags, 
                 boton_guardar_dataset],
                 alignment=ft.MainAxisAlignment.SPACE_EVENLY,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER
             ),  
             ft.Divider(height=7, thickness=1) ,
             filas_filtrado,
+            ft.Divider(height=7, thickness=1) ,
+            entrada_tags_agregar, #FIX
+            entrada_tags_quitar,
         ],
         visible=False,
         expand=1,
-        scroll=ft.ScrollMode.HIDDEN, 
+        # scroll=ft.ScrollMode.HIDDEN, 
+        scroll=ft.ScrollMode.AUTO, 
+        height=pagina.height - 330     #FIX
         )
 
 
@@ -613,7 +646,8 @@ def main(pagina: ft.Page):
         text="Galeria",
         content=fila_galeria_etiquetas,
         visible=True,
-        icon=ft.icons.GRID_VIEW_ROUNDED,
+        # icon=ft.icons.GRID_VIEW_ROUNDED,
+        icon=ft.icons.PHOTO_ROUNDED
         )
 
 
@@ -658,6 +692,7 @@ def main(pagina: ft.Page):
         # texto = e.control.value
         texto = entrada_tags_agregar.value
 
+
         # conversion a lista de etiquetas
         texto = separar_etiquetas([texto])
         # descarte de entradas vacias
@@ -684,12 +719,6 @@ def main(pagina: ft.Page):
         estadisticas()
 
 
-
-    entrada_tags_agregar = ft.TextField(
-        label="Agregar tags a la seleccion - pulsar 'ENTER' para confirmar",
-        # on_change=textbox_changed,
-        on_submit=agregar_tags_seleccion,
-    )
 
 
     def quitar_tags_seleccion(e):
@@ -722,44 +751,41 @@ def main(pagina: ft.Page):
         estadisticas()
 
 
-    entrada_tags_quitar = ft.TextField(
-        label="Quitar tags a la seleccion - pulsar 'ENTER' para confirmar",
-        # on_change=textbox_changed,
-        on_submit=quitar_tags_seleccion,
-    )
+    entrada_tags_agregar.on_submit = agregar_tags_seleccion
+    entrada_tags_quitar.on_submit  = quitar_tags_seleccion
 
 
-    columna_edicion_seleccion = ft.Column(
-        controls=[
-            entrada_tags_agregar,
-            entrada_tags_quitar,
-            ],
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        expand=1,
-        visible=True,
-    )
+    # columna_edicion_seleccion = ft.Column(
+    #     controls=[
+    #         entrada_tags_agregar,
+    #         entrada_tags_quitar,
+    #         ],
+    #     alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+    #     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    #     expand=1,
+    #     visible=True,
+    # )
 
 
 
-    fila_edicion_seleccion= ft.Row(
-        controls = [ 
-            # galeria, 
-            ft.VerticalDivider(), 
-            columna_edicion_seleccion,
-            ], 
-        spacing = 10, 
-        height = altura_tab_etiquetado
-    ) 
+    # fila_edicion_seleccion= ft.Row(
+    #     controls = [ 
+    #         # galeria, 
+    #         ft.VerticalDivider(), 
+    #         columna_edicion_seleccion,
+    #         ], 
+    #     spacing = 10, 
+    #     height = altura_tab_etiquetado
+    # ) 
 
 
-    tab_global = ft.Tab(
-        text="Edicion global",
-        # content=fila_etiquetado_navegacion,
-        content=fila_edicion_seleccion,
-        visible=True,    
-        # icon = ft.icon.,
-    )
+    # tab_global = ft.Tab(
+    #     text="Edicion global",
+    #     # content=fila_etiquetado_navegacion,
+    #     content=fila_edicion_seleccion,
+    #     visible=True,    
+    #     icon = ft.icons.APPS_OUTAGE_ROUNDED
+    # )
 
 
     ###################### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ###########################
@@ -773,7 +799,7 @@ def main(pagina: ft.Page):
         tabs=[
             tab_galeria   ,
             tab_etiquetado,
-            tab_global
+            # tab_global
         ],
         expand=1,
     )
@@ -1466,8 +1492,10 @@ def main(pagina: ft.Page):
         # redimensionado etiquetador:
         etiquetador_imagen.base   = int(pagina.width/2)
         etiquetador_imagen.altura = pagina.height - 180
-        filas_filtrado.altura = pagina.height - 240
-        columna_etiquetas.height = pagina.height - 180
+        # filas_filtrado.altura = pagina.height - 240
+        filas_filtrado.altura = pagina.height - 400
+        # columna_etiquetas.height = pagina.height - 180
+        columna_etiquetas.height = pagina.height 
         columna_etiquetas.update()
         etiquetador_imagen.update()
         fila_controles.width = pagina.width 
