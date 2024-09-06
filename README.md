@@ -188,13 +188,55 @@ Esto ahorra de espacio en disco alrededor de 600MB; sin embargo también obliga 
 
 ## Problemas conocidos
 
-### Windows Defender
+### Windows 
+
+#### Windows Defender
 
 - Los antivirus (particularmente: Windows Defender),al intentar construir los ejecutables, pueden dar alerta de troyanos  y hacer fracasar la compilación. Esto se debe al acceso del programa recortador de imagenes a la carpeta de archivos temporales, lo cual es un mecanismo habitual de los troyanos. 
 
     Este problema puede solucionarse eligiendo la opción "Permitir" de Windows Defender cuando el aviso emergente aparezca y repetir la compilación. También puede ayudar el intentar ejecutar los otros programas del pack.
 
 
+### Linux
+
+#### libmpv.so.1 faltante 
+
+Flet requiere la biblioteca **libmpv** en su versión `libmpv.so.1`.
+La biblioteca puede instalarse con:
+
+```bash
+sudo apt install libmpv-dev mpv     # caso Ubuntu / Debian
+sudo dnf mpv-devel.x86_64 mpv       # caso Fedora
+```
+Se necesita verificar la existencia de la biblioteca en el sistema :
+
+```bash
+# caso Ubuntu / Debian
+cd /usr/lib
+ls *mpv*
+
+# caso Fedora
+cd /usr/lib64
+ls *mpv*
+```
+El resultado suele ser algo como:
+
+```bash
+libmpv.so libmpv.so.2 libmpv.so.2.1.0
+```
+
+Entonces el problema puede solucionarse creando un **enlace simbólico** llamado `libmpv.so.1` dentro de la carpeta `/usr/lib/` y/o `/usr/lib64/`, dependiendo de la distribución usada:
+
+```bash
+$ sudo ln -s    /usr/lib/libmpv.so     /usr/lib/libmpv.so.1      # caso Ubuntu / Debian
+$ sudo ln -s    /usr/lib64/libmpv.so   /usr/lib64/libmpv.so.1    # Caso Fedora
+```
+Más información:
+
+[GitHub - Flet 0.20.0 mpv error #2639](https://github.com/flet-dev/flet/discussions/2639)
+
+[GitHub Gist - Installing the packages and creating a symbolic link](https://gist.github.com/luizmarinhojr/f5ede39febd53fceb757eef88618f2b8)
+
 ### Gestores de entorno
 
-- Los gestores de entornos de ejecución como Conda pueden interferir con la instalación debido a que este proyecto usa por defecto el entorno virtual VENV.
+Los gestores de entornos de ejecución como Conda pueden interferir con la instalación debido a que este proyecto usa por defecto el entorno virtual VENV.

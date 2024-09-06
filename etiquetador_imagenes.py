@@ -18,33 +18,17 @@ from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from enum import Enum
 
-class Tab(Enum):
-    TAB_GALERIA = 0
-    TAB_SELECCION = 1
-    TAB_GLOBAL = 2
 
-class Percentil(Enum):
-    UMBRAL_1 = 0.2
-    UMBRAL_2 = 0.4
-    UMBRAL_3 = 0.6
-    UMBRAL_4 = 0.8
-    UMBRAL_5 = 1
+from componentes.galeria_etiquetado import Contenedor_Etiquetado, actualizar_estilo_estado
+from componentes.galeria_etiquetado import galeria_etiquetador
+from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, filtrar_estados, leer_imagenes_etiquetadas
+from componentes.clasificador import clasificador_imagenes
 
-class Estados(Enum):
-    "Eumeracion de estados de las imagenes"
-    TODOS = "todas"
-    GUARDADOS = "guardadas"
-    MODIFICADOS = "modificadas"
-    NO_ALTERADOS = "no alteradas" 
-    DEFECTUOSOS = "defectuosas"
 
-tupla_estados = (
-    Estados.TODOS.value,
-    Estados.GUARDADOS.value,
-    Estados.MODIFICADOS.value,
-    Estados.NO_ALTERADOS.value,
-    Estados.DEFECTUOSOS.value,
-)
+from comunes.constantes import Tab, Percentil, Estados, tupla_estados
+
+
+lista_imagenes = clasificador_imagenes
 
 
 texto_ayuda = """
@@ -72,309 +56,10 @@ Teclas rápidas:
 
 
 
-def nada( e ):
-    pass
-
-
-class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
-    def __init__(
-        self, 
-        ruta: str, 
-        ancho:int=768, 
-        alto:int=768, 
-        redondeo:int=0 , 
-        estilos: dict[str, Estilo_Contenedor] = estilos_galeria,
-        ):
-        Etiquetas.__init__(self, ruta)
-        Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
-        self.__modificada = False
-        self.__guardada = False
-        self.__defectuosa = False
-        self.__dimensiones: tuple[int, ...]|None
-        self.leer_dimensiones()
-        self.verificar_imagen()   
-        self.verificar_guardado_tags()
-        self.estilos = estilos
-        self.tooltip = ruta
-
-
-    def buscar_etiqueta(self, etiqueta: str):
-        """Este método busca la etiqueta en la imagen y si la encuentra devuelve 'True'."""
-        return True if etiqueta in self.tags else False
-            
-
-    def leer_dimensiones(self):
-        """Este método lee altura, base y numero de canales de la imagen"""
-        dim = dimensiones_imagen(self.ruta)  
-        self.__dimensiones = dim if dim!=None else None 
-
-
-    @property
-    def dimensiones(self):
-        return self.__dimensiones
-
-
-    def verificar_imagen(self, dimensiones: tuple[int, int, int] | None=None)->bool|None:
-        """Este método verifica dimensiones de archivo.
-        Devuelve 'True' si las dimensiones coinciden.
-        """
-        if dimensiones == None:
-            self.__defectuosa = False
-            return None
-        if self.__dimensiones != dimensiones:
-            self.__defectuosa = True
-            return False
-        else:
-            self.__defectuosa = False
-            return True
-
-    @property
-    def defectuosa(self)->bool:
-        return self.__defectuosa
-
-
-    def verificar_guardado_tags(self ):
-        """Comprueba si las etiquetas actuales son las mismas que las guardadas en archivo de texto"""
-        # verificacion guardado
-        tags_archivo  = self.tags_archivo 
-        self.__guardada = False if len(tags_archivo)==0 else True
-        # verificacion modificaciones de etiquetado
-        tags_imagen =  self.tags
-        self.__modificada = True if set(tags_imagen) != set(tags_archivo) else False 
-
-
-    @property
-    def modificada(self)->bool:
-        return self.__modificada 
-
-    @property
-    def guardada(self)->bool:
-        return self.__guardada 
-
-
-    def guardar_archivo(self)->bool:
-        """
-        Escribe/rescribe el archivo de etiquetas si éstas no coinciden con las guardadas en la estructura. 
-        Si 'tags' es 'None' se usan las etiquetas almacenadas en el objeto imagen.
-        """
-        guardado_exitoso = False
-        self.verificar_guardado_tags()
-        if self.modificada:
-            guardado_exitoso = self.guardar(self.tags)
-            self.__guardada = guardado_exitoso
-        return guardado_exitoso
-
-
-    def actualizar_estilo_estado(self):
-        actualizar_estilo_estado([self], self.estilos)
-        
-
-class GaleriaEtiquetado( Galeria):
-    def __init__(self, estilos: dict):
-        super().__init__()
-        self.estilos = estilos
-
-
-    def cargar_imagenes(self, 
-        imagenes: list[ContImag ], 
-        cuadricula=True):
-        super().cargar_imagenes(imagenes, cuadricula)
-        self.imagenes = imagenes
-        self.actualizar_estilos( )  
-
-
-    def actualizar_estilos(self):
-        actualizar_estilo_estado( self.imagenes, self.estilos)    
-
-
-def actualizar_estilo_estado( contenedores: list[Contenedor_Etiquetado], estilos : dict ):
-    """Cambia colores y espesor de bordes de imagen según los flags de estado internos."""
-    for contenedor in contenedores:
-        if contenedor.defectuosa :     
-            estilo = estilos[Estilos.ERRONEO.value]     
-        elif contenedor.modificada :
-            estilo = estilos[Estilos.MODIFICADO.value]
-        elif contenedor.guardada :
-            estilo = estilos[Estilos.GUARDADO.value]
-        else: 
-            estilo = estilos[Estilos.DEFAULT.value]
-        contenedor.estilo( estilo )
-
-
-def leer_imagenes_etiquetadas(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0, nro_inicial=0):
-    """Esta funcion crea lee imagenes desde archivo y crea una lista de objetos ft.Image.
-    También asigna una clave ('key') a cada una.
-    """
-    contenedores = [] 
-    for i in range(nro_inicial, nro_inicial + len(rutas_imagen)):
-        contenedor = Contenedor_Etiquetado(rutas_imagen[i], ancho, alto, redondeo)
-        contenedor.clave = f"imag_{i}"
-        contenedores.append(contenedor)
-    return contenedores
-
-
-def filtrar_dimensiones(
-    lista_imagenes: list[Contenedor_Etiquetado], 
-    dimensiones: tuple[int, int, int] | None = None
-    )->list[Contenedor_Etiquetado]:
-    """Devuelve solamente los contenedores de imagen con el ancho y altura correctos.
-    Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
-    """
-    imagenes_filtradas = []
-    for imagen in lista_imagenes: 
-        if dimensiones == imagen.dimensiones:    
-            imagenes_filtradas.append(imagen)
-
-    if dimensiones != None:
-        # imagenes con dimensiones correctas
-        return imagenes_filtradas
-    else:
-        # caso sin dimensiones especificas
-        return lista_imagenes
-
-
-def filtrar_etiquetas(
-    lista_imagenes: list[Contenedor_Etiquetado], 
-    etiquetas: list[str]  = [],
-    )->list[Contenedor_Etiquetado]:
-    imagenes_filtradas = []
-    """
-    Devuelve las imagenes que tengan al menos una etiqueta de entrada. 
-    Si no hay etiquetas de entrada se devuelve toda la lista de entrada.
-    """
-    if etiquetas == []:
-        # imagenes con dimensiones correctas
-        return lista_imagenes
-    else:
-        for etiqueta in etiquetas:
-            for imagen in lista_imagenes:
-                # se previene repetir imagenes
-                if imagen not in imagenes_filtradas:
-                    if etiqueta in imagen.tags:
-                        imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
-
-    
-def filtrar_estados(
-    lista_imagenes: list[Contenedor_Etiquetado], 
-    estado: str | None ,
-    )->list[Contenedor_Etiquetado]:
-    """Devuelve solamente los contenedores con el estado de etiquetado pedido."""
-    imagen : Contenedor_Etiquetado
-    imagenes_filtradas = []
-    # imagenes guardadas (sin cambios)
-    if estado == Estados.GUARDADOS.value:
-        for imagen in lista_imagenes: 
-            if imagen.guardada and not imagen.modificada:    
-                imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
-    # imagenes tags modificados (todas)
-    elif estado == Estados.MODIFICADOS.value:
-        for imagen in lista_imagenes:   
-            if imagen.modificada:    
-                imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
-    # no etiquetadas ni guardadas
-    elif estado == Estados.NO_ALTERADOS.value:
-        for imagen in lista_imagenes: 
-            if not imagen.modificada and not imagen.guardada: 
-                imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
-    # defectuosas por uno u otro motivo
-    elif estado == Estados.DEFECTUOSOS.value:
-        for imagen in lista_imagenes: 
-            if imagen.defectuosa: 
-                imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
-    else:
-        # no filtrado
-        return lista_imagenes
 
 
 
 imagenes_tags = []
-
-
-
-class ListaImagenes:
-    """Clase pensada para gestionar las listas de imágenes de forma centralizada y ordenada."""
-    def __init__(self):
-        self.total          : list = []
-        self.seleccion      : list = []
-        self.guardadas      : list = []
-        self.modificadas    : list = []
-        self.no_alteradas   : list = []
-        self.defectuosas    : list = []
-
-        # clave de la imagen actualmente seleccionada
-        self.clave_actual: str= ""
-
-        self.ruta_directorio : str = ""
-        self.ruta_dataset : str = ""
-        self.ruta_descarte : str = "descartados/"
-
-        self.dimensiones_elegidas :tuple[int, int, int]|None = None
-
-
-    def cargar_imagenes(self, 
-        rutas_imagen: list[str], 
-        estilo=estilos_galeria[Estilos.DEFAULT.value],
-        agregado=False
-        ):
-
-        nro_inicial = 0 if agregado==False else len(self.total)
-        lista = []
-        lista = leer_imagenes_etiquetadas(
-            rutas_imagen,
-            ancho    = estilo.width,
-            alto     = estilo.height, 
-            redondeo = estilo.border_radius,
-            nro_inicial=nro_inicial
-            )
-        if agregado:
-            # modo agregado
-            self.total.append(lista)
-        else:
-            # modo reinicio
-            self.total = lista
-
-
-    def verificar_imagenes(self):
-        """Marca como defectuosas aquellas imágenes que no cumplan con los requisitos."""
-        # marcado de imagenes defectuosas según las dimensiones requeridas 
-        for imagen in self.total:
-            imagen.verificar_imagen(self.dimensiones_elegidas)
-
-
-    def clasificar_estados(self):
-        """Reparte las imagenes de la estructura en base a sus banderines de estado."""
-
-        # actualizacion de posibles imagenes defectuosas
-        self.verificar_imagenes()
-
-        # creacion de listas internas
-        self.guardadas    = filtrar_estados(self.total, Estados.GUARDADOS   .value)
-        self.modificadas  = filtrar_estados(self.total, Estados.MODIFICADOS .value)
-        self.no_alteradas = filtrar_estados(self.total, Estados.NO_ALTERADOS.value)
-        self.defectuosas  = filtrar_estados(self.total, Estados.DEFECTUOSOS .value)
-
-
-    def seleccionar_estado(self, estado)->list:
-        """Selecciona las imágenes de una de las categorías internas. Actualiza las listas antes de asignar"""
-        self.clasificar_estados()
-
-        if estado == Estados.MODIFICADOS.value:
-            self.seleccion = self.modificadas
-        elif estado == Estados.GUARDADOS.value:
-            self.seleccion = self.guardadas
-        elif estado == Estados.NO_ALTERADOS.value:
-            self.seleccion = self.no_alteradas
-        elif estado == Estados.DEFECTUOSOS.value:
-            self.seleccion = self.defectuosas
-
-        return self.seleccion
-
-
 
 
 
@@ -385,7 +70,7 @@ def main(pagina: ft.Page):
 
     tags_teclado = Etiquetas("") 
 
-    lista_imagenes = ListaImagenes()
+
 
 
 
@@ -393,13 +78,16 @@ def main(pagina: ft.Page):
     ############# COMPONENTES GRAFICOS ######################## 
     
     # caja de ayuda
+    # Tooltip obsoleto desde la V0.24
+    # """
     ayuda_emergente = ft.Tooltip(
         message=texto_ayuda,
-        content=ft.Text("Ayuda extra",size=18, width=100),
+        content=ft.Text("Ayuda extra",size=18, width=100),        # FIX
         padding=20,
         border_radius=10,
         text_style=ft.TextStyle(size=15, color=ft.colors.WHITE),
     )
+    # """
 
 
     # Botones apertura de ventana emergente
@@ -416,14 +104,17 @@ def main(pagina: ft.Page):
         # tooltip="Abre la carpeta con todas las imágenes a etiquetar.",
     )
 
+    # Tooltip obsoleto desde la V0.24
+    # """"
     tooltip_carpeta = ft.Tooltip(
         message="Abre la carpeta con todas las imágenes a etiquetar.",
         # content=ft.Text("Ayuda extra",size=18, width=100),
-        content=boton_carpeta,
+        content=[boton_carpeta],                                      # FIX
         padding=20,
         border_radius=10,
         text_style=ft.TextStyle(size=15, color=ft.colors.WHITE),
     )
+    # """
 
     boton_dataset = ft.ElevatedButton(
         text = "Abrir dataset",
@@ -478,7 +169,6 @@ def main(pagina: ft.Page):
     # Componentes especiales
     etiquetador_imagen = EtiquetadorBotones()
 
-    galeria = GaleriaEtiquetado( estilos_galeria )
 
     filas_filtrado = FilasBotonesEtiquetas()
     # filas_filtrado.altura = pagina.height - 200
@@ -549,7 +239,7 @@ def main(pagina: ft.Page):
         label="Agregar tags a las imágenes - pulsar 'ENTER' para confirmar",
         # on_change=textbox_changed,
         # on_submit=agregar_tags_seleccion,
-        height=50,
+        height=60,
         width=400
     )
 
@@ -557,7 +247,7 @@ def main(pagina: ft.Page):
         label="Quitar tags a las imágenes - pulsar 'ENTER' para confirmar",
         # on_change=textbox_changed,
         # on_submit=quitar_tags_seleccion,
-        height=50,
+        height=60,
         width=400
     )
 
@@ -569,8 +259,8 @@ def main(pagina: ft.Page):
 
     # componentes repartidos en segmentos horizontales
     fila_controles_apertura = ft.Row(
-        # [boton_carpeta, boton_dataset],
-        [tooltip_carpeta, boton_dataset],
+        [boton_carpeta, boton_dataset],
+        # [tooltip_carpeta, boton_dataset],
         width = 350,
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
         wrap = True
@@ -589,7 +279,7 @@ def main(pagina: ft.Page):
         wrap = False
         )
 
-    galeria.expand = 2
+    galeria_etiquetador.expand = 1
 
 
     columna_etiquetas = ft.Column(
@@ -620,7 +310,7 @@ def main(pagina: ft.Page):
 
 
     fila_galeria_etiquetas = ft.Row(
-        [galeria, ft.VerticalDivider(), columna_etiquetas],
+        [galeria_etiquetador, ft.VerticalDivider(), columna_etiquetas],
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
         vertical_alignment=ft.CrossAxisAlignment.START,
         wrap = False,
@@ -632,7 +322,7 @@ def main(pagina: ft.Page):
         fila_controles_apertura,
         fila_controles_dimensiones,
         fila_controles_etiquetas,
-        ayuda_emergente,
+        # ayuda_emergente,
         ],
         wrap=True,
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
@@ -693,6 +383,7 @@ def main(pagina: ft.Page):
         texto = entrada_tags_agregar.value
 
 
+
         # conversion a lista de etiquetas
         texto = separar_etiquetas([texto])
         # descarte de entradas vacias
@@ -724,6 +415,7 @@ def main(pagina: ft.Page):
     def quitar_tags_seleccion(e):
         # texto = e.control.value
         texto = entrada_tags_quitar.value
+
 
         # conversion a lista de etiquetas
         texto = separar_etiquetas([texto])
@@ -1126,6 +818,11 @@ def main(pagina: ft.Page):
         actualizar_componentes(e)    
         cerrar_dialogo(e)  
 
+        entrada_tags_quitar.value = ""
+        entrada_tags_quitar.update()
+        entrada_tags_agregar.value = ""
+        entrada_tags_agregar.update()
+
 
     # confirmar_cambios
     def abrir_dialogo_guardado(e:ft.ControlEvent | None = None):
@@ -1168,6 +865,11 @@ def main(pagina: ft.Page):
         pagina.dialog.open = False
         pagina.update()
 
+        entrada_tags_quitar.value = ""
+        entrada_tags_quitar.update()
+        entrada_tags_agregar.value = ""
+        entrada_tags_agregar.update()
+
 
     def confirmar_cierre_programa(e:ft.ControlEvent):
         if e.data == "close":
@@ -1209,10 +911,13 @@ def main(pagina: ft.Page):
 
     # prevencion decierre directo de aplicacion
     pagina.window_prevent_close = True
+    # pagina.window_on_event = confirmar_cierre_programa
     pagina.on_window_event = confirmar_cierre_programa
 
     def ventana_emergente(pagina:ft.Page, texto: str):
+        # show_snack_bar obsoleta desde la v0.23 
         pagina.show_snack_bar(
+        # pagina.open(
             ft.SnackBar(ft.Text(texto), open=True, show_close_icon=True)
         )
 
@@ -1225,9 +930,9 @@ def main(pagina: ft.Page):
         """
         clave = lista_imagenes.clave_actual
         # actualizar galeria
-        galeria.cargar_imagenes( lista_imagenes.seleccion )
-        galeria.eventos(click = click_imagen_galeria)
-        galeria.update()
+        galeria_etiquetador.cargar_imagenes( lista_imagenes.seleccion )
+        galeria_etiquetador.eventos(click = click_imagen_galeria)
+        galeria_etiquetador.update()
 
         if len(lista_imagenes.seleccion)>0:
             # busqueda imagen
@@ -1368,29 +1073,17 @@ def main(pagina: ft.Page):
 
     ###########  FUNCIONES LOCALES #################
 
-    # Creacion de imagenes con su propio contenedor por duplicado con distintas resoluciones
-    # (Compartir una misma imagen en distintos contenedores funciona mal)
-    # def cargar_imagenes(rutas: list[str]):
-    #     # Imagenes - objetos ft.Image con etiquetas leidas desde archivo TXT- baja resolucion
-    #     galeria = []
-    #     galeria = leer_imagenes_etiquetadas(
-    #         rutas,
-    #         ancho=128,
-    #         alto=128, 
-    #         redondeo=10
-    #         )
-    #     return galeria
-
 
     def apuntar_galeria(clave: str):
         """Funcion auxiliar para buscar y mostrar la imagen requerida en base a su clave ('key')."""
-        galeria.scroll_to(key=clave, duration=500)
+        galeria_etiquetador.scroll_to(key=clave, duration=500)
 
 
     def reset_tags_filtros(e: ft.ControlEvent):
         """Restaura todos los botones de filtrado."""
         filas_filtrado.agregar_tags([], True)
         filtrar_todas_etiquetas(e)
+
 
     def guardar_tags_archivo(e: ft.FilePickerResultEvent):
         if e.path :
@@ -1504,7 +1197,7 @@ def main(pagina: ft.Page):
 
     ###########  ASIGNACION HANDLERS #################
 
-    pagina.on_resize = redimensionar_controles
+    pagina.on_resized = redimensionar_controles
     
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
     lista_estados_desplegable.on_change = cargar_galeria_componentes     
@@ -1538,7 +1231,7 @@ def main(pagina: ft.Page):
      
     ancho_pagina = 1400
 
-    galeria.ancho = ancho_pagina 
+    galeria_etiquetador.ancho = ancho_pagina 
     fila_controles.width = ancho_pagina 
 
     etiquetador_imagen.altura = altura_tab_etiquetado

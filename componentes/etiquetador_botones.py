@@ -7,8 +7,12 @@ def nada( e ):
     pass
 
 
+
+
 class BotonBiestable(ft.ElevatedButton):
-    def __init__(self, texto: str, color_false=ft.colors.BLUE_50, color_true=ft.colors.BLUE_50 ):
+# class BotonBiestable(ft.CupertinoButton):
+    # def __init__(self, texto: str, color_false=ft.colors.BLUE_50, color_true=ft.colors.BLUE_50 ):
+    def __init__(self, texto: str, color_false=ft.colors.BLUE_50, color_true=ft.colors.RED_800 ):
         self.__valor = False
         self.color_true  = color_true
         self.color_false = color_false
@@ -17,7 +21,13 @@ class BotonBiestable(ft.ElevatedButton):
             # key=texto,          # asignacion automatica
             key=texto.split("(")[0].strip(), # (acomoda la clave a ciertas entradas )
             bgcolor= self.color_false,
-            on_click=self.click
+            on_click=self.click,
+
+            # border_radius=ft.border_radius.all(15),
+            # height=40,
+            # padding=5,
+            # width=150,
+
             )
         # manejador opcional para el click 
         self.click_boton = nada
@@ -27,6 +37,9 @@ class BotonBiestable(ft.ElevatedButton):
     def click(self,e: ft.ControlEvent):
         valor = True if self.__valor==False else False
         self.estado = valor
+        # print(self.estado)      # FIX
+        # print(self.bgcolor)      # FIX
+        # print(self.color)      # FIX
         self.click_boton(e)     # (no hace nada a menos que se programe)
 
     @property
@@ -566,6 +579,8 @@ def main(page: ft.Page):
 
     page.add( etiquetador)
 
+    page.add( BotonBiestable("soy un boton sobrante"))
+
     dataset     = Etiquetas(archivo_dataset) 
     etiquetas   = Etiquetas(archivo_etiquetas) 
 
@@ -633,7 +648,7 @@ def main(page: ft.Page):
         etiquetador.altura = page.height
         etiquetador.update()
 
-    page.on_resize = redimensionar_botonera
+    page.on_resized = redimensionar_botonera
 
 
     page.title = "Botones etiquetado"
