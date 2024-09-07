@@ -16,7 +16,7 @@ from sistema_archivos.buscar_extension import buscar_imagenes, listar_directorio
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
-from enum import Enum
+# from enum import Enum
 
 
 from componentes.galeria_etiquetado import Contenedor_Etiquetado, actualizar_estilo_estado
@@ -25,10 +25,24 @@ from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, fil
 from componentes.clasificador import clasificador_imagenes
 
 
+from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
+
+from vistas.columna_etiquetas import entrada_tags_agregar,entrada_tags_quitar
+from vistas.columna_etiquetas import filas_filtrado, columna_etiquetas, texto_contador_tags
+from vistas.columna_etiquetas import boton_reset_tags, boton_guardar_dataset
+
+from vistas.columna_seleccion import texto_imagen, texto_ruta_data,texto_ruta_titulo,texto_tags_data,texto_tags_titulo
+from vistas.columna_seleccion import columna_seleccion, contenedor_seleccion
+
+
 from comunes.constantes import Tab, Percentil, Estados, tupla_estados
 
 
+
+
+
 lista_imagenes = clasificador_imagenes
+
 
 
 texto_ayuda = """
@@ -129,26 +143,7 @@ def main(pagina: ft.Page):
         ),
         tooltip="Elige el archivo TXT con las etiquetas a agregar.\nCada renglón se interpreta como un 'grupo' de tags."
     )
-    
-    boton_guardar_dataset = ft.ElevatedButton(
-        text = f"Guardar como dataset",
-        bgcolor = ft.colors.AMBER_800,
-        icon=ft.icons.SAVE,
-        color = ft.colors.WHITE,
-        ## manejador
-        on_click=lambda _: dialogo_guardado_tags.save_file(
-            dialog_title = "Guardar archivo de dataset (formato .txt)",
-            allowed_extensions=["txt"],
-            ),
-        tooltip="Guarda en archivo de texto las etiquetas encontradas. Si el archivo ya existe lo sobreescribe.",
-        )
 
-    boton_reset_tags = ft.ElevatedButton(
-        text = f"Deseleccionar etiquetas...",
-        bgcolor = ft.colors.BLUE_800,
-        color = ft.colors.WHITE,
-        tooltip="Reinicia la selección de etiquetas encontradas."
-        )
 
     boton_filtrar_dimensiones = BotonBiestable("Filtrar", ft.colors.BROWN_100, ft.colors.BROWN_800)
     boton_filtrar_dimensiones.color = ft.colors.WHITE
@@ -168,90 +163,11 @@ def main(pagina: ft.Page):
 
     # Componentes especiales
     etiquetador_imagen = EtiquetadorBotones()
-
-
-    filas_filtrado = FilasBotonesEtiquetas()
-    # filas_filtrado.altura = pagina.height - 200
-    filas_filtrado.altura = pagina.height - 330     #FIX
-
-    filas_filtrado.lista_colores_activo=[
-        ft.colors.BLUE_800,
-        ft.colors.GREEN_800,
-        ft.colors.YELLOW_800,
-        ft.colors.ORANGE_800,
-        ft.colors.RED_800,
-        ]
-    filas_filtrado.lista_colores_pasivo=[
-        ft.colors.BLUE_100,
-        ft.colors.GREEN_100,
-        ft.colors.YELLOW_100,
-        ft.colors.ORANGE_100,
-        ft.colors.RED_100,
-        ]
+    
 
     # textos
     texto_dimensiones = ft.Text("Dimensiones\nimagen:")
     texto_estados = ft.Text("Estado\netiquetado:")
-    texto_imagen= ft.Text(
-        "(Titulo)",
-        size=20,
-        # height=30, 
-        weight=ft.FontWeight.BOLD,
-        text_align=ft.TextAlign.CENTER,
-        )
-    texto_ruta_titulo = ft.Text(
-        "(ruta))",
-        weight=ft.FontWeight.BOLD,
-        text_align=ft.TextAlign.CENTER,
-        )
-    texto_ruta_data = ft.Text(
-        "(ruta_completa))",
-        weight=ft.FontWeight.NORMAL,
-        text_align=ft.TextAlign.CENTER,
-        )
-    texto_tags_titulo = ft.Text(
-        "(nro tags)",
-        weight=ft.FontWeight.BOLD,
-        text_align=ft.TextAlign.CENTER,
-        )
-    texto_tags_data = ft.Text(
-        "(tags)",
-        weight=ft.FontWeight.NORMAL,
-        text_align=ft.TextAlign.CENTER,
-        )
-    
-    texto_contador_tags= ft.Text(
-        "Tags encontados:",
-        size=15,
-        weight=ft.FontWeight.BOLD,
-        text_align=ft.TextAlign.START,
-        )
-    
-    # contenedor visualizador de la imagen actual
-    contenedor_seleccion = Contenedor_Imagen("",512,512)
-    contenedor_seleccion.estilo(estilos_seleccion[Estilos.DEFAULT.value])
-    # contenedor_seleccion.estilo(estilos_seleccion[Estilos.ACTUAL.value])          # FIX
-    contenedor_seleccion.bgcolor = ft.colors.LIGHT_BLUE
-
-
-    # Entradas de texto
-    entrada_tags_agregar = ft.TextField(
-        label="Agregar tags a las imágenes - pulsar 'ENTER' para confirmar",
-        # on_change=textbox_changed,
-        # on_submit=agregar_tags_seleccion,
-        height=60,
-        width=400
-    )
-
-    entrada_tags_quitar = ft.TextField(
-        label="Quitar tags a las imágenes - pulsar 'ENTER' para confirmar",
-        # on_change=textbox_changed,
-        # on_submit=quitar_tags_seleccion,
-        height=60,
-        width=400
-    )
-
-
 
 
 
@@ -281,32 +197,6 @@ def main(pagina: ft.Page):
 
     galeria_etiquetador.expand = 1
 
-
-    columna_etiquetas = ft.Column(
-        controls=[    
-            ft.Row(
-                [ texto_contador_tags],
-                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER
-            ),  
-            ft.Row(
-                [boton_reset_tags, 
-                boton_guardar_dataset],
-                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER
-            ),  
-            ft.Divider(height=7, thickness=1) ,
-            filas_filtrado,
-            ft.Divider(height=7, thickness=1) ,
-            entrada_tags_agregar, #FIX
-            entrada_tags_quitar,
-        ],
-        visible=False,
-        expand=1,
-        # scroll=ft.ScrollMode.HIDDEN, 
-        scroll=ft.ScrollMode.AUTO, 
-        height=pagina.height - 330     #FIX
-        )
 
 
     fila_galeria_etiquetas = ft.Row(
@@ -341,20 +231,7 @@ def main(pagina: ft.Page):
         )
 
 
-    columna_seleccion = ft.Column(
-        [
-            texto_imagen, 
-            contenedor_seleccion, 
-            texto_ruta_titulo, 
-            texto_ruta_data, 
-            texto_tags_titulo,
-            texto_tags_data,
-        ],
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        expand=True,
-        visible=False,
-    )
+    columna_seleccion.visible = False
 
 
     # pestaña de etiquetado y navegacion de imagenes
@@ -447,41 +324,7 @@ def main(pagina: ft.Page):
     entrada_tags_quitar.on_submit  = quitar_tags_seleccion
 
 
-    # columna_edicion_seleccion = ft.Column(
-    #     controls=[
-    #         entrada_tags_agregar,
-    #         entrada_tags_quitar,
-    #         ],
-    #     alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-    #     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-    #     expand=1,
-    #     visible=True,
-    # )
-
-
-
-    # fila_edicion_seleccion= ft.Row(
-    #     controls = [ 
-    #         # galeria, 
-    #         ft.VerticalDivider(), 
-    #         columna_edicion_seleccion,
-    #         ], 
-    #     spacing = 10, 
-    #     height = altura_tab_etiquetado
-    # ) 
-
-
-    # tab_global = ft.Tab(
-    #     text="Edicion global",
-    #     # content=fila_etiquetado_navegacion,
-    #     content=fila_edicion_seleccion,
-    #     visible=True,    
-    #     icon = ft.icons.APPS_OUTAGE_ROUNDED
-    # )
-
-
     ###################### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ###########################
-
 
 
     # organizacion en pestañas
@@ -642,7 +485,8 @@ def main(pagina: ft.Page):
             rutas_imagen = buscar_imagenes(directorio)
         
             # lectura de imagenes del directorio
-            lista_imagenes.cargar_imagenes(rutas_imagen) 
+            # lista_imagenes.cargar_imagenes(rutas_imagen) 
+            lista_imagenes.leer_imagenes(rutas_imagen) 
             # lista_imagenes.total = cargar_imagenes(rutas_imagen) 
 
             # reinicio de las listas de imagenes
@@ -865,10 +709,18 @@ def main(pagina: ft.Page):
         pagina.dialog.open = False
         pagina.update()
 
-        entrada_tags_quitar.value = ""
-        entrada_tags_quitar.update()
-        entrada_tags_agregar.value = ""
-        entrada_tags_agregar.update()
+        # entrada_tags_quitar.value = ""
+        # entrada_tags_quitar.update()
+        # entrada_tags_agregar.value = ""
+        # entrada_tags_agregar.update()
+
+
+    
+
+
+    # j = 0
+
+    # from vistas.dialogos import dialogo_salida_progama
 
 
     def confirmar_cierre_programa(e:ft.ControlEvent):
@@ -900,7 +752,8 @@ def main(pagina: ft.Page):
                             ),
                     ],
                     actions_alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                )
+                    )
+
                 pagina.dialog.open = True
                 pagina.update()
 
@@ -908,10 +761,16 @@ def main(pagina: ft.Page):
     def cerrar_programa(e:ft.ControlEvent | None = None):
         pagina.window_destroy()
 
+    
+    """
+    dialogo_salida_progama = 
+    """
+
+
+
 
     # prevencion decierre directo de aplicacion
     pagina.window_prevent_close = True
-    # pagina.window_on_event = confirmar_cierre_programa
     pagina.on_window_event = confirmar_cierre_programa
 
     def ventana_emergente(pagina:ft.Page, texto: str):
@@ -959,9 +818,11 @@ def main(pagina: ft.Page):
 
         else:
             # ocultamiento de componentes graficos
-            columna_etiquetas.visible = False
+            # columna_etiquetas.visible = False   # FIX
+            columna_etiquetas.visible = True
             columna_etiquetas.update()
-            columna_seleccion.visible = False
+            # columna_seleccion.visible = False   # FIX
+            columna_seleccion.visible = True
             columna_seleccion.update()
             etiquetador_imagen.habilitado = False
             etiquetador_imagen.update()
@@ -1006,7 +867,8 @@ def main(pagina: ft.Page):
             columna_etiquetas.update()
         else:
             ventana_emergente(pagina, f"Filtrado por etiquetas deshabilitado.")
-            columna_etiquetas.visible = False
+            # columna_etiquetas.visible = False
+            columna_etiquetas.visible = True
             columna_etiquetas.update()
 
         # actualizacion grafica
@@ -1213,10 +1075,12 @@ def main(pagina: ft.Page):
     
     pestanias.on_change = cambio_pestanias
 
+
     # Clase para manejar dialogos de archivo y de carpeta
-    dialogo_directorio      = ft.FilePicker(on_result = resultado_directorio )
-    dialogo_dataset         = ft.FilePicker(on_result = resultado_dataset)
-    dialogo_guardado_tags   = ft.FilePicker(on_result = guardar_tags_archivo)
+    dialogo_directorio   .on_result = resultado_directorio 
+    dialogo_dataset      .on_result = resultado_dataset
+    dialogo_guardado_tags.on_result = guardar_tags_archivo
+
 
     # Añadido de diálogos a la página
     pagina.overlay.extend([

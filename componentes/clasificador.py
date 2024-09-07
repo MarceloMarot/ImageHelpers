@@ -100,6 +100,9 @@ def filtrar_estados(
         return lista_imagenes
 
 
+# Clases
+
+
 class ClasificadorImagenes:
     """Clase pensada para gestionar las listas de imágenes de forma centralizada y ordenada."""
     def __init__(self):
@@ -120,7 +123,8 @@ class ClasificadorImagenes:
         self.dimensiones_elegidas :tuple[int, int, int]|None = None
 
 
-    def cargar_imagenes(self, 
+    # def cargar_imagenes(self, 
+    def leer_imagenes(self, 
         rutas_imagen: list[str], 
         estilo=estilos_galeria[Estilos.DEFAULT.value],
         agregado=False
@@ -177,15 +181,6 @@ class ClasificadorImagenes:
             self.seleccion = self.defectuosas
 
         return self.seleccion
-
-
-
-
-
-
-
-
-
 
 
 

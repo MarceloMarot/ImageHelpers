@@ -1,4 +1,4 @@
-__pycache__/
+__pycache__
 
 botones.py
 calculadora.py
@@ -7,11 +7,12 @@ pruebas/
 *.txt
 *.spec
 
-build/
-dist/
-distribuibles/
-virtual_env/
-recortes/
+build
+dist
+distribuibles
+virtual_env
+venv
+recortes
 
 
 
