@@ -37,39 +37,12 @@ from vistas.columna_seleccion import columna_seleccion, contenedor_seleccion
 
 from comunes.constantes import Tab, Percentil, Estados, tupla_estados
 
-
+from vistas.menu_etiquetador import boton_carpeta, boton_filtrar_dimensiones, boton_dataset, tooltip_carpeta, ayuda_emergente
+from vistas.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
 
 
 
 lista_imagenes = clasificador_imagenes
-
-
-
-texto_ayuda = """
-Bordes de imagen:
-  Cada color de borde da informacion sobre el estado del etiquetado o de las dimensiones de cada imagen.
-  Opciones:
-  - Celeste: no etiquetado
-  - Verde: tags guardados
-  - Amarillo: tags agregados o modificados
-  - Rojo: dimensiones incorrectas
-
-Teclado: 
-Permite cambiar rápidamente la imagen seleccionada. 
-Teclas rápidas:
-- Home:  primera imagen;
-- RePag | A : imagen anterior;
-- AvPag | D : imagen siguiente;
-- End:   última imagen.
-- Space : restaurar etiquetas (imagen actual)
--  W    : guardar etiquetas   (imagen actual)
-- Flechas : navegar por el menú
-- ENTER   : abrir ventanas y listas 
-- Escape  : salir de ventanas emergentes, deseleccionar opciones
-"""
-
-
-
 
 
 
@@ -94,106 +67,19 @@ def main(pagina: ft.Page):
     # caja de ayuda
     # Tooltip obsoleto desde la V0.24
     # """
-    ayuda_emergente = ft.Tooltip(
-        message=texto_ayuda,
-        content=ft.Text("Ayuda extra",size=18, width=100),        # FIX
-        padding=20,
-        border_radius=10,
-        text_style=ft.TextStyle(size=15, color=ft.colors.WHITE),
-    )
-    # """
 
 
-    # Botones apertura de ventana emergente
-    boton_carpeta = ft.ElevatedButton(
-        text = "Abrir imágenes",
-        # icon=ft.icons.FOLDER_OPEN,
-        icon=ft.icons.FOLDER,
-        bgcolor=ft.colors.RED,
-        color= ft.colors.WHITE,
-        ## manejador
-        on_click=lambda _: dialogo_directorio.get_directory_path(
-            dialog_title="Elegir carpeta con todas las imágenes"
-        ),
-        # tooltip="Abre la carpeta con todas las imágenes a etiquetar.",
-    )
-
-    # Tooltip obsoleto desde la V0.24
-    # """"
-    tooltip_carpeta = ft.Tooltip(
-        message="Abre la carpeta con todas las imágenes a etiquetar.",
-        # content=ft.Text("Ayuda extra",size=18, width=100),
-        content=[boton_carpeta],                                      # FIX
-        padding=20,
-        border_radius=10,
-        text_style=ft.TextStyle(size=15, color=ft.colors.WHITE),
-    )
-    # """
-
-    boton_dataset = ft.ElevatedButton(
-        text = "Abrir dataset",
-        icon=ft.icons.FILE_OPEN,
-        bgcolor=ft.colors.BLUE,
-        color= ft.colors.WHITE,
-        ## manejador
-        on_click=lambda _: dialogo_dataset.pick_files(
-            dialog_title= "Elegir archivo de dataset (formato .txt)",
-            allowed_extensions=["txt"],
-            allow_multiple=False,
-        ),
-        tooltip="Elige el archivo TXT con las etiquetas a agregar.\nCada renglón se interpreta como un 'grupo' de tags."
-    )
-
-
-    boton_filtrar_dimensiones = BotonBiestable("Filtrar", ft.colors.BROWN_100, ft.colors.BROWN_800)
-    boton_filtrar_dimensiones.color = ft.colors.WHITE
-    boton_filtrar_dimensiones.tooltip = "Selecciona las imágenes que cumplan con las dimensiones indicadas."
-
-    boton_filtrar_etiquetas = BotonBiestable("Panel filtrado", ft.colors.PURPLE_100, ft.colors.PURPLE_800)
-    boton_filtrar_etiquetas.color = ft.colors.WHITE
-    boton_filtrar_etiquetas.tooltip = "Abre el panel de filtrado con todas las etiquetas detectadas.\nRequiere que haya al menos una imagen cargada."
 
     boton_guardar = ft.FloatingActionButton(
         icon=ft.icons.SAVE, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todas las etiquetas cambiadas."
     )
 
-    # listas desplegable para elegir opciones de imagen 
-    lista_dimensiones_desplegable = crear_lista_desplegable(tupla_resoluciones, ancho=120)
-    lista_estados_desplegable = crear_lista_desplegable(tupla_estados, ancho=120)
-
     # Componentes especiales
     etiquetador_imagen = EtiquetadorBotones()
     
 
-    # textos
-    texto_dimensiones = ft.Text("Dimensiones\nimagen:")
-    texto_estados = ft.Text("Estado\netiquetado:")
-
-
-
     #############  MAQUETADO ############################
 
-    # componentes repartidos en segmentos horizontales
-    fila_controles_apertura = ft.Row(
-        [boton_carpeta, boton_dataset],
-        # [tooltip_carpeta, boton_dataset],
-        width = 350,
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        wrap = True
-        )
-    fila_controles_dimensiones = ft.Row(
-        [texto_dimensiones, lista_dimensiones_desplegable, boton_filtrar_dimensiones],
-        width = 400,
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        wrap = False
-        )
-
-    fila_controles_etiquetas = ft.Row(
-        [texto_estados, lista_estados_desplegable, boton_filtrar_etiquetas],
-        width = 400,
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        wrap = False
-        )
 
     galeria_etiquetador.expand = 1
 
@@ -207,18 +93,8 @@ def main(pagina: ft.Page):
         expand=True,
         )
 
-    # Fila de botones para abrir carpetas y leer archivos
-    fila_controles = ft.Row([
-        fila_controles_apertura,
-        fila_controles_dimensiones,
-        fila_controles_etiquetas,
-        # ayuda_emergente,
-        ],
-        wrap=True,
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        )
 
-    pagina.add(fila_controles)
+    pagina.add(fila_controles)  
     pagina.add(ft.Divider(height=7, thickness=1))
 
     #pestaña de galeria
@@ -699,8 +575,8 @@ def main(pagina: ft.Page):
                         "No", 
                         on_click=cerrar_dialogo, 
                         autofocus=True ),
-                ],
-            )
+                    ],
+                )
             # mantener dialogo abierto
             pagina.dialog.open = True
             pagina.update()
@@ -709,20 +585,8 @@ def main(pagina: ft.Page):
         pagina.dialog.open = False
         pagina.update()
 
-        # entrada_tags_quitar.value = ""
-        # entrada_tags_quitar.update()
-        # entrada_tags_agregar.value = ""
-        # entrada_tags_agregar.update()
 
-
-    
-
-
-    # j = 0
-
-    # from vistas.dialogos import dialogo_salida_progama
-
-
+    # """
     def confirmar_cierre_programa(e:ft.ControlEvent):
         if e.data == "close":
             # conteo imagenes con cambios sin guardar
@@ -757,16 +621,11 @@ def main(pagina: ft.Page):
                 pagina.dialog.open = True
                 pagina.update()
 
+    # """
+
 
     def cerrar_programa(e:ft.ControlEvent | None = None):
         pagina.window_destroy()
-
-    
-    """
-    dialogo_salida_progama = 
-    """
-
-
 
 
     # prevencion decierre directo de aplicacion
@@ -833,7 +692,8 @@ def main(pagina: ft.Page):
     
         global imagenes_tags
 
-        if boton_filtrar_etiquetas.estado:
+        # if boton_filtrar_etiquetas.estado:
+        if True:
             # lectura de tags seleccionados
             set_etiquetas = set()
             tags_conteo = filas_filtrado.leer_botones()
@@ -1064,11 +924,11 @@ def main(pagina: ft.Page):
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
     lista_estados_desplegable.on_change = cargar_galeria_componentes     
     boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes   
-    boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
+    # boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
     boton_reset_tags.on_click = reset_tags_filtros
     # inicializacion opciones
     boton_filtrar_dimensiones.estado = False
-    boton_filtrar_etiquetas.estado = False
+    # boton_filtrar_etiquetas.estado = False
 
     # propiedad de pagina: handler del teclado elegido
     pagina.on_keyboard_event = desplazamiento_teclado
