@@ -165,6 +165,35 @@ def main(pagina: ft.Page):
 
 
 
+
+
+
+
+
+
+    ###################### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ###########################
+
+
+    # organizacion en pestañas
+    pestanias = ft.Tabs(
+        selected_index=Tab.TAB_GALERIA.value,
+        animation_duration=500,
+        tabs=[
+            tab_galeria   ,
+            tab_etiquetado,
+            # tab_global
+        ],
+        expand=1,
+    )
+
+    # Añadido componentes (todos juntos)
+    pagina.add(pestanias)
+    # boton para guardar cambios 
+    pagina.floating_action_button = boton_guardar
+
+    ############## HANDLERS ##################################
+
+
     def quitar_tags_seleccion(e):
         # texto = e.control.value
         texto = entrada_tags_quitar.value
@@ -195,32 +224,6 @@ def main(pagina: ft.Page):
         # renovar lista de etiquetas
         estadisticas()
 
-
-    entrada_tags_agregar.on_submit = agregar_tags_seleccion
-    entrada_tags_quitar.on_submit  = quitar_tags_seleccion
-
-
-    ###################### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ###########################
-
-
-    # organizacion en pestañas
-    pestanias = ft.Tabs(
-        selected_index=Tab.TAB_GALERIA.value,
-        animation_duration=500,
-        tabs=[
-            tab_galeria   ,
-            tab_etiquetado,
-            # tab_global
-        ],
-        expand=1,
-    )
-
-    # Añadido componentes (todos juntos)
-    pagina.add(pestanias)
-    # boton para guardar cambios 
-    pagina.floating_action_button = boton_guardar
-
-    ############## HANDLERS ##################################
 
 
     def click_botones_tags(e: ft.ControlEvent ):
@@ -422,45 +425,9 @@ def main(pagina: ft.Page):
         # actualizacion grafica
         actualizar_componentes()
 
-    
-    def imagen_seleccion(imagen: Contenedor_Etiquetado):
-        """Actualiza imagen y estilo de bordes del selector de imagen"""
-        contenedor_seleccion.ruta_imagen = imagen.ruta
- 
-        if imagen.defectuosa :   
-            estilo = Estilos.ERRONEO.value  
-        elif imagen.modificada :  
-            estilo = Estilos.MODIFICADO.value  
-        elif imagen.guardada :
-            estilo = Estilos.GUARDADO.value  
-        else: 
-            estilo = Estilos.DEFAULT.value  
 
-        contenedor_seleccion.estilo(estilos_seleccion[estilo]) 
-        contenedor_seleccion.update()
+    from vistas.columna_seleccion import imagen_seleccion
 
-
-        #textos informativos
-        ruta = pathlib.Path(imagen.ruta)
-        nombre = ruta.name
-        indice = lista_imagenes.seleccion.index(imagen)
-        tags = imagen.tags
-        n = len(lista_imagenes.seleccion)
-        texto_imagen.value = f"{indice+1}/{n} - '{nombre}'"
-        texto_imagen.visible = True 
-        texto_imagen.update()
-        texto_ruta_titulo.value = f"Ruta archivo:"
-        texto_ruta_titulo.visible = True
-        texto_ruta_titulo.update()
-        texto_ruta_data.value = f"{ruta}"
-        texto_ruta_data.visible = True
-        texto_ruta_data.update()
-        texto_tags_titulo.value = f"Tags imagen ({len(tags)}):"
-        texto_tags_titulo.visible = True
-        texto_tags_titulo.update()
-        texto_tags_data.value = f"{etiquetas2texto(tags)}"
-        texto_tags_data.visible = True
-        texto_tags_data.update()
 
 
     # Eventos galeria
@@ -919,6 +886,9 @@ def main(pagina: ft.Page):
 
     ###########  ASIGNACION HANDLERS #################
 
+    entrada_tags_agregar.on_submit = agregar_tags_seleccion
+    entrada_tags_quitar.on_submit  = quitar_tags_seleccion
+
     pagina.on_resized = redimensionar_controles
     
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
@@ -926,6 +896,7 @@ def main(pagina: ft.Page):
     boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes   
     # boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
     boton_reset_tags.on_click = reset_tags_filtros
+    
     # inicializacion opciones
     boton_filtrar_dimensiones.estado = False
     # boton_filtrar_etiquetas.estado = False

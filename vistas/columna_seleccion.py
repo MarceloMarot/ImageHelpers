@@ -1,8 +1,18 @@
+import pathlib
 import flet as ft
 
 
 from componentes.galeria_imagenes import  Contenedor_Imagen
 from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
+
+from componentes.galeria_etiquetado import Contenedor_Etiquetado
+
+from componentes.clasificador import clasificador_imagenes
+
+
+from manejo_texto.procesar_etiquetas import etiquetas2texto
+
+from sistema_archivos.rutas import ruta_relativa_usuario
 
 
 
@@ -58,6 +68,53 @@ columna_seleccion = ft.Column(
     # expand=1,
     visible=True,
     )
+
+
+
+def imagen_seleccion(imagen: Contenedor_Etiquetado):
+    """Actualiza imagen y estilo de bordes del selector de imagen"""
+    contenedor_seleccion.ruta_imagen = imagen.ruta
+
+    if imagen.defectuosa :   
+        estilo = Estilos.ERRONEO.value  
+    elif imagen.modificada :  
+        estilo = Estilos.MODIFICADO.value  
+    elif imagen.guardada :
+        estilo = Estilos.GUARDADO.value  
+    else: 
+        estilo = Estilos.DEFAULT.value  
+
+    contenedor_seleccion.estilo(estilos_seleccion[estilo]) 
+    contenedor_seleccion.update()
+
+
+    #textos informativos
+    # ruta = pathlib.Path(imagen.ruta)
+    # nombre = ruta.name
+    nombre = pathlib.Path(imagen.ruta).name
+    ruta = ruta_relativa_usuario(imagen.ruta)
+    # indice = lista_imagenes.seleccion.index(imagen)
+    indice = clasificador_imagenes.seleccion.index(imagen)
+    tags = imagen.tags
+    # n = len(lista_imagenes.seleccion)
+    n = len(clasificador_imagenes.seleccion)
+    texto_imagen.value = f"{indice+1}/{n} - '{nombre}'"
+    texto_imagen.visible = True 
+    texto_imagen.update()
+    texto_ruta_titulo.value = f"Ruta archivo:"
+    texto_ruta_titulo.visible = True
+    texto_ruta_titulo.update()
+    texto_ruta_data.value = f"{ruta}"
+    texto_ruta_data.visible = True
+    texto_ruta_data.update()
+    texto_tags_titulo.value = f"Tags imagen ({len(tags)}):"
+    texto_tags_titulo.visible = True
+    texto_tags_titulo.update()
+    texto_tags_data.value = f"{etiquetas2texto(tags)}"
+    texto_tags_data.visible = True
+    texto_tags_data.update()
+
+
 
 
 

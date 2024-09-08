@@ -6,6 +6,7 @@ from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from comunes.constantes import Tab, Percentil, Estados
 
+from sistema_archivos.rutas import ruta_relativa_usuario
 
 
 def nada( e ):
@@ -31,7 +32,8 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         self.verificar_imagen()   
         self.verificar_guardado_tags()
         self.estilos = estilos
-        self.tooltip = ruta
+        # self.tooltip = ruta
+        self.tooltip = ruta_relativa_usuario(ruta)
 
 
     def buscar_etiqueta(self, etiqueta: str):
