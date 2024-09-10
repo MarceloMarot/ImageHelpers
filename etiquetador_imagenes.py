@@ -29,7 +29,7 @@ from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardad
 
 from vistas.columna_etiquetas import entrada_tags_agregar,entrada_tags_quitar
 from vistas.columna_etiquetas import filas_filtrado, columna_etiquetas, texto_contador_tags
-from vistas.columna_etiquetas import boton_reset_tags, boton_guardar_dataset
+from vistas.columna_etiquetas import boton_reset_tags, boton_guardar_dataset, boton_reordenar_tags
 
 from vistas.columna_seleccion import texto_imagen, texto_ruta_data,texto_ruta_titulo,texto_tags_data,texto_tags_titulo
 from vistas.columna_seleccion import columna_seleccion, contenedor_seleccion
@@ -793,6 +793,31 @@ def main(pagina: ft.Page):
         ventana_emergente(pagina, texto)
 
 
+
+    def cambiar_orden_tags(e: ft.ControlEvent|None = None):
+        """Reordena los botones de filtrado correspondientes a cada etiqueta detectada. """
+
+        # Cambio de orden en caso de pulsarse el boton pertinente
+        if e != None:
+
+            if boton_reordenar_tags.valor == True:
+
+                boton_reordenar_tags.valor = False
+                boton_reordenar_tags.text = f"Orden alfabético"
+                boton_reordenar_tags.bgcolor = ft.colors.GREEN_800
+                boton_reordenar_tags.update()
+
+            else:
+
+                boton_reordenar_tags.valor = True
+                boton_reordenar_tags.text = f"Orden por percentiles"
+                boton_reordenar_tags.bgcolor = ft.colors.GREEN_ACCENT_700
+                boton_reordenar_tags.update()
+
+        estadisticas()
+
+
+
     def estadisticas()->dict:
         """Detecta todas las etiquetas usadas en las imagenes y cuenta cuantas repeticiones tiene cada una.
         Crea tambien los botones de filtrado correspondientes a cada una."""
@@ -820,45 +845,67 @@ def main(pagina: ft.Page):
         boton_reset_tags.text = f"Deseleccionar tags"
         # boton_reset_tags.text = f"Deseleccionar etiquetas ({nro_tags} en total)"
 
+        # etiquetas con numero de repeticiones agregado
         tags_contadas = []
         for tag in lista_tags:
             tags_contadas.append(f"{tag}  ({conteo_etiquetas[tag]})")
 
-        # objeto auxiliar vacio para almacenar etiquetass    
+        # objeto auxiliar vacio para almacenar etiquetas    
         etiquetas_marcadas = Etiquetas()
 
         tags_grupo = []
 
-        # reparto en grupos y coloreo de botones en base a percentiles del 20%
-        umbral_1 = int(nro_tags * Percentil.UMBRAL_1.value)
-        umbral_2 = int(nro_tags * Percentil.UMBRAL_2.value)
-        umbral_3 = int(nro_tags * Percentil.UMBRAL_3.value)
-        umbral_4 = int(nro_tags * Percentil.UMBRAL_4.value)
-        umbral_5 = int(nro_tags * Percentil.UMBRAL_5.value)
 
-        for i in range(0, umbral_1):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
+        if boton_reordenar_tags.valor == True:
+            
+            # ordenamiento por orden alfabetico, un grupo por letra
 
-        tags_grupo = []
-        for i in range(umbral_1, umbral_2):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
+            letras = []
+            set_letras = set()
+            for tag in tags_contadas:
+                set_letras.add(tag[0])
 
-        tags_grupo = []
-        for i in range(umbral_2, umbral_3):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
+            letras = list(set_letras)
+            letras.sort()
 
-        tags_grupo = []
-        for i in range(umbral_3, umbral_4):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
+            for tag in tags_contadas:
+                n = letras.index(tag[0])
+                etiquetas_marcadas.agregar_tags([tag], n)
 
-        tags_grupo = []
-        for i in range(umbral_4, umbral_5):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
+
+        else:
+
+            # reparto en grupos y coloreo de botones en base a percentiles del 20%
+            umbral_1 = int(nro_tags * Percentil.UMBRAL_1.value)
+            umbral_2 = int(nro_tags * Percentil.UMBRAL_2.value)
+            umbral_3 = int(nro_tags * Percentil.UMBRAL_3.value)
+            umbral_4 = int(nro_tags * Percentil.UMBRAL_4.value)
+            umbral_5 = int(nro_tags * Percentil.UMBRAL_5.value)
+
+            for i in range(0, umbral_1):
+                tags_grupo.append(tags_contadas[i])
+            etiquetas_marcadas.agregar_tags(tags_grupo)
+
+            tags_grupo = []
+            for i in range(umbral_1, umbral_2):
+                tags_grupo.append(tags_contadas[i])
+            etiquetas_marcadas.agregar_tags(tags_grupo)
+
+            tags_grupo = []
+            for i in range(umbral_2, umbral_3):
+                tags_grupo.append(tags_contadas[i])
+            etiquetas_marcadas.agregar_tags(tags_grupo)
+
+            tags_grupo = []
+            for i in range(umbral_3, umbral_4):
+                tags_grupo.append(tags_contadas[i])
+            etiquetas_marcadas.agregar_tags(tags_grupo)
+
+            tags_grupo = []
+            for i in range(umbral_4, umbral_5):
+                tags_grupo.append(tags_contadas[i])
+            etiquetas_marcadas.agregar_tags(tags_grupo)
+
 
         filas_filtrado.leer_dataset(etiquetas_marcadas, False)
         filas_filtrado.agregar_tags([], True)
@@ -897,6 +944,9 @@ def main(pagina: ft.Page):
     # boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
     boton_reset_tags.on_click = reset_tags_filtros
     
+
+    boton_reordenar_tags.on_click = cambiar_orden_tags
+
     # inicializacion opciones
     boton_filtrar_dimensiones.estado = False
     # boton_filtrar_etiquetas.estado = False

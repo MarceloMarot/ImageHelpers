@@ -44,6 +44,16 @@ filas_filtrado.lista_colores_pasivo=[
     ]
 
 
+boton_reordenar_tags = ft.ElevatedButton(
+    text = f"Orden alfabético",
+    bgcolor = ft.colors.GREEN_800,
+    color = ft.colors.WHITE,
+    # tooltip="Reinicia la selección de etiquetas encontradas."
+    )
+
+boton_reordenar_tags.valor = False
+
+
 boton_guardar_dataset = ft.ElevatedButton(
     text = f"Guardar como dataset",
     bgcolor = ft.colors.AMBER_800,
@@ -58,7 +68,7 @@ boton_guardar_dataset = ft.ElevatedButton(
     )
 
 boton_reset_tags = ft.ElevatedButton(
-    text = f"Deseleccionar etiquetas...",
+    text = f"Deseleccionar etiquetas",
     bgcolor = ft.colors.BLUE_800,
     color = ft.colors.WHITE,
     tooltip="Reinicia la selección de etiquetas encontradas."
@@ -79,7 +89,9 @@ columna_etiquetas = ft.Column(
             vertical_alignment=ft.CrossAxisAlignment.CENTER
         ),  
         ft.Row(
-            [boton_reset_tags, 
+            # [boton_reset_tags, 
+            [boton_reordenar_tags,
+            boton_reset_tags, 
             boton_guardar_dataset],
             alignment=ft.MainAxisAlignment.SPACE_EVENLY,
             vertical_alignment=ft.CrossAxisAlignment.CENTER
