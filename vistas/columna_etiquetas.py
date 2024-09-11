@@ -65,7 +65,7 @@ boton_reordenar_tags = ft.ElevatedButton(
     # tooltip="Reinicia la selección de etiquetas encontradas."
     )
 
-boton_reordenar_tags.valor = False
+boton_reordenar_tags.valor = True
 
 
 boton_guardar_dataset = ft.ElevatedButton(
