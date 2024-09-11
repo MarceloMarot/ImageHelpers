@@ -41,6 +41,7 @@ from comunes.constantes import Tab, Percentil, Estados, tupla_estados
 
 from vistas.menu_etiquetador import boton_carpeta, boton_filtrar_dimensiones, boton_dataset, tooltip_carpeta, ayuda_emergente
 from vistas.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
+from vistas.menu_etiquetador import actualizar_lista_dimensiones
 
 
 lista_imagenes = clasificador_imagenes
@@ -273,6 +274,7 @@ def main(pagina: ft.Page):
         columna_etiquetas.update()
    
 
+    '''
     def actualizar_lista_dimensiones():
         """Reduce la lista de dimensiones seleccionables en base al tamaño detectado de las imagenes de galeria."""
         # acceso a elementos globales
@@ -290,7 +292,8 @@ def main(pagina: ft.Page):
                 lista_resoluciones.append(resolucion)
 
         opciones_lista_desplegable(lista_dimensiones_desplegable, tuple(lista_resoluciones))
-        lista_dimensiones_desplegable.update()
+        # lista_dimensiones_desplegable.update()
+    '''
 
 
     def crear_botones_etiquetador():
@@ -372,6 +375,7 @@ def main(pagina: ft.Page):
             lista_imagenes.clave_actual = clave
             # se descartan los tamaños de imagen no disponibles
             actualizar_lista_dimensiones() 
+            lista_dimensiones_desplegable.update()
             # relectura del archivo dataset (puede no existir)
             dataset.ruta = lista_imagenes.ruta_dataset
             dataset.leer_archivo()

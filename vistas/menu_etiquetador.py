@@ -7,6 +7,10 @@ from comunes.constantes import Tab, Percentil, Estados, tupla_estados
 
 from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 
+from componentes.clasificador import clasificador_imagenes
+lista_imagenes = clasificador_imagenes
+
+
 texto_ayuda = """
 Bordes de imagen:
   Cada color de borde da informacion sobre el estado del etiquetado o de las dimensiones de cada imagen.
@@ -136,3 +140,25 @@ fila_controles = ft.Row([
     wrap=True,
     alignment=ft.MainAxisAlignment.SPACE_EVENLY,
     )
+
+
+# funciones
+
+def actualizar_lista_dimensiones():
+    """Reduce la lista de dimensiones seleccionables en base al tamaño detectado de las imagenes de galeria."""
+    # acceso a elementos globales
+
+    lista_resoluciones = [tupla_resoluciones[0]] # opcion "No filtrar" agregada
+    set_dimensiones = set()
+
+    for imagen in lista_imagenes.seleccion:
+        dimensiones = imagen.dimensiones
+        set_dimensiones.add(dimensiones)
+
+    for resolucion in tupla_resoluciones:
+        resolucion_conv = convertir_dimensiones_opencv(str(resolucion))
+        if resolucion_conv in set_dimensiones:
+            lista_resoluciones.append(resolucion)
+
+    opciones_lista_desplegable(lista_dimensiones_desplegable, tuple(lista_resoluciones))
+    # lista_dimensiones_desplegable.update()
