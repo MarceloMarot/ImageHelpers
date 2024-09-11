@@ -28,6 +28,7 @@ from componentes.clasificador import clasificador_imagenes
 from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 
 from vistas.columna_etiquetas import entrada_tags_agregar,entrada_tags_quitar
+from vistas.columna_etiquetas import entrada_tags_buscar
 from vistas.columna_etiquetas import filas_filtrado, columna_etiquetas, texto_contador_tags
 from vistas.columna_etiquetas import boton_reset_tags, boton_guardar_dataset, boton_reordenar_tags
 
@@ -128,14 +129,52 @@ def main(pagina: ft.Page):
         icon = ft.icons.TAG_OUTLINED,
     )
 
-    ###################### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ###########################
+
+
+    # organizacion en pestañas
+    pestanias = ft.Tabs(
+        selected_index=Tab.TAB_GALERIA.value,
+        animation_duration=500,
+        tabs=[
+            tab_galeria   ,
+            tab_etiquetado,
+            # tab_global
+        ],
+        expand=1,
+    )
+
+    # Añadido componentes (todos juntos)
+    pagina.add(pestanias)
+    # boton para guardar cambios 
+    pagina.floating_action_button = boton_guardar
+
+    ############## HANDLERS ##################################
+
+
+
+    import re
+
+
+
+
+
+    def buscar_tags_seleccion(e):
+
+        # texto = e.control.value
+        texto = entrada_tags_buscar.value
+        # descarte de entradas vacias
+        if len(texto) == 0:
+            return
+
+        # actualizacion de las etiquetas encontradas
+        estadisticas()
+
+
 
 
     def agregar_tags_seleccion(e):
         # texto = e.control.value
         texto = entrada_tags_agregar.value
-
-
 
         # conversion a lista de etiquetas
         texto = separar_etiquetas([texto])
@@ -162,36 +201,6 @@ def main(pagina: ft.Page):
         # renovar lista de etiquetas
         estadisticas()
 
-
-
-
-
-
-
-
-
-
-    ###################### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ###########################
-
-
-    # organizacion en pestañas
-    pestanias = ft.Tabs(
-        selected_index=Tab.TAB_GALERIA.value,
-        animation_duration=500,
-        tabs=[
-            tab_galeria   ,
-            tab_etiquetado,
-            # tab_global
-        ],
-        expand=1,
-    )
-
-    # Añadido componentes (todos juntos)
-    pagina.add(pestanias)
-    # boton para guardar cambios 
-    pagina.floating_action_button = boton_guardar
-
-    ############## HANDLERS ##################################
 
 
     def quitar_tags_seleccion(e):
@@ -818,21 +827,26 @@ def main(pagina: ft.Page):
 
 
 
+
+
     def estadisticas()->dict:
         """Detecta todas las etiquetas usadas en las imagenes y cuenta cuantas repeticiones tiene cada una.
         Crea tambien los botones de filtrado correspondientes a cada una."""
 
         conteo_etiquetas = dict()
 
-        # busqueda de etiquetas
+        # lectura de patron de busqueda
+        secuencia = entrada_tags_buscar.value
+        # descarte de espacios en blanco
+        secuencia = secuencia.strip()
+
+        # busqueda y conteo de etiquetas
         for imagen in lista_imagenes.seleccion:  
             for tag in imagen.tags:
-                conteo_etiquetas[tag] = 0
+                retorno = re.search(secuencia, tag, re.I)
+                if retorno !=None:
+                    conteo_etiquetas[tag] = 1 if tag not in conteo_etiquetas else conteo_etiquetas[tag]+1
 
-        # conteo de repeticiones para cada etiqueta
-        for imagen in lista_imagenes.seleccion:
-            for tag in imagen.tags:
-                conteo_etiquetas[tag] += 1
 
         # etiquetas ordenadas de más repetidas a menos usadas
         conteo_etiquetas = dict(sorted(conteo_etiquetas.items(), key=lambda item:item[1], reverse=True))
@@ -935,6 +949,9 @@ def main(pagina: ft.Page):
 
     entrada_tags_agregar.on_submit = agregar_tags_seleccion
     entrada_tags_quitar.on_submit  = quitar_tags_seleccion
+
+    entrada_tags_buscar.on_submit = buscar_tags_seleccion
+    entrada_tags_buscar.on_change = buscar_tags_seleccion
 
     pagina.on_resized = redimensionar_controles
     

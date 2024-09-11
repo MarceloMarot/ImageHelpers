@@ -7,6 +7,15 @@ from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardad
 
 
 # Entradas de texto
+entrada_tags_buscar = ft.TextField(
+    label="Buscar coincidencias",
+    # on_change=textbox_changed,
+    # on_submit=agregar_tags_seleccion,
+    height=60,
+    width=400
+)
+
+
 entrada_tags_agregar = ft.TextField(
     label="Agregar tags a las imágenes - pulsar 'ENTER' para confirmar",
     # on_change=textbox_changed,
@@ -96,6 +105,8 @@ columna_etiquetas = ft.Column(
             alignment=ft.MainAxisAlignment.SPACE_EVENLY,
             vertical_alignment=ft.CrossAxisAlignment.CENTER
         ),  
+        ft.Divider(height=7, thickness=1) ,
+        entrada_tags_buscar,
         ft.Divider(height=7, thickness=1) ,
         filas_filtrado,
         ft.Divider(height=7, thickness=1) ,
