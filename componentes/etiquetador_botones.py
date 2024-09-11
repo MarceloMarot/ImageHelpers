@@ -533,132 +533,134 @@ class EtiquetadorBotones(ft.Column):
         # self.scroll_to(key=clave)
 
 
-########### FUNCIONES TEST #####################
-
-def funcion_etiqueta(e: ft.ControlEvent):
-    boton = e.control
-    valor = boton.text
-    print( "[bold green]Etiqueta afectada!")
-    print(f"[bold blue]Valor etiqueta: [bold yellow]{valor}")
 
 
-def funcion_comando(e: ft.ControlEvent):
-    boton = e.control
-    valor = boton.text
-    print( "[bold magenta]Comando activado!")
-    print(f"[bold blue]Comando: [bold yellow]{valor} [bold blue]activado!")
 
 
-def funcion_grupos(e: ft.ControlEvent):
-    boton = e.control
-    valor = boton.data
-    print( "[bold cyan]Grupo afectado!")
-    print(f"[bold blue]Indice grupo: [bold yellow]{valor}")
 
-
-################## FUNCION PRINCIPAL ####################
-
-def main(page: ft.Page):
-
-    archivo_dataset = "demo/dataset.png"
-    archivo_etiquetas = "demo/etiquetas_imagen.jpg"
-
-
-    print( "[bold green]        DEMO ETIQUETADOR        ")
-    print()
-    print("[bold blue]Este archivo simula las operaciones de etiquetado de una imagen.")
-    print("[bold blue]Los archivos del demo están incluidos en la carpeta 'demo'.")
-    print(f"[bold cyan] Archivo dataset: [bold yellow]{archivo_dataset} ")
-    print(f"[bold cyan] Archivo salida : [bold yellow]{archivo_etiquetas} ")
-
-    # Recordar: se ignora la extension del archivo de etiqueta
-    # éste siempre es TXT
-
-    # componente etiquetador
-    etiquetador = EtiquetadorBotones()
-
-    page.add( etiquetador)
-
-    page.add( BotonBiestable("soy un boton sobrante"))
-
-    dataset     = Etiquetas(archivo_dataset) 
-    etiquetas   = Etiquetas(archivo_etiquetas) 
-
-    # dataset = Etiquetas()   # borrado forzoso
-
-    etiquetador.altura = 800
-    etiquetador.base = 600
-    # carga de archivos (sentido inverso)
-    etiquetador.setear_salida( etiquetas )      # carga el estado de los botones desde archivo
-
-    
-    
-    
-    
-    etiquetador.leer_dataset(   dataset   )     # crea los botones de etiquetado y de grupo
-    # etiquetador.leer_dataset( dataset, False )     # crea sólo los botones de etiquetado
-
-    # configuracion de eventos ante el click sobre los botones
-    etiquetador.evento_click(funcion_etiqueta, funcion_grupos, funcion_comando)
-
-    # reporte de etiquetas almacenadas
-    leido = etiquetador.leer_botones()
-    print("[cyan]Etiquetas leidas")
-    print(leido)
-
-
-    page.title = "Botones etiquetado"
-    page.window_height      = 800
-    page.window_min_height  = 800
-    page.window_width       = 600
-    page.update()
-
-    # cambios con delay
-    import time 
-    time.sleep(2)
-    # etiquetas agregadas desde el programa
-    nuevos_tags = ["3","4","5","6", "Aquiles Brinco"] 
-    etiquetador.agregar_tags(nuevos_tags, False)
-
-    # reporte de etiquetas almacenadas
-    leido = etiquetador.leer_botones()
-    print("[cyan]Tags agregados - etiquetas leidas")
-    print(leido)
-    etiquetador.mostrar_tag("6")
-
-
-    time.sleep(2)
-    # etiquetas agregadas desde el programa
-    nuevos_tags = ["3","4","5","6", "15","Aquiles Brinco"] 
-    etiquetador.agregar_tags(nuevos_tags, True)
-
-
-    # reporte de etiquetas almacenadas
-    leido = etiquetador.leer_botones()
-    print("[cyan]Sobreescritura de tags - etiquetas leidas")
-    print(leido)
-    etiquetador.mostrar_tag("fuente")
-
-    time.sleep(2)
-    etiquetador.mostrar_tag("6")
-
-    def redimensionar_botonera(e):
-
-        etiquetador.base   = page.width
-        etiquetador.altura = page.height
-        etiquetador.update()
-
-    page.on_resized = redimensionar_botonera
-
-
-    page.title = "Botones etiquetado"
-    page.window_height      = 800
-    page.window_min_height  = 800
-    page.window_width       = 600
-    page.update()
-
-
-################## EJECUCION ###################
+################## EJECUCION DEMO ###################
 
 if __name__ == "__main__":
+
+    ########### FUNCIONES TEST #####################
+
+    def funcion_etiqueta(e: ft.ControlEvent):
+        boton = e.control
+        valor = boton.text
+        print( "[bold green]Etiqueta afectada!")
+        print(f"[bold blue]Valor etiqueta: [bold yellow]{valor}")
+
+
+    def funcion_comando(e: ft.ControlEvent):
+        boton = e.control
+        valor = boton.text
+        print( "[bold magenta]Comando activado!")
+        print(f"[bold blue]Comando: [bold yellow]{valor} [bold blue]activado!")
+
+
+    def funcion_grupos(e: ft.ControlEvent):
+        boton = e.control
+        valor = boton.data
+        print( "[bold cyan]Grupo afectado!")
+        print(f"[bold blue]Indice grupo: [bold yellow]{valor}")
+
+
+    ################## FUNCION PRINCIPAL ####################
+
+    def main(page: ft.Page):
+
+        archivo_dataset = "demo/dataset.png"
+        archivo_etiquetas = "demo/etiquetas_imagen.jpg"
+
+
+        print( "[bold green]        DEMO ETIQUETADOR        ")
+        print()
+        print("[bold blue]Este archivo simula las operaciones de etiquetado de una imagen.")
+        print("[bold blue]Los archivos del demo están incluidos en la carpeta 'demo'.")
+        print(f"[bold cyan] Archivo dataset: [bold yellow]{archivo_dataset} ")
+        print(f"[bold cyan] Archivo salida : [bold yellow]{archivo_etiquetas} ")
+
+        # Recordar: se ignora la extension del archivo de etiqueta
+        # éste siempre es TXT
+
+        # componente etiquetador
+        etiquetador = EtiquetadorBotones()
+
+        page.add( etiquetador)
+
+        page.add( BotonBiestable("soy un boton sobrante"))
+
+        dataset     = Etiquetas(archivo_dataset) 
+        etiquetas   = Etiquetas(archivo_etiquetas) 
+
+        # dataset = Etiquetas()   # borrado forzoso
+
+        etiquetador.altura = 800
+        etiquetador.base = 600
+        # carga de archivos (sentido inverso)
+        etiquetador.setear_salida( etiquetas )      # carga el estado de los botones desde archivo
+        etiquetador.leer_dataset(   dataset   )     # crea los botones de etiquetado y de grupo
+        # etiquetador.leer_dataset( dataset, False )     # crea sólo los botones de etiquetado
+
+        # configuracion de eventos ante el click sobre los botones
+        etiquetador.evento_click(funcion_etiqueta, funcion_grupos, funcion_comando)
+
+        # reporte de etiquetas almacenadas
+        leido = etiquetador.leer_botones()
+        print("[cyan]Etiquetas leidas")
+        print(leido)
+
+
+        page.title = "Botones etiquetado"
+        page.window_height      = 800
+        page.window_min_height  = 800
+        page.window_width       = 600
+        page.update()
+
+        # cambios con delay
+        import time 
+        time.sleep(2)
+        # etiquetas agregadas desde el programa
+        nuevos_tags = ["3","4","5","6", "Aquiles Brinco"] 
+        etiquetador.agregar_tags(nuevos_tags, False)
+
+        # reporte de etiquetas almacenadas
+        leido = etiquetador.leer_botones()
+        print("[cyan]Tags agregados - etiquetas leidas")
+        print(leido)
+        etiquetador.mostrar_tag("6")
+
+
+        time.sleep(2)
+        # etiquetas agregadas desde el programa
+        nuevos_tags = ["3","4","5","6", "15","Aquiles Brinco"] 
+        etiquetador.agregar_tags(nuevos_tags, True)
+
+
+        # reporte de etiquetas almacenadas
+        leido = etiquetador.leer_botones()
+        print("[cyan]Sobreescritura de tags - etiquetas leidas")
+        print(leido)
+        etiquetador.mostrar_tag("fuente")
+
+        time.sleep(2)
+        etiquetador.mostrar_tag("6")
+
+        def redimensionar_botonera(e):
+
+            etiquetador.base   = page.width
+            etiquetador.altura = page.height
+            etiquetador.update()
+
+        page.on_resized = redimensionar_botonera
+
+
+        page.title = "Botones etiquetado"
+        page.window_height      = 800
+        page.window_min_height  = 800
+        page.window_width       = 600
+        page.update()
+
+
+
     ft.app(target=main)

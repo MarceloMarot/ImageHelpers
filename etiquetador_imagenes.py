@@ -10,6 +10,8 @@ from manejo_texto.procesar_etiquetas import Etiquetas, guardar_archivo, etiqueta
 
 from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
 from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable, FilasBotonesEtiquetas
+# from componentes.etiquetador_botones import crear_botones_etiquetador
+# from componentes.etiquetador_botones import etiquetador_imagen
 from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
@@ -43,6 +45,10 @@ from vistas.menu_etiquetador import boton_carpeta, boton_filtrar_dimensiones, bo
 from vistas.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
 from vistas.menu_etiquetador import actualizar_lista_dimensiones
 
+from vistas.columna_etiquetador import etiquetador_imagen, crear_botones_etiquetador
+
+
+
 
 lista_imagenes = clasificador_imagenes
 
@@ -63,7 +69,7 @@ def main(pagina: ft.Page):
     )
 
     # Componentes especiales
-    etiquetador_imagen = EtiquetadorBotones()
+    # etiquetador_imagen = EtiquetadorBotones()
     
     #############  MAQUETADO ############################
 
@@ -295,7 +301,7 @@ def main(pagina: ft.Page):
         # lista_dimensiones_desplegable.update()
     '''
 
-
+    '''
     def crear_botones_etiquetador():
         """Crea los botones del etiquetador en base al archivo de texto indicado y a los tags ya presentes en las imagenes actuales"""
 
@@ -333,6 +339,7 @@ def main(pagina: ft.Page):
             funcion_grupo       = click_botones_etiquetador,
             funcion_comando     = click_botones_etiquetador
             )
+    '''
 
 
     # Funcion de apertura de directorio
@@ -404,7 +411,15 @@ def main(pagina: ft.Page):
         # si se encuentran imagenes se visibilizan y configuran los controles
         filtrar_dimensiones_estados()   
         # agregado de todas las etiquetas al editor
-        crear_botones_etiquetador()  
+        crear_botones_etiquetador(dataset)  
+
+        #  Asignacion de eventos de los botones internos
+        etiquetador_imagen.evento_click(
+            funcion_etiquetas   = click_botones_tags,
+            funcion_grupo       = click_botones_etiquetador,
+            funcion_comando     = click_botones_etiquetador
+            )
+
         # actualizar galeria
         actualizar_estilo_estado( lista_imagenes.seleccion, estilos_galeria )
         # actualizacion grafica
