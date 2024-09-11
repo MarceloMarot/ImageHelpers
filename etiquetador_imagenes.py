@@ -47,8 +47,6 @@ from vistas.menu_etiquetador import actualizar_lista_dimensiones
 from vistas.columna_etiquetador import etiquetador_imagen, crear_botones_etiquetador
 
 
-
-
 lista_imagenes = clasificador_imagenes
 
 imagenes_tags = []
@@ -67,9 +65,7 @@ def main(pagina: ft.Page):
         icon=ft.icons.SAVE, bgcolor=ft.colors.YELLOW_600, tooltip="Guardar todas las etiquetas cambiadas."
     )
 
-    # Componentes especiales
-    # etiquetador_imagen = EtiquetadorBotones()
-    
+
     #############  MAQUETADO ############################
 
     galeria_etiquetador.expand = 1
@@ -179,7 +175,6 @@ def main(pagina: ft.Page):
         columna_etiquetas.update()
 
 
-
     def quitar_tags_seleccion(e):
         # texto = e.control.value
         texto = entrada_tags_quitar.value
@@ -212,7 +207,6 @@ def main(pagina: ft.Page):
         columna_etiquetas.update()
 
 
-
     def click_botones_tags(e: ft.ControlEvent ):
         """Habilita el accionamiento solidario de los botones de etiquetas repetidas. Tambien llama al handler de actualizaciones."""
         tag = e.control.text
@@ -232,7 +226,6 @@ def main(pagina: ft.Page):
         etiquetador_imagen.agregar_tags(etiquetas_botones, sobreescribir=True)
         # transferencias y actualizaciones graficas de imagenes
         click_botones_etiquetador(None)
-
 
 
     def click_botones_etiquetador( e: ft.ControlEvent | None ):
@@ -278,8 +271,6 @@ def main(pagina: ft.Page):
         filas_filtrado.evento_click(filtrar_todas_etiquetas)
         columna_etiquetas.update()
    
-
-
 
     # Funcion de apertura de directorio
     def resultado_directorio(e: ft.FilePickerResultEvent):
@@ -490,7 +481,6 @@ def main(pagina: ft.Page):
         pagina.update()
 
 
-    # """
     def confirmar_cierre_programa(e:ft.ControlEvent):
         if e.data == "close":
             # conteo imagenes con cambios sin guardar
@@ -525,16 +515,10 @@ def main(pagina: ft.Page):
                 pagina.dialog.open = True
                 pagina.update()
 
-    # """
-
 
     def cerrar_programa(e:ft.ControlEvent | None = None):
         pagina.window_destroy()
 
-
-    # prevencion decierre directo de aplicacion
-    pagina.window_prevent_close = True
-    pagina.on_window_event = confirmar_cierre_programa
 
     def ventana_emergente(pagina:ft.Page, texto: str):
         # show_snack_bar obsoleta desde la v0.23 
@@ -639,7 +623,6 @@ def main(pagina: ft.Page):
         actualizar_componentes() # incluye prevencion de errores por clave inexistente
 
 
-
     # manejador del teclado
     def desplazamiento_teclado(e: ft.KeyboardEvent):
         """Permite el desplazamiento rapido de imagenes con teclas del teclado predefinidas"""
@@ -697,14 +680,6 @@ def main(pagina: ft.Page):
                 apuntar_galeria(lista_imagenes.clave_actual)
 
 
-    ###########  FUNCIONES LOCALES #################
-
-
-    def apuntar_galeria(clave: str):
-        """Funcion auxiliar para buscar y mostrar la imagen requerida en base a su clave ('key')."""
-        galeria_etiquetador.scroll_to(key=clave, duration=500)
-
-
     def reset_tags_filtros(e: ft.ControlEvent):
         """Restaura todos los botones de filtrado."""
         filas_filtrado.agregar_tags([], True)
@@ -728,7 +703,6 @@ def main(pagina: ft.Page):
             texto=f"Guardado cancelado"
         # etiquetador_imagen.guardar_dataset(INCOMPLETO)
         ventana_emergente(pagina, texto)
-
 
 
     def cambiar_orden_tags(e: ft.ControlEvent|None = None):
@@ -756,7 +730,6 @@ def main(pagina: ft.Page):
         columna_etiquetas.update()
 
 
-
     def redimensionar_controles(e: ft.ControlEvent | None):
 
         # redimensionado etiquetador:
@@ -772,6 +745,14 @@ def main(pagina: ft.Page):
         fila_controles.update() 
 
 
+    ###########  FUNCIONES LOCALES #################
+
+
+    def apuntar_galeria(clave: str):
+        """Funcion auxiliar para buscar y mostrar la imagen requerida en base a su clave ('key')."""
+        galeria_etiquetador.scroll_to(key=clave, duration=500)
+
+
     ###########  ASIGNACION HANDLERS #################
 
     entrada_tags_agregar.on_submit = agregar_tags_seleccion
@@ -782,13 +763,16 @@ def main(pagina: ft.Page):
 
     pagina.on_resized = redimensionar_controles
     
+    # prevencion decierre directo de aplicacion
+    pagina.window_prevent_close = True
+    pagina.on_window_event = confirmar_cierre_programa
+
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
     lista_estados_desplegable.on_change = cargar_galeria_componentes     
     boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes   
     # boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
     boton_reset_tags.on_click = reset_tags_filtros
     
-
     boton_reordenar_tags.on_click = cambiar_orden_tags
 
     # inicializacion opciones
@@ -797,9 +781,8 @@ def main(pagina: ft.Page):
 
     # propiedad de pagina: handler del teclado elegido
     pagina.on_keyboard_event = desplazamiento_teclado
-    
-    pestanias.on_change = cambio_pestanias
 
+    pestanias.on_change = cambio_pestanias
 
     # Clase para manejar dialogos de archivo y de carpeta
     dialogo_directorio   .on_result = resultado_directorio 

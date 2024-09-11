@@ -62,6 +62,7 @@ boton_reordenar_tags = ft.ElevatedButton(
     text = f"Orden alfabético",
     bgcolor = ft.colors.GREEN_800,
     color = ft.colors.WHITE,
+    icon = ft.icons.SORT_ROUNDED
     # tooltip="Reinicia la selección de etiquetas encontradas."
     )
 
@@ -69,7 +70,8 @@ boton_reordenar_tags.valor = True
 
 
 boton_guardar_dataset = ft.ElevatedButton(
-    text = f"Guardar como dataset",
+    # text = f"Guardar como dataset",
+    text = f"Guardar tags",
     bgcolor = ft.colors.AMBER_800,
     icon=ft.icons.SAVE,
     color = ft.colors.WHITE,
@@ -82,9 +84,10 @@ boton_guardar_dataset = ft.ElevatedButton(
     )
 
 boton_reset_tags = ft.ElevatedButton(
-    text = f"Deseleccionar etiquetas",
+    text = f"Deseleccionar",
     bgcolor = ft.colors.BLUE_800,
     color = ft.colors.WHITE,
+    icon=ft.icons.UNDO_ROUNDED, 
     tooltip="Reinicia la selección de etiquetas encontradas."
     )
 
