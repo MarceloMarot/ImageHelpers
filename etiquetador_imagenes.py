@@ -9,7 +9,9 @@ import pathlib
 from manejo_texto.procesar_etiquetas import Etiquetas, guardar_archivo, etiquetas2texto, separar_etiquetas
 
 from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
-from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable, FilasBotonesEtiquetas
+# from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable, FilasBotonesEtiquetas
+from componentes.filas_botones import FilasBotonesEtiquetas
+
 
 from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
