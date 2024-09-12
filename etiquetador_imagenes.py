@@ -1,30 +1,27 @@
 
 
-from re import I
-# import re
+
 from rich import print as print
 import flet as ft
 import pathlib
 
 from manejo_texto.procesar_etiquetas import Etiquetas, guardar_archivo, etiquetas2texto, separar_etiquetas
 
-from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
-# from componentes.etiquetador_botones import EtiquetadorBotones , BotonBiestable, FilasBotonesEtiquetas
-from componentes.filas_botones import FilasBotonesEtiquetas
-
-
-from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
-from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
+from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from sistema_archivos.buscar_extension import buscar_imagenes, listar_directorios
 
-from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
+from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
 
-# from enum import Enum
+from componentes.filas_botones import FilasBotonesEtiquetas
 
+from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
+
+from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
 from componentes.galeria_etiquetado import Contenedor_Etiquetado, actualizar_estilo_estado
 from componentes.galeria_etiquetado import galeria_etiquetador
+
 from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, filtrar_estados, leer_imagenes_etiquetadas
 from componentes.clasificador import clasificador_imagenes
 
@@ -40,14 +37,13 @@ from vistas.columna_seleccion import texto_imagen, texto_ruta_data,texto_ruta_ti
 from vistas.columna_seleccion import columna_seleccion, contenedor_seleccion
 from vistas.columna_seleccion import imagen_seleccion
 
-from comunes.constantes import Tab, Percentil, Estados, tupla_estados
-
 from vistas.menu_etiquetador import boton_carpeta, boton_filtrar_dimensiones, boton_dataset, tooltip_carpeta, ayuda_emergente
 from vistas.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
 from vistas.menu_etiquetador import actualizar_lista_dimensiones
 
 from vistas.columna_etiquetador import etiquetador_imagen, crear_botones_etiquetador
 
+from comunes.constantes import Tab, Percentil, Estados, tupla_estados
 
 lista_imagenes = clasificador_imagenes
 
