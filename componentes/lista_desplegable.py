@@ -1,18 +1,18 @@
 import flet as ft
+import pathlib
+import os 
+import yaml
 
+from constantes.rutas import ARCHIVO_RESOLUCIONES_ETIQUETADOR, DIRECTORIO_CONFIGURACION
 
-tupla_resoluciones = (
-    "todas",
-    "512 x 512",
-    "512 x 768",
-    "768 x 512",
-    "768 x 768",
-    "512 x 1024",
-    "1024 x 512",
-    "768 x 1024",
-    "1024 x 768",
-    "1024 x 1024",
-)
+# apertura del archivo YAML con dimensiones de archivo
+os.chdir( DIRECTORIO_CONFIGURACION) 
+
+with open(ARCHIVO_RESOLUCIONES_ETIQUETADOR,  'r') as archivo:
+    tupla_resoluciones = yaml.safe_load(archivo)
+
+os.chdir( ".." ) 
+
 
 
 def extraer_numeros(texto_entrada: str)->list[int]:
@@ -58,38 +58,40 @@ def opciones_lista_desplegable(componente: ft.Dropdown, opciones: tuple | list):
     opciones_desplegables = []
     for opcion in opciones:
         valor = opcion
-        opciones_desplegables.append( ft.dropdown.Option(valor) )
+        # opciones_desplegables.append( ft.dropdown.Option(valor) ) # FIX
+        opciones_desplegables.append( ft.dropdown.Option(text=valor) ) # FIX
 
     # asignacion lista
     componente.options = opciones_desplegables
 
 
 
-def main(page: ft.Page):
-
-    def cambio_opcion(e):
-        numeros = extraer_numeros( str(lista_desplegable.value) )
-        if len(numeros)==2:
-            [ancho, alto ] = numeros
-            print(f"Base: {ancho}; Altura: {alto}")
-            caja_texto.value = f"Base: {ancho}; Altura: {alto}"
-        else: 
-            print("---------")
-            caja_texto.value = "---------"
-        caja_texto.update()
-
-
-    caja_texto = ft.Text()
-
-    lista_desplegable = crear_lista_desplegable(tupla_resoluciones)
-    lista_desplegable.on_change = cambio_opcion
-
-
-    page.add(lista_desplegable,  caja_texto)
-    # lista_desplegable.focus()
-    lista_desplegable.update()
-
-
-
 if __name__=="__main__":
+
+
+    def main(page: ft.Page):
+
+        def cambio_opcion(e):
+            numeros = extraer_numeros( str(lista_desplegable.value) )
+            if len(numeros)==2:
+                [ancho, alto ] = numeros
+                print(f"Base: {ancho}; Altura: {alto}")
+                caja_texto.value = f"Base: {ancho}; Altura: {alto}"
+            else: 
+                print("---------")
+                caja_texto.value = "---------"
+            caja_texto.update()
+
+
+        caja_texto = ft.Text()
+
+        lista_desplegable = crear_lista_desplegable(tupla_resoluciones)
+        lista_desplegable.on_change = cambio_opcion
+
+
+        page.add(lista_desplegable,  caja_texto)
+        # lista_desplegable.focus()
+        lista_desplegable.update()
+
+
     ft.app(target=main)

@@ -3,7 +3,7 @@ import flet as ft
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 from componentes.etiquetador_botones import BotonBiestable
 
-from comunes.constantes import Tab, Percentil, Estados, tupla_estados
+from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
 from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 

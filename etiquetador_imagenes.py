@@ -43,7 +43,7 @@ from vistas.menu_etiquetador import actualizar_lista_dimensiones
 
 from vistas.columna_etiquetador import etiquetador_imagen, crear_botones_etiquetador
 
-from comunes.constantes import Tab, Percentil, Estados, tupla_estados
+from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
 lista_imagenes = clasificador_imagenes
 
@@ -285,13 +285,11 @@ def main(pagina: ft.Page):
             rutas_imagen = buscar_imagenes(directorio)
         
             # lectura de imagenes del directorio
-            # lista_imagenes.cargar_imagenes(rutas_imagen) 
             lista_imagenes.leer_imagenes(rutas_imagen) 
-            # lista_imagenes.total = cargar_imagenes(rutas_imagen) 
-
+ 
             # reinicio de las listas de imagenes
-            imagenes_tags = lista_imagenes.total
-            lista_imagenes.seleccion = lista_imagenes.total
+            imagenes_tags = lista_imagenes.todas
+            lista_imagenes.seleccion = lista_imagenes.todas
 
             # asignacion de la primera imagen de la galeria 
             clave = lista_imagenes.clave_actual
@@ -389,14 +387,14 @@ def main(pagina: ft.Page):
 
         # Filtrado en base a las dimensiones de imagen
         dimensiones = dimensiones_elegidas if boton_filtrar_dimensiones.estado else None
-        lista_imagenes.seleccion = filtrar_dimensiones(lista_imagenes.total, dimensiones)
+        lista_imagenes.seleccion = filtrar_dimensiones(lista_imagenes.todas, dimensiones)
 
         # Filtrado en base a los estados de las imagenes
         estado = lista_estados_desplegable.value
         lista_imagenes.seleccionar_estado( estado )
 
         # reporte por snackbar 
-        if len(lista_imagenes.total) > 0 and estado != None:
+        if len(lista_imagenes.todas) > 0 and estado != None:
             ventana_emergente(pagina, f"Filtrado por dimensiones y estado - {len(lista_imagenes.seleccion)} imagenes seleccionadas.")
         # actualizacion de las etiquetas encontradas
         estadisticas()

@@ -1,0 +1,6 @@
+
+
+DIRECTORIO_CONFIGURACION = "configuracion"
+
+
+ARCHIVO_RESOLUCIONES_ETIQUETADOR = "resoluciones.yml"

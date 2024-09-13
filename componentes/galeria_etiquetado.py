@@ -4,7 +4,7 @@ from componentes.estilos_contenedores import  estilos_seleccion, estilos_galeria
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
-from comunes.constantes import Tab, Percentil, Estados
+from constantes.constantes import Tab, Percentil, Estados
 
 from sistema_archivos.rutas import ruta_relativa_usuario
 

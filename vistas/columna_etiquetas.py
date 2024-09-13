@@ -5,7 +5,7 @@ from componentes.etiquetador_botones import FilasBotonesEtiquetas
 from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 from manejo_texto.procesar_etiquetas import Etiquetas
 
-from comunes.constantes import Tab, Percentil, Estados, tupla_estados
+from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
 from componentes.clasificador import clasificador_imagenes
 lista_imagenes = clasificador_imagenes

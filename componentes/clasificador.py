@@ -4,7 +4,7 @@ from componentes.estilos_contenedores import  estilos_seleccion, estilos_galeria
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
-from comunes.constantes import Tab, Percentil, Estados
+from constantes.constantes import Tab, Percentil, Estados
 
 from componentes.galeria_etiquetado import Contenedor_Etiquetado,  actualizar_estilo_estado
 
@@ -106,7 +106,7 @@ def filtrar_estados(
 class ClasificadorImagenes:
     """Clase pensada para gestionar las listas de imágenes de forma centralizada y ordenada."""
     def __init__(self):
-        self.total          : list = []
+        self.todas          : list = []
         self.seleccion      : list = []
         self.guardadas      : list = []
         self.modificadas    : list = []
@@ -118,7 +118,7 @@ class ClasificadorImagenes:
 
         self.ruta_directorio : str = ""
         self.ruta_dataset : str = ""
-        self.ruta_descarte : str = "descartados/"
+        self.ruta_descarte : str = "descartados"
 
         self.dimensiones_elegidas :tuple[int, int, int]|None = None
 
@@ -130,7 +130,7 @@ class ClasificadorImagenes:
         agregado=False
         ):
 
-        nro_inicial = 0 if agregado==False else len(self.total)
+        nro_inicial = 0 if agregado==False else len(self.todas)
         lista = []
         lista = leer_imagenes_etiquetadas(
             rutas_imagen,
@@ -141,16 +141,16 @@ class ClasificadorImagenes:
             )
         if agregado:
             # modo agregado
-            self.total.append(lista)
+            self.todas.append(lista)
         else:
             # modo reinicio
-            self.total = lista
+            self.todas = lista
 
 
     def verificar_imagenes(self):
         """Marca como defectuosas aquellas imágenes que no cumplan con los requisitos."""
         # marcado de imagenes defectuosas según las dimensiones requeridas 
-        for imagen in self.total:
+        for imagen in self.todas:
             imagen.verificar_imagen(self.dimensiones_elegidas)
 
 
@@ -161,10 +161,10 @@ class ClasificadorImagenes:
         self.verificar_imagenes()
 
         # creacion de listas internas
-        self.guardadas    = filtrar_estados(self.total, Estados.GUARDADOS   .value)
-        self.modificadas  = filtrar_estados(self.total, Estados.MODIFICADOS .value)
-        self.no_alteradas = filtrar_estados(self.total, Estados.NO_ALTERADOS.value)
-        self.defectuosas  = filtrar_estados(self.total, Estados.DEFECTUOSOS .value)
+        self.guardadas    = filtrar_estados(self.todas, Estados.GUARDADOS   .value)
+        self.modificadas  = filtrar_estados(self.todas, Estados.MODIFICADOS .value)
+        self.no_alteradas = filtrar_estados(self.todas, Estados.NO_ALTERADOS.value)
+        self.defectuosas  = filtrar_estados(self.todas, Estados.DEFECTUOSOS .value)
 
 
     def seleccionar_estado(self, estado)->list:
@@ -179,6 +179,8 @@ class ClasificadorImagenes:
             self.seleccion = self.no_alteradas
         elif estado == Estados.DEFECTUOSOS.value:
             self.seleccion = self.defectuosas
+        elif estado == Estados.TODOS.value:
+            self.seleccion = self.todas
 
         return self.seleccion
 
