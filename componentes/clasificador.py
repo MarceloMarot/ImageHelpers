@@ -9,16 +9,17 @@ from constantes.constantes import Tab, Percentil, Estados
 from componentes.galeria_etiquetado import Contenedor_Etiquetado,  actualizar_estilo_estado
 
 
-
 def leer_imagenes_etiquetadas(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0, nro_inicial=0):
     """Esta funcion crea lee imagenes desde archivo y crea una lista de objetos ft.Image.
     También asigna una clave ('key') a cada una.
     """
     contenedores = [] 
+
     for i in range(nro_inicial, nro_inicial + len(rutas_imagen)):
         contenedor = Contenedor_Etiquetado(rutas_imagen[i], ancho, alto, redondeo)
         contenedor.clave = f"imag_{i}"
         contenedores.append(contenedor)
+
     return contenedores
 
 
@@ -30,13 +31,13 @@ def filtrar_dimensiones(
     Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
     """
     imagenes_filtradas = []
-    for imagen in lista_imagenes: 
-        if dimensiones == imagen.dimensiones:    
-            imagenes_filtradas.append(imagen)
 
     if dimensiones != None:
         # imagenes con dimensiones correctas
+        objeto_resultado = filter(lambda imagen: imagen.dimensiones == dimensiones, lista_imagenes)
+        imagenes_filtradas = list(objeto_resultado)
         return imagenes_filtradas
+
     else:
         # caso sin dimensiones especificas
         return lista_imagenes
@@ -46,11 +47,11 @@ def filtrar_etiquetas(
     lista_imagenes: list[Contenedor_Etiquetado], 
     etiquetas: list[str]  = [],
     )->list[Contenedor_Etiquetado]:
-    imagenes_filtradas = []
     """
     Devuelve las imagenes que tengan al menos una etiqueta de entrada. 
     Si no hay etiquetas de entrada se devuelve toda la lista de entrada.
     """
+    imagenes_filtradas = []
     if etiquetas == []:
         # imagenes con dimensiones correctas
         return lista_imagenes
@@ -61,6 +62,7 @@ def filtrar_etiquetas(
                 if imagen not in imagenes_filtradas:
                     if etiqueta in imagen.tags:
                         imagenes_filtradas.append(imagen)
+
         return imagenes_filtradas
 
     
@@ -73,28 +75,24 @@ def filtrar_estados(
     imagenes_filtradas = []
     # imagenes guardadas (sin cambios)
     if estado == Estados.GUARDADOS.value:
-        for imagen in lista_imagenes: 
-            if imagen.guardada and not imagen.modificada:    
-                imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
+        objeto_resultado = filter(lambda imagen: imagen.guardada and not imagen.modificada, lista_imagenes)
+        return list(objeto_resultado)
+
     # imagenes tags modificados (todas)
     elif estado == Estados.MODIFICADOS.value:
-        for imagen in lista_imagenes:   
-            if imagen.modificada:    
-                imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
+        objeto_resultado = filter(lambda imagen: imagen.modificada, lista_imagenes)
+        return list(objeto_resultado)
+
     # no etiquetadas ni guardadas
     elif estado == Estados.NO_ALTERADOS.value:
-        for imagen in lista_imagenes: 
-            if not imagen.modificada and not imagen.guardada: 
-                imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
+        objeto_resultado = filter(lambda imagen: not imagen.modificada and not imagen.guardada, lista_imagenes)
+        return list(objeto_resultado)
+
     # defectuosas por uno u otro motivo
     elif estado == Estados.DEFECTUOSOS.value:
-        for imagen in lista_imagenes: 
-            if imagen.defectuosa: 
-                imagenes_filtradas.append(imagen)
-        return imagenes_filtradas
+        objeto_resultado = filter(lambda imagen: imagen.defectuosa, lista_imagenes)
+        return list(objeto_resultado)
+
     else:
         # no filtrado
         return lista_imagenes
@@ -147,11 +145,29 @@ class ClasificadorImagenes:
             self.todas = lista
 
 
-    def verificar_imagenes(self):
+    # def verificar_imagenes(self):
+    def verificar_imagenes(self, dimensiones: tuple[int, int, int]|None=None):
         """Marca como defectuosas aquellas imágenes que no cumplan con los requisitos."""
         # marcado de imagenes defectuosas según las dimensiones requeridas 
+        if dimensiones!=None:
+            self.dimensiones_elegidas = dimensiones
+            
         for imagen in self.todas:
             imagen.verificar_imagen(self.dimensiones_elegidas)
+
+
+    def filtrar_estados(self, estado: str | None):
+        """Devuelve solamente los contenedores internos con el estado de etiquetado pedido."""
+        return filtrar_estados(self.todas, estado )
+
+
+    def filtrar_dimensiones(self,     
+        lista_imagenes: list[Contenedor_Etiquetado], 
+        dimensiones: tuple[int, int, int] | None = None):
+        """Devuelve solamente los contenedores de imagen con el ancho y altura correctos.
+        Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
+        """
+        return filtrar_dimensiones(self.todas, dimensiones)
 
 
     def clasificar_estados(self):
@@ -161,10 +177,10 @@ class ClasificadorImagenes:
         self.verificar_imagenes()
 
         # creacion de listas internas
-        self.guardadas    = filtrar_estados(self.todas, Estados.GUARDADOS   .value)
-        self.modificadas  = filtrar_estados(self.todas, Estados.MODIFICADOS .value)
-        self.no_alteradas = filtrar_estados(self.todas, Estados.NO_ALTERADOS.value)
-        self.defectuosas  = filtrar_estados(self.todas, Estados.DEFECTUOSOS .value)
+        self.guardadas    = self.filtrar_estados(Estados.GUARDADOS   .value)
+        self.modificadas  = self.filtrar_estados(Estados.MODIFICADOS .value)
+        self.no_alteradas = self.filtrar_estados(Estados.NO_ALTERADOS.value)
+        self.defectuosas  = self.filtrar_estados(Estados.DEFECTUOSOS .value)
 
 
     def seleccionar_estado(self, estado)->list:
