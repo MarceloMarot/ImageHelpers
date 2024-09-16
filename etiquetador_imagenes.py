@@ -25,6 +25,8 @@ from componentes.galeria_etiquetado import galeria_etiquetador
 from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, filtrar_estados, leer_imagenes_etiquetadas
 from componentes.clasificador import clasificador_imagenes
 
+from componentes.dialogo_alerta import DialogoAlerta
+
 from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 
 from vistas.columna_etiquetas import entrada_tags_agregar,entrada_tags_quitar
@@ -427,7 +429,6 @@ def main(pagina: ft.Page):
             ventana_emergente(pagina,f"¡Etiquetas guardadas! - {i} archivos modificados")
         # actualizacion grafica
         actualizar_componentes(e)    
-        cerrar_dialogo(e)  
 
         entrada_tags_quitar.value = ""
         entrada_tags_quitar.update()
@@ -435,85 +436,53 @@ def main(pagina: ft.Page):
         entrada_tags_agregar.update()
 
 
-    # confirmar_cambios
+
+
+
     def abrir_dialogo_guardado(e:ft.ControlEvent | None = None):
 
-        # conteo imagenes a guardar
-        j = 0
-        for imagen in lista_imagenes.seleccion:  
-            if imagen.modificada:
-                j += 1 
+        # conteo imagenes con cambios sin guardar
+        lista_imagenes.clasificar_estados()
+        j = len(lista_imagenes.modificadas) 
 
+        # si no hay modificaciones realizadas se cierra la alerta    
         if j == 0:
             # se ignora (nada que hacer)
             ventana_emergente(pagina, "Sin cambios para guardar.")
             return
         else:
-            # pedido de confirmacion
-            pagina.dialog = ft.AlertDialog(
-                # modal=True,
-                modal=False,
-                title=ft.Text("¿Guardar cambios?"),
-                content=ft.Text(f"{j} imágenes modificadas."),
-                actions=[
-                    ft.ElevatedButton(
-                        "Sí", 
-                        on_click=guardar_cambios,
-                        autofocus=False,
-                        ),
-                    # ft.OutlinedButton("No", on_click=no_click),
-                    ft.OutlinedButton(
-                        "No", 
-                        on_click=cerrar_dialogo, 
-                        autofocus=True ),
-                    ],
+            # en caso contrario se lanza la alerta de guardado
+            dialogo_guardado_imagenes = DialogoAlerta(
+                pagina,
+                "¿Descartar cambios?", 
+                f"Hay {j} modificaciones sin guardar."
                 )
-            # mantener dialogo abierto
-            pagina.dialog.open = True
-            pagina.update()
 
-    def cerrar_dialogo(e):
-        pagina.dialog.open = False
-        pagina.update()
+            dialogo_guardado_imagenes.funcion_confirmacion = guardar_cambios
+            dialogo_guardado_imagenes.abrir_alerta() 
 
 
     def confirmar_cierre_programa(e:ft.ControlEvent):
+
         if e.data == "close":
             # conteo imagenes con cambios sin guardar
-            j = 0
-            for imagen in lista_imagenes.seleccion:  
-                if imagen.modificada:
-                    j += 1 
-
-            # si no hay modificaciones realizadas se cierra directamente
+            lista_imagenes.clasificar_estados()
+            j = len(lista_imagenes.modificadas) 
+            # si no hay modificaciones realizadas se cierra el programa
             if j==0:
-                cerrar_programa()
+                # cerrar_programa(e)
+                pagina.window_destroy()
+            # en caso contrario se lanza la alerta de cierre
             else:
-                pagina.dialog = ft.AlertDialog(
-                    modal=False,
-                    title=ft.Text("¿Descartar cambios y salir?"),
-                    content=ft.Text(f"Hay {j} imágenes con modificaciones sin guardar."),
-                    actions=[
-                        ft.ElevatedButton(
-                            "Sí", 
-                            on_click=cerrar_programa,
-                            autofocus=False,
-                            ),
-                        ft.OutlinedButton(
-                            "No", 
-                            on_click=cerrar_dialogo,
-                            autofocus=True 
-                            ),
-                    ],
-                    actions_alignment=ft.MainAxisAlignment.SPACE_EVENLY,
+                dialogo_cierre_programa = DialogoAlerta(
+                    pagina,
+                    "¿Descartar cambios?", 
+                    f"Hay {j} modificaciones sin guardar."
                     )
 
-                pagina.dialog.open = True
-                pagina.update()
+                dialogo_cierre_programa.funcion_confirmacion = pagina.window_destroy
+                dialogo_cierre_programa.abrir_alerta()
 
-
-    def cerrar_programa(e:ft.ControlEvent | None = None):
-        pagina.window_destroy()
 
 
     def ventana_emergente(pagina:ft.Page, texto: str):
@@ -762,6 +731,7 @@ def main(pagina: ft.Page):
     # prevencion decierre directo de aplicacion
     pagina.window_prevent_close = True
     pagina.on_window_event = confirmar_cierre_programa
+    # pagina.on_window_event = dialogo_cierre_programa.abrir_alerta
 
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
     lista_estados_desplegable.on_change = cargar_galeria_componentes     
