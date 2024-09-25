@@ -8,6 +8,7 @@ import  time
 
 # from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 from componentes.galeria_imagenes import ContImag, Galeria, Contenedor_Imagen, imagen_clave, imagen_nombre, indice_clave
+from componentes.dialogo_alerta import DialogoAlerta
 from sistema_archivos.buscar_extension import buscar_imagenes
 from componentes.estilos_contenedores import estilos_galeria, estilos_seleccion, Estilo_Contenedor
 from componentes.selector_recortes import SelectorRecorte, DataRecorte
@@ -197,14 +198,14 @@ Teclas rápidas:
 clave_actual = None
 
 
-def pagina_galeria(page: ft.Page):
+def pagina_galeria(pagina: ft.Page):
     """Funcion gráfica para crear la galería de Flet"""
 
     ancho_pagina = 1500
     altura_pagina = 900
 
-    page.window_height = altura_pagina
-    page.window_width  = ancho_pagina
+    pagina.window_height = altura_pagina
+    pagina.window_width  = ancho_pagina
 
     ################## COMPONENTES ########################
 
@@ -288,7 +289,7 @@ def pagina_galeria(page: ft.Page):
     )
 
     # boton para guardar cambios 
-    page.floating_action_button = boton_guardar
+    pagina.floating_action_button = boton_guardar
 
     #################### MAQUETADO ########################
 
@@ -348,8 +349,8 @@ def pagina_galeria(page: ft.Page):
         )
 
 
-    page.add( fila_controles )
-    page.add(fila_galeria)
+    pagina.add( fila_controles )
+    pagina.add(fila_galeria)
 
     ####################### HANDLERS Y FUNCIONES ##################################
 
@@ -387,7 +388,7 @@ def pagina_galeria(page: ft.Page):
             # ruta de directorio elegido
             directorio = e.path
              # reporte por snackbar
-            ventana_emergente(page,f"Buscando imágenes...")
+            ventana_emergente(pagina,f"Buscando imágenes...")
             # busqueda de imagenes
             rutas_imagen = buscar_imagenes(directorio)
             # Creacion y carga de imagenes del directorio
@@ -405,7 +406,7 @@ def pagina_galeria(page: ft.Page):
             # carga de recortes preexistentes
             buscar_archivos_recortes(directorio_recortes)  
             # reporte por snackbar
-            ventana_emergente(page,f"Directorio de imágenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_galeria)}")
+            ventana_emergente(pagina,f"Directorio de imágenes abierto\nRuta: {directorio} \nNº imágenes: {len(imagenes_galeria)}")
 
 
     def resultado_directorio_destino(e: ft.FilePickerResultEvent):
@@ -420,7 +421,7 @@ def pagina_galeria(page: ft.Page):
             columna_selector.visible = False
             columna_selector.update()
             # reporte por snackbar
-            ventana_emergente(page,f"Directorio de recortes elegido\nRuta: {directorio} ")
+            ventana_emergente(pagina,f"Directorio de recortes elegido\nRuta: {directorio} ")
 
 
     def buscar_archivos_recortes(directorio: str):
@@ -469,7 +470,7 @@ def pagina_galeria(page: ft.Page):
         selector_recorte.abrir_imagen( imagen.ruta_origen)  
 
         # redimensionado del selector de recortes
-        ancho_pagina = int(page.window_width)
+        ancho_pagina = int(pagina.window_width)
         ancho_selector = int(ancho_pagina/2)
         selector_recorte.dimensiones_graficas(1, ancho_selector, ancho_selector)
 
@@ -478,7 +479,7 @@ def pagina_galeria(page: ft.Page):
         nombre =  pathlib.Path(imagen.ruta_origen).name
 
         # habilitacion redimensionamiento del selector de recortes
-        page.on_resize = redimensionar_selector
+        pagina.on_resize = redimensionar_selector
 
         # se acomoda la barra de escala al valor preguardado
         if imagen.guardada:
@@ -647,49 +648,31 @@ def pagina_galeria(page: ft.Page):
         texto_zoom.update()
 
 
-        # global imagenes_galeria, clave_actual
-        # if indice_clave(str(clave_actual), imagenes_galeria)!=None:
-        #     g = selector_recorte.temporal.data_guardado.escala
-        #     m = selector_recorte.temporal.data_marcado.escala
-        # texto_zoom.value = f"Zoom: {int(barra_escala.value)}% {int(m)}% {int(g)}%"
-        # texto_zoom.update()
-    
     
     def guardar_cambios(e:ft.ControlEvent | None = None):
-        """Guarda las etiquetas en archivo de todas las imagenes modificadas. También actualiza estados y graficas."""
+        """Guarda los recortes en archivo de todas las imagenes modificadas. También actualiza estados y graficas."""
         
         global imagenes_galeria
 
-
-
         if len(imagenes_galeria) == 0 : 
-            ventana_emergente(page,f"Galería vacía - sin cambios")
+            ventana_emergente(pagina,f"Galería vacía - sin cambios")
             return
         imagen: ContenedorRecortes
         i = 0
         for imagen in imagenes_galeria:  #
             # busqueda de recortes modificados
-            # clave = imagen.clave
-            # imag = imagen_clave(clave, imagenes_galeria)
             if imagen.marcada :
                 i += 1 
-                # clave_actual = clave
-                # marcar_recorte(guardar=True)
-                # ruta_recorte = imagen.ruta_imagen
-
                 imagen.guardar_recorte_archivo()
-
-                # imagen.marcada = False
-                # imagen.guardada = True
 
         galeria.actualizar_estilos()
         galeria.update()
 
         # reporte por snackbar
         if i == 0:
-            ventana_emergente(page,f"Recortes sin cambios")
+            ventana_emergente(pagina,f"Recortes sin cambios")
         else:
-            ventana_emergente(page,f"¡Recortes guardados! - {i} archivos modificados")
+            ventana_emergente(pagina,f"¡Recortes guardados! - {i} archivos modificados")
         # actualizacion grafica 
         cerrar_dialogo(e)  
 
@@ -706,37 +689,26 @@ def pagina_galeria(page: ft.Page):
 
         if j == 0:
             # se ignora (nada que hacer)
-            ventana_emergente(page, "Sin cambios para guardar.")
+            ventana_emergente(pagina, "Sin cambios para guardar.")
             return
         else:
-            # pedido de confirmacion
-            page.dialog = ft.AlertDialog(
-                # modal=True,
-                modal=False,
-                title=ft.Text("¿Guardar cambios?"),
-                content=ft.Text(f"{j} imágenes modificadas."),
-                actions=[
-                    ft.ElevatedButton(
-                        "Sí", 
-                        on_click=guardar_cambios,
-                        autofocus=False,
-                        ),
-                    # ft.OutlinedButton("No", on_click=no_click),
-                    ft.OutlinedButton(
-                        "No", 
-                        on_click=cerrar_dialogo, 
-                        autofocus=True ),
-                ],
-            )
-            # mantener dialogo abierto
-            page.dialog.open = True
-            page.update()
+            # en caso contrario se lanza la alerta de guardado
+            dialogo_guardado_imagenes = DialogoAlerta(
+                pagina,
+                "¿Guardar cambios?", 
+                f"Hay {j} imágenes modificadas."
+                )
 
+            dialogo_guardado_imagenes.funcion_confirmacion = guardar_cambios
+            dialogo_guardado_imagenes.abrir_alerta() 
 
 
     def cerrar_dialogo(e):
-        page.dialog.open = False
-        page.update()
+        pagina.dialog.open = False
+        pagina.update()
+
+
+
 
 
     def confirmar_cierre_programa(e:ft.ControlEvent):
@@ -757,29 +729,17 @@ def pagina_galeria(page: ft.Page):
             # si no hay modificaciones realizadas se cierra directamente
             # print(j)
             if j==0:
-                print("sin cambios registrados")
-                cierre_programa()
+                    pagina.window_destroy()
+            # en caso contrario se lanza la alerta de cierre
             else:
-                page.dialog = ft.AlertDialog(
-                    modal=False,
-                    title=ft.Text("¿Descartar cambios y salir?"),
-                    content=ft.Text(f"Hay {j} imágenes con modificaciones sin guardar."),
-                    actions=[
-                        ft.ElevatedButton(
-                            "Sí", 
-                            on_click=cierre_programa,
-                            autofocus=False,
-                            ),
-                        ft.OutlinedButton(
-                            "No", 
-                            on_click=cerrar_dialogo,
-                            autofocus=True 
-                            ),
-                    ],
-                    actions_alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                )
-                page.dialog.open = True
-                page.update()
+                dialogo_cierre_programa = DialogoAlerta(
+                    pagina,
+                    "¿Descartar cambios?", 
+                    f"Hay {j} modificaciones sin guardar."
+                    )
+
+                dialogo_cierre_programa.funcion_confirmacion = pagina.window_destroy
+                dialogo_cierre_programa.abrir_alerta()
 
 
     def cierre_programa(e:ft.ControlEvent|None=None):
@@ -793,7 +753,7 @@ def pagina_galeria(page: ft.Page):
                 cerrar = True
 
         if cerrar:
-            page.window_destroy()
+            pagina.window_destroy()
             time.sleep(0.5)
             selector_recorte.cerrar()
             directorio_miniaturas.cleanup()
@@ -801,11 +761,11 @@ def pagina_galeria(page: ft.Page):
 
     def redimensionar_selector(e):
         # if e.data =="resize":
-        ancho_pagina = int(page.window_width)
+        ancho_pagina = int(pagina.window_width)
         ancho_selector = int(ancho_pagina/2)
         selector_recorte.dimensiones_graficas(1, ancho_selector, ancho_selector)
 
-        fila_galeria.width = page.window_width
+        fila_galeria.width = pagina.window_width
         fila_galeria.update()
 
     ##################### ASIGNACION HANDLERS ##################
@@ -814,7 +774,7 @@ def pagina_galeria(page: ft.Page):
     barra_escala.on_change = escalar_imagen
 
     # propiedad de pagina: handler del teclado elegido
-    page.on_keyboard_event = teclado_galeria
+    pagina.on_keyboard_event = teclado_galeria
 
     # confirmacion guardado en grupo
     boton_guardar.on_click = abrir_dialogo_guardado
@@ -824,7 +784,7 @@ def pagina_galeria(page: ft.Page):
     dialogo_directorio_destino  = ft.FilePicker(on_result = resultado_directorio_destino )
    
     # Añadido de diálogos a la página
-    page.overlay.extend([
+    pagina.overlay.extend([
             dialogo_directorio_origen, dialogo_directorio_destino
         ])
 
@@ -834,14 +794,14 @@ def pagina_galeria(page: ft.Page):
     selector_recorte.funcion_scroll_mouse = actualizar_barra_zoom
 
     # rutina para liberar archivos temporales
-    page.window_prevent_close = True
-    # page.on_window_event = cierre_programa
-    page.on_window_event = confirmar_cierre_programa
+    pagina.window_prevent_close = True
+    # pagina.on_window_event = cierre_programa
+    pagina.on_window_event = confirmar_cierre_programa
 
-    page.title="Galeria Recorte"
-    # page.theme_mode = ft.ThemeMode.DARK
-    page.theme_mode = ft.ThemeMode.LIGHT
-    page.update()
+    pagina.title="Galeria Recorte"
+    # pagina.theme_mode = ft.ThemeMode.DARK
+    pagina.theme_mode = ft.ThemeMode.LIGHT
+    pagina.update()
 
 
 if __name__=="__main__":

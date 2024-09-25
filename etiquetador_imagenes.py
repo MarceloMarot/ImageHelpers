@@ -461,8 +461,8 @@ def main(pagina: ft.Page):
             # en caso contrario se lanza la alerta de guardado
             dialogo_guardado_imagenes = DialogoAlerta(
                 pagina,
-                "¿Descartar cambios?", 
-                f"Hay {j} modificaciones sin guardar."
+                "¿Guardar cambios?", 
+                f"Hay {j} imágenes modificadas."
                 )
 
             dialogo_guardado_imagenes.funcion_confirmacion = guardar_cambios
