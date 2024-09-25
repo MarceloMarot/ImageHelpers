@@ -539,105 +539,112 @@ class SelectorRecorte(ft.GestureDetector):
         self.temporal.xy_relativo = xy
 
 
-def principal(page: ft.Page):
-
-    def click_izquierdo(e):
-        selector_recorte.hacer_recorte_preliminar()
-        imagen_miniatura.src = selector_recorte.ruta_recorte
-        imagen_miniatura.visible=True
-        imagen_miniatura.update()
-        print(f"dimensiones marcado: {selector_recorte.dimensiones_recorte}")
 
 
-    def click_derecho(e):
-        selector_recorte.hacer_recorte_definitivo()
-        imagen_miniatura.src = selector_recorte.ruta_recorte
-        imagen_miniatura.visible=True
-        imagen_miniatura.update()
-        print(f"dimensiones guardado: {selector_recorte.dimensiones_recorte}")
- 
-
-    def escalar(e):
-        valor = e.control.value
-        selector_recorte.escalar(int(valor))
-
-
-    def actualizar_barra(e):
-        # actualizacion grafica de la barra deslizante
-        barra_escala.value = selector_recorte.escala_actual
-        barra_escala.update()
-
-
-    def cierre(e:ft.ControlEvent):
-        if e.data=="close":
-            page.window_destroy()
-            time.sleep(0.5)
-            selector_recorte.cerrar()
-
-
-
-    barra_escala = ft.Slider(
-        min=30, 
-        max=330, 
-        divisions=300,
-        value=100, 
-        label="{value}", 
-        width=512
-        )
-    barra_escala.on_change = escalar
-
-    selector_recorte = SelectorRecorte("selector_recortes__")
-
-    imagen_miniatura = ft.Image(
-        height=256,
-        width=256,
-        visible=False,
-    )
-
-    fila = ft.Row(
-        [selector_recorte,
-        imagen_miniatura,
-        ],
-        alignment=ft.MainAxisAlignment.CENTER,
-        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-
-    )
-
-    page.add(fila)
-    page.add(ft.Row(
-        [barra_escala],
-        alignment=ft.MainAxisAlignment.CENTER,
-        expand=True,
-        ))
-
-    page.window_height = 700
-    fila.height = 400
-    page.window_width  = 1000
-    fila.width  = 1000
-    page.theme_mode = ft.ThemeMode.DARK
-    page.on_window_event = cierre
-    page.window_prevent_close = True
-    page.update()
-
-    selector_recorte.abrir_imagen(ruta_archivo)
-
-    selector_recorte.dimensiones_graficas(0.5)
-    selector_recorte.dimensiones_recorte = [512, 512]
-    selector_recorte.funcion_click_izquierdo = click_izquierdo
-    selector_recorte.funcion_click_derecho = click_derecho
-    selector_recorte.funcion_scroll_mouse = actualizar_barra
-
-
-    time.sleep(0.5)
-    selector_recorte.xy_relativo = [0.5, 0.5]
-    selector_recorte.coordenadas()
-    click_izquierdo("")
-
-
-    page.update()
-
+# demo
 
 if __name__ == "__main__":
+
+
+    def principal(page: ft.Page):
+
+        def click_izquierdo(e):
+            selector_recorte.hacer_recorte_preliminar()
+            imagen_miniatura.src = selector_recorte.ruta_recorte
+            imagen_miniatura.visible=True
+            imagen_miniatura.update()
+            print(f"dimensiones marcado: {selector_recorte.dimensiones_recorte}")
+
+
+        def click_derecho(e):
+            selector_recorte.hacer_recorte_definitivo()
+            imagen_miniatura.src = selector_recorte.ruta_recorte
+            imagen_miniatura.visible=True
+            imagen_miniatura.update()
+            print(f"dimensiones guardado: {selector_recorte.dimensiones_recorte}")
+    
+
+        def escalar(e):
+            valor = e.control.value
+            selector_recorte.escalar(int(valor))
+
+
+        def actualizar_barra(e):
+            # actualizacion grafica de la barra deslizante
+            barra_escala.value = selector_recorte.escala_actual
+            barra_escala.update()
+
+
+        def cierre(e:ft.ControlEvent):
+            if e.data=="close":
+                page.window_destroy()
+                time.sleep(0.5)
+                selector_recorte.cerrar()
+
+
+
+        barra_escala = ft.Slider(
+            min=30, 
+            max=330, 
+            divisions=300,
+            value=100, 
+            label="{value}", 
+            width=512
+            )
+        barra_escala.on_change = escalar
+
+        selector_recorte = SelectorRecorte("selector_recortes__")
+
+        imagen_miniatura = ft.Image(
+            height=256,
+            width=256,
+            visible=False,
+        )
+
+        fila = ft.Row(
+            [selector_recorte,
+            imagen_miniatura,
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+
+        )
+
+        page.add(fila)
+        page.add(ft.Row(
+            [barra_escala],
+            alignment=ft.MainAxisAlignment.CENTER,
+            expand=True,
+            ))
+
+        page.window_height = 700
+        fila.height = 400
+        page.window_width  = 1000
+        fila.width  = 1000
+        page.theme_mode = ft.ThemeMode.DARK
+        page.on_window_event = cierre
+        page.window_prevent_close = True
+        page.update()
+
+        selector_recorte.abrir_imagen(ruta_archivo)
+
+        selector_recorte.dimensiones_graficas(0.5)
+        selector_recorte.dimensiones_recorte = [512, 512]
+        selector_recorte.funcion_click_izquierdo = click_izquierdo
+        selector_recorte.funcion_click_derecho = click_derecho
+        selector_recorte.funcion_scroll_mouse = actualizar_barra
+
+
+        time.sleep(0.5)
+        selector_recorte.xy_relativo = [0.5, 0.5]
+        selector_recorte.coordenadas()
+        click_izquierdo("")
+
+
+        page.update()
+
+
+
 
     import sys
     if len(sys.argv) == 2:

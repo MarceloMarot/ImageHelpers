@@ -7,7 +7,7 @@ from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria,
 
 from componentes.galeria_etiquetado import Contenedor_Etiquetado
 
-from componentes.clasificador import clasificador_imagenes
+from vistas.clasificador_etiquetador import clasificador_imagenes
 
 
 from manejo_texto.procesar_etiquetas import etiquetas2texto

@@ -7,7 +7,9 @@ from manejo_texto.procesar_etiquetas import Etiquetas
 
 from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
-from componentes.clasificador import clasificador_imagenes
+from vistas.clasificador_etiquetador import clasificador_imagenes
+
+
 lista_imagenes = clasificador_imagenes
 
 

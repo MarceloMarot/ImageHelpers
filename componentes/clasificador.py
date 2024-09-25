@@ -204,4 +204,4 @@ class ClasificadorImagenes:
 
 # Componentes globales
 
-clasificador_imagenes = ClasificadorImagenes()
+# clasificador_imagenes = ClasificadorImagenes()

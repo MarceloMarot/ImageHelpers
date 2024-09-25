@@ -261,77 +261,82 @@ def nada( indice ):
 
 
 
-def pagina_etiquetado(page: ft.Page ):
 
-    numero_imagenes = 20
-    rutas_imagen = rutas_imagenes_picsum(numero_imagenes, 200) 
-
-    dimension = 512
-
-    # estilos para el contenedor 
-    estilo_defecto = Estilo_Contenedor(
-        width = dimension,
-        height = dimension,
-        border_radius = 50, 
-        bgcolor = ft.colors.BLUE_400,
-        border=ft.border.all(20, ft.colors.INDIGO_100)
-        )
-
-    estilo_click = Estilo_Contenedor(
-        width = dimension,
-        height = dimension,
-        border_radius = 5,
-        bgcolor = ft.colors.RED_900,
-        border = ft.border.all(20, ft.colors.PURPLE_900),
-        )   
-
-    estilo_hover = Estilo_Contenedor(
-        width = dimension,
-        height = dimension,
-        border_radius = 50, 
-        bgcolor = ft.colors.AMBER_400,
-        border=ft.border.all(20, ft.colors.ORANGE_600),
-        )
-
-
-    def funcion_click(e : ft.ControlEvent):
-        cont = e.control    
-        cont.estilo(estilo_click)
-        cont.update()
-
-    def funcion_hover( e: ft.ControlEvent):
-        cont = e.control
-        cont.estilo(estilo_hover)
-        cont.update()
-
-    def funcion_longpress( e: ft.ControlEvent):   
-        cont = e.control     
-        cont.estilo(estilo_defecto)
-        cont.update()
-
-
-    menu = MenuNavegacion()
-    page.add(menu)
-
-    # carga de imagenes --> habilita controles
-    menu.eventos(funcion_click, funcion_hover, funcion_longpress)
-    menu.estilo(estilo_defecto)
-    menu.leer_imagenes(rutas_imagen, dimension, dimension, 30)
-
-    menu.alto  = 800
-    menu.ancho = 800
-
-    page.title = "Navegación Imágenes"
-    page.window_width  = 1200
-    page.window_height = 1000
-    page.window_maximizable = True
-    page.window_minimizable = True
-    page.window_maximized   = False
-    page.update()
-
-
-# Llamado al programa y su frontend
+# demo
 if __name__ == "__main__":
+
+    #  funcion de pagina
+    def pagina_etiquetado(page: ft.Page ):
+
+        numero_imagenes = 20
+        rutas_imagen = rutas_imagenes_picsum(numero_imagenes, 200) 
+
+        dimension = 512
+
+        # estilos para el contenedor 
+        estilo_defecto = Estilo_Contenedor(
+            width = dimension,
+            height = dimension,
+            border_radius = 50, 
+            bgcolor = ft.colors.BLUE_400,
+            border=ft.border.all(20, ft.colors.INDIGO_100)
+            )
+
+        estilo_click = Estilo_Contenedor(
+            width = dimension,
+            height = dimension,
+            border_radius = 5,
+            bgcolor = ft.colors.RED_900,
+            border = ft.border.all(20, ft.colors.PURPLE_900),
+            )   
+
+        estilo_hover = Estilo_Contenedor(
+            width = dimension,
+            height = dimension,
+            border_radius = 50, 
+            bgcolor = ft.colors.AMBER_400,
+            border=ft.border.all(20, ft.colors.ORANGE_600),
+            )
+
+
+        def funcion_click(e : ft.ControlEvent):
+            cont = e.control    
+            cont.estilo(estilo_click)
+            cont.update()
+
+        def funcion_hover( e: ft.ControlEvent):
+            cont = e.control
+            cont.estilo(estilo_hover)
+            cont.update()
+
+        def funcion_longpress( e: ft.ControlEvent):   
+            cont = e.control     
+            cont.estilo(estilo_defecto)
+            cont.update()
+
+
+        menu = MenuNavegacion()
+        page.add(menu)
+
+        # carga de imagenes --> habilita controles
+        menu.eventos(funcion_click, funcion_hover, funcion_longpress)
+        menu.estilo(estilo_defecto)
+        menu.leer_imagenes(rutas_imagen, dimension, dimension, 30)
+
+        menu.alto  = 800
+        menu.ancho = 800
+
+        page.title = "Navegación Imágenes"
+        page.window_width  = 1200
+        page.window_height = 1000
+        page.window_maximizable = True
+        page.window_minimizable = True
+        page.window_maximized   = False
+        page.update()
+
+
+
+    # Llamado al programa y su frontend
     mensaje = ft.app(target=pagina_etiquetado)
 
 

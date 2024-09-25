@@ -147,6 +147,6 @@ def actualizar_estilo_estado( contenedores: list[Contenedor_Etiquetado], estilos
 
 # componentes globales
 
-galeria_etiquetador = GaleriaEtiquetado( estilos_galeria )
+# galeria_etiquetador = GaleriaEtiquetado( estilos_galeria )
 
 

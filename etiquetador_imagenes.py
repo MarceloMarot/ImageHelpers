@@ -20,10 +20,11 @@ from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria,
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
 from componentes.galeria_etiquetado import Contenedor_Etiquetado, actualizar_estilo_estado
-from componentes.galeria_etiquetado import galeria_etiquetador
+# from componentes.galeria_etiquetado import galeria_etiquetador
+from componentes.galeria_etiquetado import GaleriaEtiquetado
 
 from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, filtrar_estados, leer_imagenes_etiquetadas
-from componentes.clasificador import clasificador_imagenes
+# from componentes.clasificador import clasificador_imagenes
 
 from componentes.dialogo_alerta import DialogoAlerta
 
@@ -39,6 +40,8 @@ from vistas.columna_seleccion import texto_imagen, texto_ruta_data,texto_ruta_ti
 from vistas.columna_seleccion import columna_seleccion, contenedor_seleccion
 from vistas.columna_seleccion import imagen_seleccion
 
+from vistas.clasificador_etiquetador import clasificador_imagenes
+
 from vistas.menu_etiquetador import boton_carpeta, boton_filtrar_dimensiones, boton_dataset, tooltip_carpeta, ayuda_emergente
 from vistas.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
 from vistas.menu_etiquetador import actualizar_lista_dimensiones
@@ -49,7 +52,11 @@ from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
 lista_imagenes = clasificador_imagenes
 
+
+galeria_etiquetador = GaleriaEtiquetado( estilos_galeria )
+
 imagenes_tags = []
+
 
 
 def main(pagina: ft.Page):

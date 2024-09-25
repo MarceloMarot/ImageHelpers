@@ -7,7 +7,8 @@ from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
 from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 
-from componentes.clasificador import clasificador_imagenes
+from vistas.clasificador_etiquetador import clasificador_imagenes
+
 lista_imagenes = clasificador_imagenes
 
 

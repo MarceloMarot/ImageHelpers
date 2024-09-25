@@ -247,119 +247,120 @@ def imagen_nombre(nombre: str, imagenes: list[ContImag]):
     return list(objeto_filtrado)[0]
 
 
-
-def pagina_galeria(page: ft.Page):
-    
-    # parametros de ejemplo
-    numero_imagenes =  15
-    rutas_imagenes = rutas_imagenes_picsum(numero_imagenes, 256 )
-
-    # estilos para contenedores 
-    estilo_defecto = Estilo_Contenedor(
-        width = 300,
-        height = 300,
-        border_radius = 50, 
-        bgcolor = ft.colors.BLUE_400,
-        border=ft.border.all(20, ft.colors.INDIGO_100),
-        )
-
-    estilo_click = Estilo_Contenedor(
-        width = 300,
-        height = 300,
-        border_radius = 5,
-        bgcolor = ft.colors.RED_900,
-        border = ft.border.all(20, ft.colors.PURPLE_900),
-        )   
-
-    estilo_hover = Estilo_Contenedor(
-        width = 300,
-        height = 300,
-        border_radius = 50, 
-        bgcolor = ft.colors.AMBER_400,
-        border=ft.border.all(20, ft.colors.ORANGE_600),
-        )
-
-
-    # Funciones para los eventos del mouse que producirán un cambio de estilo del contenedor afectado
-    def funcion_click(e: ft.ControlEvent):
-        cont = e.control 
-        cont.estilo(estilo_click)
-        print("click: ", cont.content.key)
-        cont.update()
-
-    def funcion_hover(e: ft.ControlEvent):
-        cont = e.control 
-        cont.estilo(estilo_hover)
-        cont.update()
-
-    def funcion_longpress(e: ft.ControlEvent): 
-        cont = e.control        
-        cont.estilo(estilo_defecto)
-        cont.update()
-
-    # Maquetado
-    # componente galeria de contenedores con imágenes
-    galeria = Galeria()
-    page.add(galeria)
-
-    galeria.leer_imagenes(rutas_imagenes, redondeo = 30)
-    galeria.estilo(estilo_defecto)
-    galeria.eventos(
-        click = funcion_click,
-        hover = funcion_hover,
-        longpress = funcion_longpress
-        )
-
-    def scroll_to_key(clave, e):
-        # galeria.scroll_to(key=str(n), duration=1000)
-        galeria.scroll_to(key=clave, duration=1000)
-        print(f"Imagen con clave: {clave}")
-
-    m = 0 
-    clave = f"imag_{m}" 
-    boton_inicio = ft.ElevatedButton(  
-        text="Inicio",    
-        bgcolor=ft.colors.RED_800, 
-        color=ft.colors.WHITE,
-        on_click=partial(scroll_to_key, clave)
-        )
-
-    m = int((numero_imagenes-1)/2)  
-    clave = f"imag_{m}" 
-    boton_medio = ft.ElevatedButton(
-        text="Medio",    
-        bgcolor=ft.colors.AMBER_800, 
-        color=ft.colors.WHITE, 
-        on_click=partial(scroll_to_key, clave)
-        )
-
-    m = numero_imagenes - 1 
-    clave = f"imag_{m}" 
-    boton_fin = ft.ElevatedButton(   
-        text="Fin",    
-        bgcolor=ft.colors.GREEN_800, 
-        color=ft.colors.WHITE,
-        on_click=partial(scroll_to_key, clave)
-        )
-
-    page.add(ft.Row([boton_inicio, boton_medio, boton_fin]))
-
-    # dimensiones componente
-    # galeria.ancho = 1400      # ancho maximo
-    # galeria.alto = 600
-    galeria.update()
-
-    # Elementos generales de la pagina
-    page.title = "Galería Imágenes"
-    page.window_width  = 1500
-    page.window_height =  800
-    page.theme_mode = ft.ThemeMode.LIGHT
-    # page.theme_mode = ft.ThemeMode.DARK
-
-    page.padding = 10
-    page.update()
-
-
-# creacion de ventana
+# demo
 if __name__ == "__main__":
+
+    def pagina_galeria(page: ft.Page):
+        
+        # parametros de ejemplo
+        numero_imagenes =  15
+        rutas_imagenes = rutas_imagenes_picsum(numero_imagenes, 256 )
+
+        # estilos para contenedores 
+        estilo_defecto = Estilo_Contenedor(
+            width = 300,
+            height = 300,
+            border_radius = 50, 
+            bgcolor = ft.colors.BLUE_400,
+            border=ft.border.all(20, ft.colors.INDIGO_100),
+            )
+
+        estilo_click = Estilo_Contenedor(
+            width = 300,
+            height = 300,
+            border_radius = 5,
+            bgcolor = ft.colors.RED_900,
+            border = ft.border.all(20, ft.colors.PURPLE_900),
+            )   
+
+        estilo_hover = Estilo_Contenedor(
+            width = 300,
+            height = 300,
+            border_radius = 50, 
+            bgcolor = ft.colors.AMBER_400,
+            border=ft.border.all(20, ft.colors.ORANGE_600),
+            )
+
+
+        # Funciones para los eventos del mouse que producirán un cambio de estilo del contenedor afectado
+        def funcion_click(e: ft.ControlEvent):
+            cont = e.control 
+            cont.estilo(estilo_click)
+            print("click: ", cont.content.key)
+            cont.update()
+
+        def funcion_hover(e: ft.ControlEvent):
+            cont = e.control 
+            cont.estilo(estilo_hover)
+            cont.update()
+
+        def funcion_longpress(e: ft.ControlEvent): 
+            cont = e.control        
+            cont.estilo(estilo_defecto)
+            cont.update()
+
+        # Maquetado
+        # componente galeria de contenedores con imágenes
+        galeria = Galeria()
+        page.add(galeria)
+
+        galeria.leer_imagenes(rutas_imagenes, redondeo = 30)
+        galeria.estilo(estilo_defecto)
+        galeria.eventos(
+            click = funcion_click,
+            hover = funcion_hover,
+            longpress = funcion_longpress
+            )
+
+        def scroll_to_key(clave, e):
+            # galeria.scroll_to(key=str(n), duration=1000)
+            galeria.scroll_to(key=clave, duration=1000)
+            print(f"Imagen con clave: {clave}")
+
+        m = 0 
+        clave = f"imag_{m}" 
+        boton_inicio = ft.ElevatedButton(  
+            text="Inicio",    
+            bgcolor=ft.colors.RED_800, 
+            color=ft.colors.WHITE,
+            on_click=partial(scroll_to_key, clave)
+            )
+
+        m = int((numero_imagenes-1)/2)  
+        clave = f"imag_{m}" 
+        boton_medio = ft.ElevatedButton(
+            text="Medio",    
+            bgcolor=ft.colors.AMBER_800, 
+            color=ft.colors.WHITE, 
+            on_click=partial(scroll_to_key, clave)
+            )
+
+        m = numero_imagenes - 1 
+        clave = f"imag_{m}" 
+        boton_fin = ft.ElevatedButton(   
+            text="Fin",    
+            bgcolor=ft.colors.GREEN_800, 
+            color=ft.colors.WHITE,
+            on_click=partial(scroll_to_key, clave)
+            )
+
+        page.add(ft.Row([boton_inicio, boton_medio, boton_fin]))
+
+        # dimensiones componente
+        # galeria.ancho = 1400      # ancho maximo
+        # galeria.alto = 600
+        galeria.update()
+
+        # Elementos generales de la pagina
+        page.title = "Galería Imágenes"
+        page.window_width  = 1500
+        page.window_height =  800
+        page.theme_mode = ft.ThemeMode.LIGHT
+        # page.theme_mode = ft.ThemeMode.DARK
+
+        page.padding = 10
+        page.update()
+
+
+    # creacion de ventana
     ft.app(target = pagina_galeria)
