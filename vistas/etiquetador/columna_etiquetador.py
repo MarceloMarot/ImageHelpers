@@ -1,7 +1,7 @@
 
 from manejo_texto.procesar_etiquetas import  Etiquetas
 from componentes.etiquetador_botones import EtiquetadorBotones  
-from vistas.columna_etiquetas import filas_filtrado
+from vistas.etiquetador.columna_etiquetas import filas_filtrado
 
 
 # Componentes globales

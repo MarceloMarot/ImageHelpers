@@ -2,12 +2,12 @@ import flet as ft
 import re
 from componentes.etiquetador_botones import FilasBotonesEtiquetas
 
-from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
+from vistas.etiquetador.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 from manejo_texto.procesar_etiquetas import Etiquetas
 
 from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
-from vistas.clasificador_etiquetador import clasificador_imagenes
+from vistas.etiquetador.clasificador import clasificador_imagenes
 
 
 lista_imagenes = clasificador_imagenes

@@ -5,9 +5,9 @@ from componentes.etiquetador_botones import BotonBiestable
 
 from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
-from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
+from vistas.etiquetador.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 
-from vistas.clasificador_etiquetador import clasificador_imagenes
+from vistas.etiquetador.clasificador import clasificador_imagenes
 
 lista_imagenes = clasificador_imagenes
 

@@ -28,25 +28,25 @@ from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, fil
 
 from componentes.dialogo_alerta import DialogoAlerta
 
-from vistas.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
+from vistas.etiquetador.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 
-from vistas.columna_etiquetas import entrada_tags_agregar,entrada_tags_quitar
-from vistas.columna_etiquetas import entrada_tags_buscar
-from vistas.columna_etiquetas import filas_filtrado, columna_etiquetas, texto_contador_tags
-from vistas.columna_etiquetas import boton_reset_tags, boton_guardar_dataset, boton_reordenar_tags
-from vistas.columna_etiquetas import estadisticas
+from vistas.etiquetador.columna_etiquetas import entrada_tags_agregar,entrada_tags_quitar
+from vistas.etiquetador.columna_etiquetas import entrada_tags_buscar
+from vistas.etiquetador.columna_etiquetas import filas_filtrado, columna_etiquetas, texto_contador_tags
+from vistas.etiquetador.columna_etiquetas import boton_reset_tags, boton_guardar_dataset, boton_reordenar_tags
+from vistas.etiquetador.columna_etiquetas import estadisticas
 
-from vistas.columna_seleccion import texto_imagen, texto_ruta_data,texto_ruta_titulo,texto_tags_data,texto_tags_titulo
-from vistas.columna_seleccion import columna_seleccion, contenedor_seleccion
-from vistas.columna_seleccion import imagen_seleccion
+from vistas.etiquetador.columna_seleccion import texto_imagen, texto_ruta_data,texto_ruta_titulo,texto_tags_data,texto_tags_titulo
+from vistas.etiquetador.columna_seleccion import columna_seleccion, contenedor_seleccion
+from vistas.etiquetador.columna_seleccion import imagen_seleccion
 
-from vistas.clasificador_etiquetador import clasificador_imagenes
+from vistas.etiquetador.clasificador import clasificador_imagenes
 
-from vistas.menu_etiquetador import boton_carpeta, boton_filtrar_dimensiones, boton_dataset, tooltip_carpeta, ayuda_emergente
-from vistas.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
-from vistas.menu_etiquetador import actualizar_lista_dimensiones
+from vistas.etiquetador.menu_etiquetador import boton_carpeta, boton_filtrar_dimensiones, boton_dataset, tooltip_carpeta, ayuda_emergente
+from vistas.etiquetador.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
+from vistas.etiquetador.menu_etiquetador import actualizar_lista_dimensiones
 
-from vistas.columna_etiquetador import etiquetador_imagen, crear_botones_etiquetador
+from vistas.etiquetador.columna_etiquetador import etiquetador_imagen, crear_botones_etiquetador
 
 from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
