@@ -1,6 +1,3 @@
-
-
-
 import flet as ft
 from typing import TypeVar
 import pathlib
@@ -15,6 +12,10 @@ from componentes.selector_recortes import SelectorRecorte, DataRecorte
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 from sistema_archivos.imagen_editable import ImagenEditable, crear_directorio_RAM
 
+
+from vistas.recortador.menu_recortador import ayuda_emergente
+from vistas.recortador.dialogos import dialogo_directorio_origen, dialogo_directorio_destino
+from vistas.recortador.menu_recortador import boton_carpeta_origen, boton_carpeta_destino, fila_controles, lista_dimensiones_desplegable
 
 def nada( e ):
     pass
@@ -166,33 +167,6 @@ def actualizar_estilo_estado(
 
 
 
-texto_ayuda = """
-Bordes de Imagen:
-Cada color de borde da informacion sobre el estado del recorte de cada imagen.
-Opciones:
-- Celeste: no recortado
-- Verde: archivo de recorte guardado
-- Amarillo: recorte marcado pero sin guardar en disco
-
-Galería de imágenes:
-- Click izquierdo sobre cualquier imagen para seleccionarla.
-  Se abrirá el selector de recortes a la derecha.
-
-Selector de recortes:
-- Click derecho sobre la imagen ampliada para guardar el recorte marcado;
-- Click izquierdo para marcado provisional (no se guarda);
-- Rueda del mouse: cambio del zoom de imagen.
-
-Barra de zoom:
-- Deslizar la barra para ajustar el zoom de imagen.
-
-Teclas rápidas:
-- Home:  primera imagen;
-- RePag | A: imagen anterior;
-- AvPag | D: imagen siguiente;
-- End:   última imagen;
-- Flechas: cambia zoom
-"""
 
 
 clave_actual = None
@@ -209,42 +183,7 @@ def pagina_galeria(pagina: ft.Page):
 
     ################## COMPONENTES ########################
 
-    ancho_botones = 200
-    altura_botones = 40
 
-    # Botones apertura de ventana emergente
-    boton_carpeta_origen = ft.ElevatedButton(
-        text = "Carpeta capturas",
-        icon=ft.icons.FOLDER_OPEN,
-        bgcolor=ft.colors.BLUE_900,
-        color= ft.colors.WHITE,
-        height = altura_botones,
-        width  = ancho_botones,
-        ## manejador
-        on_click=lambda _: dialogo_directorio_origen.get_directory_path(
-            dialog_title="Elegir carpeta con las capturas de imagen"
-        ),
-        tooltip="Elegir carpeta con las capturas de imagen",
-    )
-
-    boton_carpeta_destino = ft.ElevatedButton(
-        text = "Carpeta recortes",
-        icon=ft.icons.FOLDER_OPEN,
-        ## manejador: leer sólo directorios
-        on_click=lambda _: dialogo_directorio_destino.get_directory_path(
-            dialog_title="Elegir carpeta para los recortes creados",
-            ),
-        tooltip = "Elegir carpeta para los recortes creados",
-        disabled = True,       
-        height = altura_botones,
-        width  = ancho_botones,
-        bgcolor = ft.colors.RED_900,
-        color = ft.colors.WHITE,
-    )
-
-    # lista desplegable para elegir opciones de imagen 
-    lista_dimensiones_desplegable = crear_lista_desplegable(tupla_resoluciones[1:], ancho=120)
-    
     # textos
     texto_imagen = ft.Text(
         "(Titulo)",
@@ -254,8 +193,6 @@ def pagina_galeria(pagina: ft.Page):
         text_align=ft.TextAlign.CENTER,
         )
 
-
-    texto_dimensiones = ft.Text("Dimensiones\nrecorte:", tooltip="512x512 por defecto")
 
     barra_escala = ft.Slider(
         min=30, 
@@ -270,13 +207,7 @@ def pagina_galeria(pagina: ft.Page):
     texto_zoom = ft.Text(f"Zoom: {int(barra_escala.value) } %", width=300)
 
 
-    ayuda_emergente = ft.Tooltip(
-        message=texto_ayuda,
-        content=ft.Text("Ayuda emergente",size=20, width=200),
-        padding=20,
-        border_radius=10,
-        text_style=ft.TextStyle(size=15, color=ft.colors.WHITE),
-    )
+
 
     selector_recorte = SelectorRecorte(prefijo_directorio_temporal)
     selector_recorte.height = 768
@@ -315,30 +246,6 @@ def pagina_galeria(pagina: ft.Page):
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
-    # componentes repartidos en segmentos horizontales
-    fila_controles_apertura = ft.Row(
-        [boton_carpeta_origen, boton_carpeta_destino],
-        width = 500,
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        wrap = True
-        )
-
-    fila_controles_dimensiones = ft.Row(
-        [texto_dimensiones, lista_dimensiones_desplegable],
-        width = 400,
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        wrap = False
-        )
-
-    fila_controles = ft.Row([
-        # boton_carpeta_origen, boton_carpeta_destino, 
-        fila_controles_apertura,
-        fila_controles_dimensiones,
-        ayuda_emergente
-        ],
-        wrap = True,
-        # alignment=ft.MainAxisAlignment.END,
-        )
 
     fila_galeria = ft.Row(
         [galeria, 
@@ -708,9 +615,6 @@ def pagina_galeria(pagina: ft.Page):
         pagina.update()
 
 
-
-
-
     def confirmar_cierre_programa(e:ft.ControlEvent):
         if e.data == "close":
             global imagenes_galeria
@@ -780,9 +684,12 @@ def pagina_galeria(pagina: ft.Page):
     boton_guardar.on_click = abrir_dialogo_guardado
 
     # Clase para manejar dialogos de archivo y de carpeta
-    dialogo_directorio_origen   = ft.FilePicker(on_result = resultado_directorio_origen )
-    dialogo_directorio_destino  = ft.FilePicker(on_result = resultado_directorio_destino )
-   
+    dialogo_directorio_origen .on_result = resultado_directorio_origen 
+    dialogo_directorio_destino.on_result = resultado_directorio_destino 
+
+
+
+
     # Añadido de diálogos a la página
     pagina.overlay.extend([
             dialogo_directorio_origen, dialogo_directorio_destino
