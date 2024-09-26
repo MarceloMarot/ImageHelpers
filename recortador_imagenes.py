@@ -8,7 +8,8 @@ from componentes.galeria_imagenes import ContImag, Galeria, Contenedor_Imagen, i
 from componentes.dialogo_alerta import DialogoAlerta
 from sistema_archivos.buscar_extension import buscar_imagenes
 from componentes.estilos_contenedores import estilos_galeria, estilos_seleccion, Estilo_Contenedor
-from componentes.selector_recortes import SelectorRecorte, DataRecorte
+# from componentes.selector_recortes import SelectorRecorte, DataRecorte
+from componentes.selector_recortes import DataRecorte
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 from sistema_archivos.imagen_editable import ImagenEditable, crear_directorio_RAM
 
@@ -16,18 +17,19 @@ from sistema_archivos.imagen_editable import ImagenEditable, crear_directorio_RA
 from vistas.recortador.menu_recortador import ayuda_emergente
 from vistas.recortador.dialogos import dialogo_directorio_origen, dialogo_directorio_destino
 from vistas.recortador.menu_recortador import boton_carpeta_origen, boton_carpeta_destino, fila_controles, lista_dimensiones_desplegable
+from vistas.recortador.columna_selector import columna_selector
+from vistas.recortador.columna_selector import texto_imagen, texto_zoom
+from vistas.recortador.columna_selector import selector_recorte, barra_escala
+
+from constantes.rutas import DIRECTORIO_RECORTES, PREFIJO_DIRECTORIO_MINIATURAS
 
 def nada( e ):
     pass
 
 
-directorio_recortes = "recortes/"
+directorio_recortes = DIRECTORIO_RECORTES
+directorio_miniaturas = crear_directorio_RAM(PREFIJO_DIRECTORIO_MINIATURAS)
 
-prefijo_directorio_temporal = "recortador_imagenes_"
-prefijo_directorio_miniaturas = "recortador_miniaturas_"
-
-# carpeta auxiliar para contener las miniaturas de los recortes, de ser posible en RAM
-directorio_miniaturas = crear_directorio_RAM(prefijo_directorio_miniaturas)
 
 
 imagenes_galeria = []
@@ -184,34 +186,6 @@ def pagina_galeria(pagina: ft.Page):
     ################## COMPONENTES ########################
 
 
-    # textos
-    texto_imagen = ft.Text(
-        "(Titulo)",
-        size=20,
-        # height=30, 
-        weight=ft.FontWeight.BOLD,
-        text_align=ft.TextAlign.CENTER,
-        )
-
-
-    barra_escala = ft.Slider(
-        min=30, 
-        max=330, 
-        divisions=300,
-        value=100, 
-        label="{value}", 
-        width=700,
-        round=0,
-        )
-
-    texto_zoom = ft.Text(f"Zoom: {int(barra_escala.value) } %", width=300)
-
-
-
-
-    selector_recorte = SelectorRecorte(prefijo_directorio_temporal)
-    selector_recorte.height = 768
-    selector_recorte.width  = 768
 
     galeria = GaleriaRecortes(estilos_galeria)
     
@@ -224,27 +198,8 @@ def pagina_galeria(pagina: ft.Page):
 
     #################### MAQUETADO ########################
 
-    fila_zoom = ft.Row(
-        [texto_zoom, barra_escala],
-        width=768,
-        wrap=True,
-        alignment=ft.MainAxisAlignment.START,
-        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-        )
 
-    columna_selector = ft.Column(
-        [
-        texto_imagen,
-        selector_recorte,
-        fila_zoom
-        ],
-        width  = 768,
-        # height = altura_pagina,
-        expand = True ,
-        visible= False,
-        alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        )
+    
 
 
     fila_galeria = ft.Row(
@@ -553,7 +508,6 @@ def pagina_galeria(pagina: ft.Page):
         # actualiacion de texto
         texto_zoom.value = f"Zoom: {int(barra_escala.value) } %"
         texto_zoom.update()
-
 
     
     def guardar_cambios(e:ft.ControlEvent | None = None):

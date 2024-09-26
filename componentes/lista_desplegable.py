@@ -3,12 +3,12 @@ import pathlib
 import os 
 import yaml
 
-from constantes.rutas import ARCHIVO_RESOLUCIONES_ETIQUETADOR, DIRECTORIO_CONFIGURACION
+from constantes.rutas import ARCHIVO_RESOLUCIONES, DIRECTORIO_CONFIGURACION
 
 # apertura del archivo YAML con dimensiones de archivo
 os.chdir( DIRECTORIO_CONFIGURACION) 
 
-with open(ARCHIVO_RESOLUCIONES_ETIQUETADOR,  'r') as archivo:
+with open(ARCHIVO_RESOLUCIONES,  'r') as archivo:
     tupla_resoluciones = yaml.safe_load(archivo)
 
 os.chdir( ".." ) 
