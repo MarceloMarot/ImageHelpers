@@ -13,6 +13,7 @@ from componentes.selector_recortes import DataRecorte
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 from sistema_archivos.imagen_editable import ImagenEditable, crear_directorio_RAM
 
+from componentes.galeria_etiquetado import GaleriaEtiquetado, actualizar_estilo_estado
 
 from vistas.recortador.menu_recortador import ayuda_emergente
 from vistas.recortador.dialogos import dialogo_directorio_origen, dialogo_directorio_destino
@@ -23,6 +24,8 @@ from vistas.recortador.columna_selector import selector_recorte, barra_escala
 
 from constantes.rutas import DIRECTORIO_RECORTES, PREFIJO_DIRECTORIO_MINIATURAS
 
+
+
 def nada( e ):
     pass
 
@@ -30,7 +33,7 @@ def nada( e ):
 directorio_recortes = DIRECTORIO_RECORTES
 directorio_miniaturas = crear_directorio_RAM(PREFIJO_DIRECTORIO_MINIATURAS)
 
-
+clave_actual = None
 
 imagenes_galeria = []
 
@@ -38,7 +41,7 @@ class ContenedorRecortes( Contenedor_Imagen):
     def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0,):
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
         # flags para el coloreo de bordes
-        self.marcada = False
+        self.modificada = False
         self.guardada = False
         self.defectuosa = False
         # datos de la ventana emergente
@@ -91,7 +94,7 @@ class ContenedorRecortes( Contenedor_Imagen):
         """Copia el archivo del recorte a la ruta preasignada"""
         nro_bytes = 0
         # copia el archivo si hay modificaciones registradas
-        if self.marcada:
+        if self.modificada:
             archivo_origen = pathlib.Path(self.recorte_temporal.ruta )
             data_binaria = archivo_origen.read_bytes()
 
@@ -100,31 +103,16 @@ class ContenedorRecortes( Contenedor_Imagen):
 
         # actualizacion de flags si la escritura fue exitosa
         if nro_bytes > 0:
-            self.marcada = False
+            self.modificada = False
             self.guardada = True
 
         return nro_bytes
 
 
 
-# nuevos tipados para contenedor y sus subclases
-ContRec = TypeVar('ContRec', bound=ContenedorRecortes)
-
-
-class GaleriaRecortes( Galeria):
+class GaleriaRecortes( GaleriaEtiquetado):
     def __init__(self, estilos: dict):
-        super().__init__()
-        self.estilos = estilos
-        self.imagenes: list[ContenedorRecortes]
-
-
-    def cargar_imagenes(self, 
-        imagenes: list[ContRec ], 
-        cuadricula=True):
-        super().cargar_imagenes(imagenes, cuadricula)
-        self.imagenes = imagenes
-
-        self.actualizar_estilos( )  
+        super().__init__(estilos)
 
 
     def ruta_recortes(self, ruta_directorio: str):
@@ -132,10 +120,6 @@ class GaleriaRecortes( Galeria):
         for contenedor in self.controls:
             contenedor: ContenedorRecortes
             contenedor.ruta_recorte(ruta_directorio)   
-
-
-    def actualizar_estilos(self):
-        actualizar_estilo_estado( self.imagenes, self.estilos)    
 
 
 def cargar_imagenes_galeria(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0):
@@ -152,26 +136,8 @@ def cargar_imagenes_galeria(rutas_imagen: list[str], ancho=1024, alto=1024, redo
     return contenedores
 
 
-def actualizar_estilo_estado(
-    contenedores: list[ContenedorRecortes], estilos : dict ):
-    """Actualiza los colores de borde de todas las imagenes en base a los flags internos."""
-    for contenedor in contenedores:
-        if contenedor.defectuosa :
-            estilo = estilos["erroneo"]     
-        elif contenedor.marcada :
-            estilo = estilos["modificado"]
-        elif contenedor.guardada :
-            estilo = estilos["guardado"]
-        else: 
-            estilo = estilos["predefinido"]
-
-        contenedor.estilo( estilo )
 
 
-
-
-
-clave_actual = None
 
 
 def pagina_galeria(pagina: ft.Page):
@@ -347,7 +313,7 @@ def pagina_galeria(pagina: ft.Page):
         if imagen.guardada:
             escala = imagen.data_guardado.escala
             actualizar_barra_zoom(escala)
-        elif imagen.marcada:
+        elif imagen.modificada:
             escala = imagen.data_marcado.escala
             actualizar_barra_zoom(escala)
         else:
@@ -463,7 +429,7 @@ def pagina_galeria(pagina: ft.Page):
         clave_actual = selector_recorte.temporal.clave  # FIX: forzado
         imagen: ContenedorRecortes
         imagen = imagen_clave(clave_actual, imagenes_galeria)
-        imagen.marcada = not guardar # FIX
+        imagen.modificada = not guardar # FIX
         imagen.guardada = guardar    # FIX
         # se transfieren los datos auxiliares: escalas, coordenadas, etc
         imagen.data_actual  .leer(selector_recorte.temporal.data_actual  )    
@@ -522,7 +488,7 @@ def pagina_galeria(pagina: ft.Page):
         i = 0
         for imagen in imagenes_galeria:  #
             # busqueda de recortes modificados
-            if imagen.marcada :
+            if imagen.modificada :
                 i += 1 
                 imagen.guardar_recorte_archivo()
 
@@ -545,7 +511,7 @@ def pagina_galeria(pagina: ft.Page):
         j = 0
         imagen: ContenedorRecortes
         for imagen in imagenes_galeria:  
-            if imagen.marcada:
+            if imagen.modificada:
                 j += 1 
 
         if j == 0:
@@ -575,17 +541,14 @@ def pagina_galeria(pagina: ft.Page):
             # conteo imagenes con cambios sin guardar
             j = 0
             if len(imagenes_galeria)==0:
-                print("galeria vacia")
                 cierre_programa()
 
             imagen: ContenedorRecortes
             for imagen in imagenes_galeria:  
-                if imagen.marcada:
+                if imagen.modificada:
                     j += 1 
-                    # print(j)
 
             # si no hay modificaciones realizadas se cierra directamente
-            # print(j)
             if j==0:
                     pagina.window_destroy()
             # en caso contrario se lanza la alerta de cierre
