@@ -4,6 +4,7 @@
 carpeta_destino='distribuibles'
 carpeta_union='temporal'
 carpeta_traducciones='traducciones'
+carpeta_configuraciones='configuracion'
 
 carpeta_iconos='iconos'
 
@@ -96,6 +97,7 @@ do
         --distpath $carpeta_destino \
         --noconfirm --noconsole \
         --add-data $carpeta_traducciones/:$carpeta_destino/$carpeta_traducciones \
+        --add-data $carpeta_configuraciones/:$carpeta_destino/$carpeta_configuraciones \
         # --icon $carpeta_iconos/$elemento.ico 
     # compactado en directorio unico
     cd $carpeta_destino
@@ -124,6 +126,7 @@ echo "Directorio temporal '$carpeta_destino/$carpeta_union' eliminado"
 # copia archivos traduccion
 echo "Copiando archivos de traducciones"
 cp -r  $carpeta_traducciones/  $carpeta_destino/$carpeta_traducciones
+cp -r  $carpeta_configuraciones/  $carpeta_destino/$carpeta_configuraciones
 echo "Hecho!"
 
 
