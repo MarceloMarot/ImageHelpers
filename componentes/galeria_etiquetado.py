@@ -21,6 +21,7 @@ from abc import ABC, abstractclassmethod
 
 # Clase plantilla para crear contenedores de imagenes con estados
 class ContenedorEstados(ABC, Contenedor_Imagen):
+    """Clase plantilla para manejar imagenes con estados de guardado, modificación, etc."""
     #  Inicializacion
     def __init__(
         self, 
@@ -50,20 +51,20 @@ class ContenedorEstados(ABC, Contenedor_Imagen):
 
     # clases prediseñadas 
 
-    def estilo_estado(self, estilos : dict):
+    def estilo_estado(self):
         if self.defectuosa :     
-            estilo = estilos[Estilos.ERRONEO.value]     
+            estilo = self.estilos[Estilos.ERRONEO.value]     
         elif self.modificada :
-            estilo = estilos[Estilos.MODIFICADO.value]
+            estilo = self.estilos[Estilos.MODIFICADO.value]
         elif self.guardada :
-            estilo = estilos[Estilos.GUARDADO.value]
+            estilo = self.estilos[Estilos.GUARDADO.value]
         else: 
-            estilo = estilos[Estilos.DEFAULT.value]
+            estilo = self.estilos[Estilos.DEFAULT.value]
         self.estilo( estilo )
 
     #  REPETIDO
     def actualizar_estilo_estado(self):
-        self.estilo_estado(self.estilos)
+        self.estilo_estado()
 
     def leer_dimensiones(self):
         """Este método lee altura, base y numero de canales de la imagen"""
@@ -105,6 +106,7 @@ class ContenedorEstados(ABC, Contenedor_Imagen):
 
 
 class Contenedor_Etiquetado( Etiquetas, ContenedorEstados):
+    """Clase usada para manejar imágenes etiquetables."""
     def __init__(
         self, 
         ruta: str, 
@@ -163,6 +165,7 @@ class Contenedor_Etiquetado( Etiquetas, ContenedorEstados):
 
 
 class GaleriaEtiquetado( Galeria):
+    """Clase usada para manejar galerías de imágenes etiquetables."""
     def __init__(self, estilos: dict):
         super().__init__()
         self.estilos = estilos
@@ -182,8 +185,8 @@ class GaleriaEtiquetado( Galeria):
 
 
 
-def actualizar_estilo_estado( contenedores: list[Contenedor_Etiquetado], estilos : dict ):
+def actualizar_estilo_estado( contenedores: list[ContenedorEstados], estilos : dict ):
     """Cambia colores y espesor de bordes de imagen según los flags de estado internos."""
-    objeto = map(lambda c : c.estilo_estado(estilos), contenedores)
+    objeto = map(lambda c : c.estilo_estado(), contenedores)
     contenedores = list(objeto)
 
