@@ -11,7 +11,7 @@ from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from sistema_archivos.buscar_extension import buscar_imagenes, listar_directorios
 
-from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, imagen_clave,indice_clave, ContImag
+from componentes.galeria_imagenes import Galeria, Contenedor, ContenedorImagen, imagen_clave,indice_clave, ContImag
 
 from componentes.filas_botones import FilasBotonesEtiquetas
 

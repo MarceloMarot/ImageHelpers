@@ -1,5 +1,5 @@
 from manejo_texto.procesar_etiquetas import Etiquetas
-from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, EstiloContenedor, ContImag
+from componentes.galeria_imagenes import Galeria, ContenedorImagen, EstiloContenedor, ContImag
 from estilos.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
@@ -20,7 +20,7 @@ from abc import ABC, abstractclassmethod
 
 
 # Clase plantilla para crear contenedores de imagenes con estados
-class ContenedorEstados(ABC, Contenedor_Imagen):
+class ContenedorEstados(ABC, ContenedorImagen):
     """Clase plantilla para manejar imagenes con estados de guardado, modificación, etc."""
     #  Inicializacion
     def __init__(
@@ -32,7 +32,7 @@ class ContenedorEstados(ABC, Contenedor_Imagen):
         estilos: dict[str, EstiloContenedor] = estilos_galeria,
         ):
         Etiquetas.__init__(self, ruta)
-        Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
+        ContenedorImagen.__init__(self,ruta, ancho, alto, redondeo)
         self.__modificada = False
         self.__guardada = False
         self.__defectuosa = False
@@ -174,7 +174,7 @@ class GaleriaEtiquetado( Galeria):
     def cargar_imagenes(self, 
         imagenes: list[ContImag ], 
         cuadricula=True):
-        """Lee objetos de imagen Flet del tipo Contenedor_Imagen previamente creados."""
+        """Lee objetos de imagen Flet del tipo ContenedorImagen previamente creados."""
         super().cargar_imagenes(imagenes, cuadricula)
         self.imagenes = imagenes
         self.actualizar_estilos( )  
