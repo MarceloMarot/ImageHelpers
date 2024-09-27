@@ -76,9 +76,10 @@ class Contenedor_Etiquetado( Etiquetas, ContenedorEstados):
         return guardado_exitoso
 
 
-
-class GaleriaEtiquetado( Galeria):
-    """Clase usada para manejar galerías de imágenes etiquetables."""
+# REDEFINICION  de componente
+class GaleriaEstados(Galeria):
+    """Clase usada para manejar galerías de imágenes con estados.
+    Acepta objetos de la clase ContenedorEstados y sus derivados."""
     def __init__(self, estilos: dict):
         super().__init__()
         self.estilos = estilos
@@ -93,8 +94,17 @@ class GaleriaEtiquetado( Galeria):
         self.actualizar_estilos( )  
 
 
+
+    def estilo_estados(self):
+        actualizar_estilo_estado( self.imagenes, self.estilos)    
+
+
+
+    # metodo obsoleto
     def actualizar_estilos(self):
         actualizar_estilo_estado( self.imagenes, self.estilos)    
+
+
 
 
 

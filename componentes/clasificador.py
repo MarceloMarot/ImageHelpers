@@ -6,7 +6,7 @@ from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from constantes.constantes import Tab, Percentil, Estados
 
-from componentes.galeria_etiquetado import Contenedor_Etiquetado,  actualizar_estilo_estado
+from componentes.galeria_estados import Contenedor_Etiquetado,  actualizar_estilo_estado
 
 
 def leer_imagenes_etiquetadas(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0, nro_inicial=0):

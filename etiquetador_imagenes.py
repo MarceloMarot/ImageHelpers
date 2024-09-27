@@ -19,8 +19,8 @@ from estilos.estilos_contenedores import estilos_seleccion, estilos_galeria, Est
 
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
-from componentes.galeria_etiquetado import Contenedor_Etiquetado, actualizar_estilo_estado
-from componentes.galeria_etiquetado import GaleriaEtiquetado
+from componentes.galeria_estados import Contenedor_Etiquetado, actualizar_estilo_estado
+from componentes.galeria_estados import GaleriaEstados
 
 from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, leer_imagenes_etiquetadas
 
@@ -51,7 +51,7 @@ from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 lista_imagenes = clasificador_imagenes
 
 
-galeria_etiquetador = GaleriaEtiquetado( estilos_galeria )
+galeria_etiquetador = GaleriaEstados( estilos_galeria )
 
 imagenes_tags = []
 

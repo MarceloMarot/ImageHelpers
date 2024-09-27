@@ -31,11 +31,11 @@ class Galeria(ft.Row):
             contenedor.estilo(estilo)
 
 
-    def leer_imagenes(self, rutas_imagen: list[str], ancho=256, alto=256, redondeo=0,  cuadricula=True):
-        """Crea los contenedores vacios para la galeria y les carga las imagenes"""
-        self.wrap = cuadricula # version galería (si es 'False' las imagenes van en linea)
-        self.numero = len(rutas_imagen)
-        self.controls = leer_imagenes( rutas_imagen, ancho, alto, redondeo) 
+    # def leer_imagenes(self, rutas_imagen: list[str], ancho=256, alto=256, redondeo=0,  cuadricula=True):
+    #     """Crea los contenedores vacios para la galeria y les carga las imagenes"""
+    #     self.wrap = cuadricula # version galería (si es 'False' las imagenes van en linea)
+    #     self.numero = len(rutas_imagen)
+    #     self.controls = leer_imagenes( rutas_imagen, ancho, alto, redondeo) 
 
 
     def cargar_imagenes(self, imagenes: list[ContImag],  cuadricula=True):
@@ -186,7 +186,9 @@ if __name__ == "__main__":
         galeria = Galeria()
         page.add(galeria)
 
-        galeria.leer_imagenes(rutas_imagenes, redondeo = 30)
+        # galeria.leer_imagenes(rutas_imagenes, redondeo = 30)
+        imagenes = leer_imagenes(rutas_imagenes, redondeo = 30)
+        galeria.cargar_imagenes(imagenes)
         galeria.estilo(estilo_defecto)
         galeria.eventos(
             click = funcion_click,

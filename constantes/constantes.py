@@ -14,12 +14,12 @@ class Percentil(Enum):
     UMBRAL_5 = 1
 
 class Estados(Enum):
-    "Eumeracion de estados de las imagenes"
+    "Enumeracion de estados de las imagenes"
     TODOS = "todas"
-    GUARDADO = "guardada"
-    MODIFICADO = "modificada"
-    NO_ALTERADO = "no alterada" 
-    DEFECTUOSO = "defectuosa"
+    GUARDADO = "guardadas"
+    MODIFICADO = "modificadas"
+    NO_ALTERADO = "no alteradas" 
+    DEFECTUOSO = "defectuosas"
 
 
 tupla_estados = (

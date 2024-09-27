@@ -5,7 +5,7 @@ import flet as ft
 from componentes.galeria_imagenes import  ContenedorImagen
 from estilos.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
 
-from componentes.galeria_etiquetado import Contenedor_Etiquetado
+from componentes.galeria_estados import Contenedor_Etiquetado
 
 from vistas.etiquetador.clasificador import clasificador_imagenes
 

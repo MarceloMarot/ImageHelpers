@@ -22,7 +22,7 @@ class ContenedorEstados(ABC, ContenedorImagen):
         estilos: dict[str, EstiloContenedor] = estilos_galeria,
         ):
         ContenedorImagen.__init__(self,ruta, ancho, alto, redondeo)
-        self.ruta = ruta            # CUIDADO: la imagen interna TAMBIEN tiene un parametro 'ruta'
+        # self.ruta = ruta            # CUIDADO: la imagen interna TAMBIEN tiene un parametro 'ruta'
         self.__modificada = False
         self.__guardada = False
         self.__defectuosa = False
