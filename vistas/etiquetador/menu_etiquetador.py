@@ -116,8 +116,10 @@ fila_controles_apertura = ft.Row(
     wrap = True
     )
 fila_controles_dimensiones = ft.Row(
-    [texto_dimensiones, lista_dimensiones_desplegable, boton_filtrar_dimensiones],
-    width = 400,
+    # [texto_dimensiones, lista_dimensiones_desplegable, boton_filtrar_dimensiones],
+    [texto_dimensiones, lista_dimensiones_desplegable],
+    # width = 400,
+    width = 300,
     alignment=ft.MainAxisAlignment.SPACE_EVENLY,
     wrap = False
     )
@@ -125,7 +127,8 @@ fila_controles_dimensiones = ft.Row(
 fila_controles_etiquetas = ft.Row(
     # [texto_estados, lista_estados_desplegable, boton_filtrar_etiquetas],    
     [texto_estados, lista_estados_desplegable],
-    width = 400,
+    # width = 400,
+    width = 300,
     alignment=ft.MainAxisAlignment.SPACE_EVENLY,
     wrap = False
     )

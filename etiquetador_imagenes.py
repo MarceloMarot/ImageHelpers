@@ -40,7 +40,8 @@ from vistas.etiquetador.columna_seleccion import imagen_seleccion
 
 from vistas.etiquetador.clasificador import clasificador_imagenes
 
-from vistas.etiquetador.menu_etiquetador import boton_carpeta, boton_filtrar_dimensiones, boton_dataset, tooltip_carpeta, ayuda_emergente
+from vistas.etiquetador.menu_etiquetador import boton_carpeta, boton_dataset, tooltip_carpeta, ayuda_emergente
+# from vistas.etiquetador.menu_etiquetador import boton_filtrar_dimensiones
 from vistas.etiquetador.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
 from vistas.etiquetador.menu_etiquetador import actualizar_lista_dimensiones
 
@@ -342,6 +343,11 @@ def main(pagina: ft.Page):
     def cargar_galeria_componentes(  e: ft.ControlEvent | None = None ):
         """Muestra las imagenes encontradas y las asigna a los componentes de seleccion y etiquetado. Si no hay imágenes que mostra oculta y/o inhabilita componentes."""
         
+
+        # booleano = boton_filtrar_dimensiones.estado
+        # print("cargar_galeria_componentes")
+        # print(f"Boton filtrar dimensiones: {booleano}")
+
         # si se encuentran imagenes se visibilizan y configuran los controles
         filtrar_dimensiones_estados()   
         # agregado de todas las etiquetas al editor
@@ -393,9 +399,12 @@ def main(pagina: ft.Page):
 
         lista_imagenes.dimensiones_elegidas = dimensiones_elegidas
 
+        # print("filtrar_dimensiones_estados")
+        # booleano = boton_filtrar_dimensiones.estado
+        # print(f"Boton filtrar dimensiones: {booleano}")
         # Filtrado en base a las dimensiones de imagen
-        dimensiones = dimensiones_elegidas if boton_filtrar_dimensiones.estado else None
-        lista_imagenes.seleccion = filtrar_dimensiones(lista_imagenes.todas, dimensiones)
+        # dimensiones = dimensiones_elegidas if boton_filtrar_dimensiones.estado else None
+        # lista_imagenes.seleccion = filtrar_dimensiones(lista_imagenes.todas, dimensiones)
 
         # Filtrado en base a los estados de las imagenes
         estado = lista_estados_desplegable.value
@@ -740,13 +749,13 @@ def main(pagina: ft.Page):
 
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
     lista_estados_desplegable.on_change = cargar_galeria_componentes     
-    boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes   
+    # boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes   
     boton_reset_tags.on_click = reset_tags_filtros
     
     boton_reordenar_tags.on_click = cambiar_orden_tags
 
     # inicializacion opciones
-    boton_filtrar_dimensiones.estado = False
+    # boton_filtrar_dimensiones.estado = False
 
     # propiedad de pagina: handler del teclado elegido
     pagina.on_keyboard_event = desplazamiento_teclado
