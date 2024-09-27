@@ -3,7 +3,7 @@ import flet as ft
 
 
 from componentes.galeria_imagenes import  Contenedor_Imagen
-from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
+from estilos.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
 
 from componentes.galeria_etiquetado import Contenedor_Etiquetado
 

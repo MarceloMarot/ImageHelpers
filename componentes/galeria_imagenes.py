@@ -5,28 +5,8 @@ from typing import Sequence, TypeVar
 import flet as ft
 import pathlib
 
+from estilos.estilos_contenedores import EstiloContenedor
 
-
-# Clase auxiliar para configurar contenedores
-class Estilo_Contenedor:
-    """'Estilo_Contenedor' es una estructura de datos creada para guardar parametros de estilo de los contenedores: tamaño, colores, bordes, etc"""
-    def __init__(
-        self,
-        width=256,
-        height=256,
-        border_radius=0, 
-        bgcolor=ft.colors.WHITE, 
-        margin=10,
-        padding=10,
-        border=ft.border.all(0, ft.colors.WHITE),
-        ):
-        self.width = width
-        self.height = height
-        self.border_radius = border_radius
-        self.bgcolor = bgcolor
-        self.margin  = margin
-        self.padding = padding
-        self.border = border
 
 
 class Imagen(ft.Image):
@@ -68,7 +48,7 @@ class Contenedor(ft.Container):
 
     
     # Metodos
-    def estilo(self, estilo: Estilo_Contenedor):
+    def estilo(self, estilo: EstiloContenedor):
         """ Permite actualizar el aspecto del contenedor ingresando el objeto con los valores deseados. Su uso es opcional"""
         self.width  = estilo.width
         self.height = estilo.height
@@ -141,7 +121,7 @@ class Galeria(ft.Row):
         self.numero = 0
 
 
-    def estilo(self, estilo: Estilo_Contenedor ): 
+    def estilo(self, estilo: EstiloContenedor ): 
         """Asigna un mismo estilo visual a todos los contenedores de la galeria."""
         for contenedor in self.controls:
             contenedor.estilo(estilo)
@@ -255,7 +235,7 @@ if __name__ == "__main__":
         rutas_imagenes = rutas_imagenes_picsum(numero_imagenes, 256 )
 
         # estilos para contenedores 
-        estilo_defecto = Estilo_Contenedor(
+        estilo_defecto = EstiloContenedor(
             width = 300,
             height = 300,
             border_radius = 50, 
@@ -263,7 +243,7 @@ if __name__ == "__main__":
             border=ft.border.all(20, ft.colors.INDIGO_100),
             )
 
-        estilo_click = Estilo_Contenedor(
+        estilo_click = EstiloContenedor(
             width = 300,
             height = 300,
             border_radius = 5,
@@ -271,7 +251,7 @@ if __name__ == "__main__":
             border = ft.border.all(20, ft.colors.PURPLE_900),
             )   
 
-        estilo_hover = Estilo_Contenedor(
+        estilo_hover = EstiloContenedor(
             width = 300,
             height = 300,
             border_radius = 50, 

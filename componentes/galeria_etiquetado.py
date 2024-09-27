@@ -1,6 +1,6 @@
 from manejo_texto.procesar_etiquetas import Etiquetas
-from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, Estilo_Contenedor, ContImag
-from componentes.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
+from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, EstiloContenedor, ContImag
+from estilos.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
@@ -29,7 +29,7 @@ class ContenedorEstados(ABC, Contenedor_Imagen):
         ancho:int=768, 
         alto:int=768, 
         redondeo:int=0 , 
-        estilos: dict[str, Estilo_Contenedor] = estilos_galeria,
+        estilos: dict[str, EstiloContenedor] = estilos_galeria,
         ):
         Etiquetas.__init__(self, ruta)
         Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
@@ -113,7 +113,7 @@ class Contenedor_Etiquetado( Etiquetas, ContenedorEstados):
         ancho:int=768, 
         alto:int=768, 
         redondeo:int=0 , 
-        estilos: dict[str, Estilo_Contenedor] = estilos_galeria,
+        estilos: dict[str, EstiloContenedor] = estilos_galeria,
         ):
         ContenedorEstados.__init__(self,ruta, ancho, alto, redondeo)
         Etiquetas.__init__(self, ruta)

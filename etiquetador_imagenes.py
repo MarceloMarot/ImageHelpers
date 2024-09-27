@@ -11,11 +11,11 @@ from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from sistema_archivos.buscar_extension import buscar_imagenes, listar_directorios
 
-from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, Estilo_Contenedor, imagen_clave,indice_clave, ContImag
+from componentes.galeria_imagenes import Galeria, Contenedor, Contenedor_Imagen, imagen_clave,indice_clave, ContImag
 
 from componentes.filas_botones import FilasBotonesEtiquetas
 
-from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
+from estilos.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
 
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 

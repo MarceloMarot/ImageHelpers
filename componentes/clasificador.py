@@ -1,6 +1,6 @@
 from manejo_texto.procesar_etiquetas import Etiquetas
-from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, Estilo_Contenedor, ContImag
-from componentes.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
+from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, ContImag
+from estilos.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
