@@ -2,8 +2,8 @@ import pathlib
 import flet as ft
 
 
-from componentes.galeria_imagenes import  Contenedor_Imagen
-from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
+from componentes.galeria_imagenes import  ContenedorImagen
+from estilos.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
 
 from componentes.galeria_etiquetado import Contenedor_Etiquetado
 
@@ -46,7 +46,7 @@ texto_tags_data = ft.Text(
 
 
 # contenedor visualizador de la imagen actual
-contenedor_seleccion = Contenedor_Imagen("",512,512)
+contenedor_seleccion = ContenedorImagen("",512,512)
 contenedor_seleccion.estilo(estilos_seleccion[Estilos.DEFAULT.value])
 # contenedor_seleccion.estilo(estilos_seleccion[Estilos.ACTUAL.value])          # FIX
 contenedor_seleccion.bgcolor = ft.colors.LIGHT_BLUE

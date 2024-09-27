@@ -1,7 +1,32 @@
 import flet as ft
-from . galeria_imagenes import Estilo_Contenedor 
+
 
 from enum import Enum
+
+
+# Clase auxiliar para configurar contenedores
+class EstiloContenedor:
+    """'EstiloContenedor' es una estructura de datos creada para guardar parametros de estilo de los contenedores: tamaño, colores, bordes, etc"""
+    def __init__(
+        self,
+        width=256,
+        height=256,
+        border_radius=0, 
+        bgcolor=ft.colors.WHITE, 
+        margin=10,
+        padding=10,
+        border=ft.border.all(0, ft.colors.WHITE),
+        ):
+        self.width = width
+        self.height = height
+        self.border_radius = border_radius
+        self.bgcolor = bgcolor
+        self.margin  = margin
+        self.padding = padding
+        self.border = border
+
+
+
 
 class Estilos(Enum):
     "Eumeracion de estilos para contenedores"
@@ -12,7 +37,7 @@ class Estilos(Enum):
     ACTUAL      = "actual"  
 
 # estilos para contenedores 
-estilo_galeria_defecto = Estilo_Contenedor(
+estilo_galeria_defecto = EstiloContenedor(
     width = 128, 
     height = 128,
     border_radius = 10, 
@@ -20,7 +45,7 @@ estilo_galeria_defecto = Estilo_Contenedor(
     border=ft.border.all(10, ft.colors.INDIGO_100)
     )
 
-estilo_galeria_modificado = Estilo_Contenedor(
+estilo_galeria_modificado = EstiloContenedor(
     width = 128, 
     height = 128,
     border_radius = 10, 
@@ -28,7 +53,7 @@ estilo_galeria_modificado = Estilo_Contenedor(
     border=ft.border.all(10, ft.colors.AMBER_600)
     )
 
-estilo_galeria_guardado = Estilo_Contenedor(
+estilo_galeria_guardado = EstiloContenedor(
     width = 128, 
     height = 128,
     border_radius = 10, 
@@ -36,7 +61,7 @@ estilo_galeria_guardado = Estilo_Contenedor(
     border=ft.border.all(10, ft.colors.GREEN_800)
     )
 
-estilo_galeria_erroneo = Estilo_Contenedor(
+estilo_galeria_erroneo = EstiloContenedor(
     width = 128, 
     height = 128,
     border_radius = 10, 
@@ -44,7 +69,7 @@ estilo_galeria_erroneo = Estilo_Contenedor(
     border=ft.border.all(10, ft.colors.BROWN_800)
     )
 
-estilo_galeria_actual = Estilo_Contenedor(
+estilo_galeria_actual = EstiloContenedor(
     width = 128, 
     height = 128,
     border_radius = 10, 
@@ -62,7 +87,7 @@ estilos_galeria = {
 
 
 # estilos para el contenedor 
-estilo_seleccion_defecto = Estilo_Contenedor(
+estilo_seleccion_defecto = EstiloContenedor(
     width = 512,
     height = 512,
     border_radius = 20, 
@@ -70,7 +95,7 @@ estilo_seleccion_defecto = Estilo_Contenedor(
     border=ft.border.all(10, ft.colors.INDIGO_100)
     )
 
-estilo_seleccion_modificado = Estilo_Contenedor(
+estilo_seleccion_modificado = EstiloContenedor(
     width = 512,
     height = 512,
     border_radius = 20, 
@@ -78,7 +103,7 @@ estilo_seleccion_modificado = Estilo_Contenedor(
     border=ft.border.all(10, ft.colors.AMBER_600)
     )
 
-estilo_seleccion_guardado = Estilo_Contenedor(
+estilo_seleccion_guardado = EstiloContenedor(
     width = 512,
     height = 512,
     border_radius = 20, 
@@ -86,7 +111,7 @@ estilo_seleccion_guardado = Estilo_Contenedor(
     border=ft.border.all(10, ft.colors.GREEN_800)
     )
 
-estilo_seleccion_erroneo = Estilo_Contenedor(
+estilo_seleccion_erroneo = EstiloContenedor(
     width = 512,
     height = 512,
     border_radius = 20, 
@@ -94,7 +119,7 @@ estilo_seleccion_erroneo = Estilo_Contenedor(
     border=ft.border.all(10, ft.colors.BROWN_800)
     )
 
-estilo_seleccion_actual = Estilo_Contenedor(
+estilo_seleccion_actual = EstiloContenedor(
     width = 512,
     height = 512,
     border_radius = 20, 

@@ -1,6 +1,6 @@
 from manejo_texto.procesar_etiquetas import Etiquetas
-from componentes.galeria_imagenes import Galeria, Contenedor_Imagen, Estilo_Contenedor, ContImag
-from componentes.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
+from componentes.galeria_imagenes import Galeria, ContenedorImagen, ContImag
+from estilos.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
@@ -74,22 +74,22 @@ def filtrar_estados(
     imagen : Contenedor_Etiquetado
     imagenes_filtradas = []
     # imagenes guardadas (sin cambios)
-    if estado == Estados.GUARDADOS.value:
+    if estado == Estados.GUARDADO.value:
         objeto_resultado = filter(lambda imagen: imagen.guardada and not imagen.modificada, lista_imagenes)
         return list(objeto_resultado)
 
     # imagenes tags modificados (todas)
-    elif estado == Estados.MODIFICADOS.value:
+    elif estado == Estados.MODIFICADO.value:
         objeto_resultado = filter(lambda imagen: imagen.modificada, lista_imagenes)
         return list(objeto_resultado)
 
     # no etiquetadas ni guardadas
-    elif estado == Estados.NO_ALTERADOS.value:
+    elif estado == Estados.NO_ALTERADO.value:
         objeto_resultado = filter(lambda imagen: not imagen.modificada and not imagen.guardada, lista_imagenes)
         return list(objeto_resultado)
 
     # defectuosas por uno u otro motivo
-    elif estado == Estados.DEFECTUOSOS.value:
+    elif estado == Estados.DEFECTUOSO.value:
         objeto_resultado = filter(lambda imagen: imagen.defectuosa, lista_imagenes)
         return list(objeto_resultado)
 
@@ -116,33 +116,20 @@ class ClasificadorImagenes:
 
         self.ruta_directorio : str = ""
         self.ruta_dataset : str = ""
-        self.ruta_descarte : str = "descartados"
+        # self.ruta_descarte : str = "descartados"
 
         self.dimensiones_elegidas :tuple[int, int, int]|None = None
 
 
-    # def cargar_imagenes(self, 
-    def leer_imagenes(self, 
-        rutas_imagen: list[str], 
-        estilo=estilos_galeria[Estilos.DEFAULT.value],
-        agregado=False
-        ):
-
-        nro_inicial = 0 if agregado==False else len(self.todas)
-        lista = []
-        lista = leer_imagenes_etiquetadas(
-            rutas_imagen,
-            ancho    = estilo.width,
-            alto     = estilo.height, 
-            redondeo = estilo.border_radius,
-            nro_inicial=nro_inicial
-            )
+    def cargar_imagenes(self, imagenes: list[ContImag],  agregado=False):
+        """Este metodo carga imagenes de tipo ft.Image o derivadas creadas externamente"""
         if agregado:
             # modo agregado
-            self.todas.append(lista)
+            self.todas.extend(lista)
         else:
             # modo reinicio
-            self.todas = lista
+            self.todas = imagenes
+
 
 
     # def verificar_imagenes(self):
@@ -162,7 +149,7 @@ class ClasificadorImagenes:
 
 
     def filtrar_dimensiones(self,     
-        lista_imagenes: list[Contenedor_Etiquetado], 
+        # lista_imagenes: list[Contenedor_Etiquetado], 
         dimensiones: tuple[int, int, int] | None = None):
         """Devuelve solamente los contenedores de imagen con el ancho y altura correctos.
         Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
@@ -177,25 +164,28 @@ class ClasificadorImagenes:
         self.verificar_imagenes()
 
         # creacion de listas internas
-        self.guardadas    = self.filtrar_estados(Estados.GUARDADOS   .value)
-        self.modificadas  = self.filtrar_estados(Estados.MODIFICADOS .value)
-        self.no_alteradas = self.filtrar_estados(Estados.NO_ALTERADOS.value)
-        self.defectuosas  = self.filtrar_estados(Estados.DEFECTUOSOS .value)
+        self.guardadas    = self.filtrar_estados(Estados.GUARDADO  .value)
+        self.modificadas  = self.filtrar_estados(Estados.MODIFICADO.value)
+        self.no_alteradas = self.filtrar_estados(Estados.NO_ALTERADO.value)
+        self.defectuosas  = self.filtrar_estados(Estados.DEFECTUOSO .value)
 
 
-    def seleccionar_estado(self, estado)->list:
+    def seleccionar_estado(self, estado=None)->list:
         """Selecciona las imágenes de una de las categorías internas. Actualiza las listas antes de asignar"""
         self.clasificar_estados()
 
-        if estado == Estados.MODIFICADOS.value:
+        if estado == Estados.MODIFICADO.value:
             self.seleccion = self.modificadas
-        elif estado == Estados.GUARDADOS.value:
+        elif estado == Estados.GUARDADO.value:
             self.seleccion = self.guardadas
-        elif estado == Estados.NO_ALTERADOS.value:
+        elif estado == Estados.NO_ALTERADO.value:
             self.seleccion = self.no_alteradas
-        elif estado == Estados.DEFECTUOSOS.value:
+        elif estado == Estados.DEFECTUOSO.value:
             self.seleccion = self.defectuosas
         elif estado == Estados.TODOS.value:
+            self.seleccion = self.todas
+
+        elif estado == None:
             self.seleccion = self.todas
 
         return self.seleccion

@@ -14,7 +14,7 @@ from sistema_archivos.archivos_temporales import  crear_directorio_temporal
 from sistema_archivos.imagen_temporal import crear_imagen_temporal
 from sistema_archivos.imagen_editable import ImagenEditable, crear_directorio_RAM
 
-from componentes.galeria_imagenes import Contenedor , Contenedor_Imagen
+from componentes.galeria_imagenes import Contenedor , ContenedorImagen
 
 
 def nada(x):

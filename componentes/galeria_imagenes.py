@@ -1,130 +1,14 @@
 # Ejecutar demo como:
 # py -m componentes.galeria_imagenes
 from functools import partial
-from typing import Sequence, TypeVar
+from typing import TypeVar
 import flet as ft
 import pathlib
 
+from estilos.estilos_contenedores import EstiloContenedor
 
-
-# Clase auxiliar para configurar contenedores
-class Estilo_Contenedor:
-    """'Estilo_Contenedor' es una estructura de datos creada para guardar parametros de estilo de los contenedores: tamaño, colores, bordes, etc"""
-    def __init__(
-        self,
-        width=256,
-        height=256,
-        border_radius=0, 
-        bgcolor=ft.colors.WHITE, 
-        margin=10,
-        padding=10,
-        border=ft.border.all(0, ft.colors.WHITE),
-        ):
-        self.width = width
-        self.height = height
-        self.border_radius = border_radius
-        self.bgcolor = bgcolor
-        self.margin  = margin
-        self.padding = padding
-        self.border = border
-
-
-class Imagen(ft.Image):
-    """Esta clase auxiliar permite inicializar imagenes de forma simplificada."""""
-    def __init__(self, ruta: str, ancho=256, alto=256, redondeo=0):
-        super().__init__(
-            src = ruta,
-            width = ancho,
-            height = alto,
-            fit=ft.ImageFit.CONTAIN,
-            repeat=ft.ImageRepeat.NO_REPEAT,
-            border_radius=ft.border_radius.all(redondeo),
-        )
-
-
-# Subclase del container de FLET, manejo simplificado e imagen interior
-class Contenedor(ft.Container):
-    """'Contenedor' es una implementacion simplificada del componente 'ft.Container' de FLET"""
-    # Inicializacion
-    def __init__(self, ancho=256, alto=256, redondeo=0, margen=4):
-        """Crea el objeto contenedor con valores preestablecidos."""
-        # herencia de atributos y asignaciones valores predeterminados
-        super().__init__(
-            margin  = margen,
-            padding = 10,
-            width   = ancho,
-            height  = alto,
-            alignment=ft.alignment.center,
-            bgcolor=ft.colors.WHITE,
-            border = ft.border.all(0, ft.colors.WHITE),
-            border_radius=redondeo ,  
-            image_fit = ft.ImageFit.CONTAIN,       
-            animate=ft.animation.Animation(
-                1000, 
-                ft.AnimationCurve.BOUNCE_OUT # acomodamiento con "rebotes"
-                # ft.AnimationCurve.EASE    # acomodamiento gradual
-                ),
-            )
-
-    
-    # Metodos
-    def estilo(self, estilo: Estilo_Contenedor):
-        """ Permite actualizar el aspecto del contenedor ingresando el objeto con los valores deseados. Su uso es opcional"""
-        self.width  = estilo.width
-        self.height = estilo.height
-        self.border_radius = estilo.border_radius
-        self.bgcolor = estilo.bgcolor
-        self.border = estilo.border
-        self.margin  = estilo.margin
-        self.padding = estilo.padding
-
-
-    def eventos(self, click=None, hover=None, longpress=None):
-        """Carga las funciones de eventos del contenedor de forma simplificada. Su uso es opcional"""
-        if click != None :
-            self.on_click = click 
-        if hover != None :
-            self.on_hover = hover
-        if longpress != None :
-            self.on_long_press = longpress
-
-
-# nuevos tipados para contenedor y sus subclases
-Cont     = TypeVar('Cont'     , bound=Contenedor)
-
-
-class Contenedor_Imagen(Contenedor):
-    """ 'Contenedor' es una implementacion simplificada del componente 'ft.Container' de FLET"""
-    # Inicializacion
-    def __init__(self, ruta, ancho=256, alto=256, redondeo=0):
-        """Crea el objeto contenedor con valores preestablecidos."""
-        # herencia de atributos y asignaciones valores predeterminados
-        super().__init__( ancho, alto, redondeo)
-        self.imagen = Imagen(ruta, ancho, alto, redondeo)
-        self.content= self.imagen
-
-
-    @property
-    def ruta_imagen(self):
-        return  self.content.src
-
-    @ruta_imagen.setter
-    def ruta_imagen(self, valor: str):
-        self.content.src = valor
-
-    @property
-    def clave(self):
-        return  self.content.key
-    
-    
-    @clave.setter
-    def clave(self, valor: str):
-        self.content.key = valor
-
-
-# nuevos tipados para contenedor de imagenes y sus subclases
-ContImag = TypeVar('ContImag' , bound=Contenedor_Imagen)
-
+from componentes.contenedores import Imagen, Contenedor, ContenedorImagen
+from componentes.contenedores import Cont, ContImag 
 
 class Galeria(ft.Row):
     """Clase 'Galeria' compuesta creada para manejar fácilmente multiples contenedores de imagenes. 
@@ -141,23 +25,21 @@ class Galeria(ft.Row):
         self.numero = 0
 
 
-    def estilo(self, estilo: Estilo_Contenedor ): 
+    def estilo(self, estilo: EstiloContenedor ): 
         """Asigna un mismo estilo visual a todos los contenedores de la galeria."""
         for contenedor in self.controls:
             contenedor.estilo(estilo)
 
 
     def leer_imagenes(self, rutas_imagen: list[str], ancho=256, alto=256, redondeo=0,  cuadricula=True):
-        # """Este metodo carga imagenes de tipo ft.Image creadas externamente"""
-        # Crea los contenedores vacios para la galeria y les carga las imagenes
+        """Crea los contenedores vacios para la galeria y les carga las imagenes"""
         self.wrap = cuadricula # version galería (si es 'False' las imagenes van en linea)
         self.numero = len(rutas_imagen)
         self.controls = leer_imagenes( rutas_imagen, ancho, alto, redondeo) 
 
 
     def cargar_imagenes(self, imagenes: list[ContImag],  cuadricula=True):
-        # """Este metodo carga imagenes de tipo ft.Image creadas externamente"""
-        # Crea los contenedores vacios para la galeria y les carga las imagenes
+        """Este metodo carga imagenes de tipo ft.Image creadas externamente"""
         self.wrap = cuadricula # version galería (si es 'False' las imagenes van en linea)
         self.numero = len(imagenes)
         self.controls = imagenes 
@@ -204,7 +86,7 @@ def leer_imagenes(rutas_imagen: list[str], ancho=256, alto=256, redondeo=0,  cua
     """
     contenedores = [] 
     for i in range( len(rutas_imagen)):
-        contenedor = Contenedor_Imagen(rutas_imagen[i], ancho, alto, redondeo)
+        contenedor = ContenedorImagen(rutas_imagen[i], ancho, alto, redondeo)
         # contenedor.content.key = str(i)
         contenedor.content.key = f"imag_{i}"
         contenedores.append(contenedor)
@@ -257,7 +139,7 @@ if __name__ == "__main__":
         rutas_imagenes = rutas_imagenes_picsum(numero_imagenes, 256 )
 
         # estilos para contenedores 
-        estilo_defecto = Estilo_Contenedor(
+        estilo_defecto = EstiloContenedor(
             width = 300,
             height = 300,
             border_radius = 50, 
@@ -265,7 +147,7 @@ if __name__ == "__main__":
             border=ft.border.all(20, ft.colors.INDIGO_100),
             )
 
-        estilo_click = Estilo_Contenedor(
+        estilo_click = EstiloContenedor(
             width = 300,
             height = 300,
             border_radius = 5,
@@ -273,7 +155,7 @@ if __name__ == "__main__":
             border = ft.border.all(20, ft.colors.PURPLE_900),
             )   
 
-        estilo_hover = Estilo_Contenedor(
+        estilo_hover = EstiloContenedor(
             width = 300,
             height = 300,
             border_radius = 50, 

@@ -4,10 +4,10 @@ import pathlib
 import  time
 
 # from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
-from componentes.galeria_imagenes import ContImag, Galeria, Contenedor_Imagen, imagen_clave, imagen_nombre, indice_clave
+from componentes.galeria_imagenes import ContImag, Galeria, ContenedorImagen, imagen_clave, imagen_nombre, indice_clave
 from componentes.dialogo_alerta import DialogoAlerta
 from sistema_archivos.buscar_extension import buscar_imagenes
-from componentes.estilos_contenedores import estilos_galeria, estilos_seleccion, Estilo_Contenedor
+from estilos.estilos_contenedores import estilos_galeria, estilos_seleccion
 # from componentes.selector_recortes import SelectorRecorte, DataRecorte
 from componentes.selector_recortes import DataRecorte
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
@@ -37,9 +37,9 @@ clave_actual = None
 
 imagenes_galeria = []
 
-class ContenedorRecortes( Contenedor_Imagen):
+class ContenedorRecortes( ContenedorImagen):
     def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0,):
-        Contenedor_Imagen.__init__(self,ruta, ancho, alto, redondeo)
+        ContenedorImagen.__init__(self,ruta, ancho, alto, redondeo)
         # flags para el coloreo de bordes
         self.modificada = False
         self.guardada = False
