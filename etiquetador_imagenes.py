@@ -20,11 +20,9 @@ from componentes.estilos_contenedores import estilos_seleccion, estilos_galeria,
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
 from componentes.galeria_etiquetado import Contenedor_Etiquetado, actualizar_estilo_estado
-# from componentes.galeria_etiquetado import galeria_etiquetador
 from componentes.galeria_etiquetado import GaleriaEtiquetado
 
-from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, filtrar_estados, leer_imagenes_etiquetadas
-# from componentes.clasificador import clasificador_imagenes
+from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, leer_imagenes_etiquetadas
 
 from componentes.dialogo_alerta import DialogoAlerta
 
@@ -170,7 +168,7 @@ def main(pagina: ft.Page):
 
             # actualizacion bordes galeria
             imagen.verificar_imagen(lista_imagenes.dimensiones_elegidas)
-            imagen.verificar_guardado_tags()
+            imagen.verificar_guardado()
             imagen.actualizar_estilo_estado()
 
         # actualizacion grafica de todos los componentes
@@ -202,7 +200,7 @@ def main(pagina: ft.Page):
 
             # actualizacion bordes galeria
             imagen.verificar_imagen(lista_imagenes.dimensiones_elegidas)
-            imagen.verificar_guardado_tags()
+            imagen.verificar_guardado()
             imagen.actualizar_estilo_estado()
 
         # actualizacion grafica de todos los componentes
@@ -258,7 +256,7 @@ def main(pagina: ft.Page):
 
                 # actualizacion bordes galeria
                 imagen_seleccionada.verificar_imagen(lista_imagenes.dimensiones_elegidas)
-                imagen_seleccionada.verificar_guardado_tags()
+                imagen_seleccionada.verificar_guardado()
                 imagen_seleccionada.actualizar_estilo_estado()
 
             # si dicha clave no se encuentra entonces se elige la primera calve de la lista actual
@@ -294,8 +292,9 @@ def main(pagina: ft.Page):
             rutas_imagen = buscar_imagenes(directorio)
         
             # lectura de imagenes del directorio
-            lista_imagenes.leer_imagenes(rutas_imagen) 
- 
+            imagenes_etiquetadas = leer_imagenes_etiquetadas(rutas_imagen)
+            lista_imagenes.cargar_imagenes(imagenes_etiquetadas)
+
             # reinicio de las listas de imagenes
             imagenes_tags = lista_imagenes.todas
             lista_imagenes.seleccion = lista_imagenes.todas
@@ -428,7 +427,7 @@ def main(pagina: ft.Page):
             if guardado :
                 i += 1 
         for imagen in lista_imagenes.seleccion:
-            imagen.verificar_guardado_tags()
+            imagen.verificar_guardado()
         # reporte por snackbar
         if i == 0:
             ventana_emergente(pagina,f"Etiquetas sin cambios")
@@ -552,7 +551,6 @@ def main(pagina: ft.Page):
     
         global imagenes_tags
 
-        # if boton_filtrar_etiquetas.estado:
         if True:
             # lectura de tags seleccionados
             set_etiquetas = set()
@@ -743,14 +741,12 @@ def main(pagina: ft.Page):
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
     lista_estados_desplegable.on_change = cargar_galeria_componentes     
     boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes   
-    # boton_filtrar_etiquetas.click_boton = filtrar_todas_etiquetas
     boton_reset_tags.on_click = reset_tags_filtros
     
     boton_reordenar_tags.on_click = cambiar_orden_tags
 
     # inicializacion opciones
     boton_filtrar_dimensiones.estado = False
-    # boton_filtrar_etiquetas.estado = False
 
     # propiedad de pagina: handler del teclado elegido
     pagina.on_keyboard_event = desplazamiento_teclado

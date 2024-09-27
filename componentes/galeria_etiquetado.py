@@ -9,11 +9,19 @@ from constantes.constantes import Tab, Percentil, Estados
 from sistema_archivos.rutas import ruta_relativa_usuario
 
 
+
+
 def nada( e ):
     pass
 
 
-class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
+
+from abc import ABC, abstractclassmethod
+
+
+# Clase plantilla para crear contenedores de imagenes con estados
+class ContenedorEstados(ABC, Contenedor_Imagen):
+    #  Inicializacion
     def __init__(
         self, 
         ruta: str, 
@@ -30,22 +38,38 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         self.__dimensiones: tuple[int, ...]|None
         self.leer_dimensiones()
         self.verificar_imagen()   
-        self.verificar_guardado_tags()
+        self.verificar_guardado()
         self.estilos = estilos
-        # self.tooltip = ruta
         self.tooltip = ruta_relativa_usuario(ruta)
 
 
-    def buscar_etiqueta(self, etiqueta: str):
-        """Este método busca la etiqueta en la imagen y si la encuentra devuelve 'True'."""
-        return True if etiqueta in self.tags else False
-            
+    # clases a rediseñar
+    def verificar_guardado(self):
+        pass
+
+
+    # clases prediseñadas 
+
+    def estilo_estado(self, estilos : dict):
+        if self.defectuosa :     
+            estilo = estilos[Estilos.ERRONEO.value]     
+        elif self.modificada :
+            estilo = estilos[Estilos.MODIFICADO.value]
+        elif self.guardada :
+            estilo = estilos[Estilos.GUARDADO.value]
+        else: 
+            estilo = estilos[Estilos.DEFAULT.value]
+        self.estilo( estilo )
+
+    #  REPETIDO
+    def actualizar_estilo_estado(self):
+        self.estilo_estado(self.estilos)
 
     def leer_dimensiones(self):
         """Este método lee altura, base y numero de canales de la imagen"""
         dim = dimensiones_imagen(self.ruta)  
         self.__dimensiones = dim if dim!=None else None 
-
+        return self.__dimensiones
 
     @property
     def dimensiones(self):
@@ -66,10 +90,42 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
             self.__defectuosa = False
             return True
 
+
     @property
     def defectuosa(self)->bool:
         return self.__defectuosa
 
+    @property
+    def guardada(self)->bool:
+        return self.__guardada 
+
+    @property
+    def modificada(self)->bool:
+        return self.__modificada 
+
+
+class Contenedor_Etiquetado( Etiquetas, ContenedorEstados):
+    def __init__(
+        self, 
+        ruta: str, 
+        ancho:int=768, 
+        alto:int=768, 
+        redondeo:int=0 , 
+        estilos: dict[str, Estilo_Contenedor] = estilos_galeria,
+        ):
+        ContenedorEstados.__init__(self,ruta, ancho, alto, redondeo)
+        Etiquetas.__init__(self, ruta)
+
+ 
+    # Implementacion de metodos requeridos
+    def verificar_guardado(self):
+        self.verificar_guardado_tags()
+
+
+    def buscar_etiqueta(self, etiqueta: str):
+        """Este método busca la etiqueta en la imagen y si la encuentra devuelve 'True'."""
+        return True if etiqueta in self.tags else False
+            
 
     def verificar_guardado_tags(self ):
         """Comprueba si las etiquetas actuales son las mismas que las guardadas en archivo de texto"""
@@ -81,6 +137,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         self.__modificada = True if set(tags_imagen) != set(tags_archivo) else False 
 
 
+    #  REPETIDOS PERO NECESARIOS 
     @property
     def modificada(self)->bool:
         return self.__modificada 
@@ -88,6 +145,7 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
     @property
     def guardada(self)->bool:
         return self.__guardada 
+
 
 
     def guardar_archivo(self)->bool:
@@ -103,9 +161,6 @@ class Contenedor_Etiquetado( Etiquetas, Contenedor_Imagen):
         return guardado_exitoso
 
 
-    def actualizar_estilo_estado(self):
-        actualizar_estilo_estado([self], self.estilos)
-        
 
 class GaleriaEtiquetado( Galeria):
     def __init__(self, estilos: dict):
@@ -126,27 +181,9 @@ class GaleriaEtiquetado( Galeria):
         actualizar_estilo_estado( self.imagenes, self.estilos)    
 
 
+
 def actualizar_estilo_estado( contenedores: list[Contenedor_Etiquetado], estilos : dict ):
     """Cambia colores y espesor de bordes de imagen según los flags de estado internos."""
-    for contenedor in contenedores:
-        if contenedor.defectuosa :     
-            estilo = estilos[Estilos.ERRONEO.value]     
-        elif contenedor.modificada :
-            estilo = estilos[Estilos.MODIFICADO.value]
-        elif contenedor.guardada :
-            estilo = estilos[Estilos.GUARDADO.value]
-        else: 
-            estilo = estilos[Estilos.DEFAULT.value]
-        contenedor.estilo( estilo )
-
-
-
-
-
-
-
-# componentes globales
-
-# galeria_etiquetador = GaleriaEtiquetado( estilos_galeria )
-
+    objeto = map(lambda c : c.estilo_estado(estilos), contenedores)
+    contenedores = list(objeto)
 

@@ -116,33 +116,20 @@ class ClasificadorImagenes:
 
         self.ruta_directorio : str = ""
         self.ruta_dataset : str = ""
-        self.ruta_descarte : str = "descartados"
+        # self.ruta_descarte : str = "descartados"
 
         self.dimensiones_elegidas :tuple[int, int, int]|None = None
 
 
-    # def cargar_imagenes(self, 
-    def leer_imagenes(self, 
-        rutas_imagen: list[str], 
-        estilo=estilos_galeria[Estilos.DEFAULT.value],
-        agregado=False
-        ):
-
-        nro_inicial = 0 if agregado==False else len(self.todas)
-        lista = []
-        lista = leer_imagenes_etiquetadas(
-            rutas_imagen,
-            ancho    = estilo.width,
-            alto     = estilo.height, 
-            redondeo = estilo.border_radius,
-            nro_inicial=nro_inicial
-            )
+    def cargar_imagenes(self, imagenes: list[ContImag],  agregado=False):
+        """Este metodo carga imagenes de tipo ft.Image o derivadas creadas externamente"""
         if agregado:
             # modo agregado
-            self.todas.append(lista)
+            self.todas.extend(lista)
         else:
             # modo reinicio
-            self.todas = lista
+            self.todas = imagenes
+
 
 
     # def verificar_imagenes(self):
@@ -162,7 +149,7 @@ class ClasificadorImagenes:
 
 
     def filtrar_dimensiones(self,     
-        lista_imagenes: list[Contenedor_Etiquetado], 
+        # lista_imagenes: list[Contenedor_Etiquetado], 
         dimensiones: tuple[int, int, int] | None = None):
         """Devuelve solamente los contenedores de imagen con el ancho y altura correctos.
         Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
@@ -183,7 +170,7 @@ class ClasificadorImagenes:
         self.defectuosas  = self.filtrar_estados(Estados.DEFECTUOSOS .value)
 
 
-    def seleccionar_estado(self, estado)->list:
+    def seleccionar_estado(self, estado=None)->list:
         """Selecciona las imágenes de una de las categorías internas. Actualiza las listas antes de asignar"""
         self.clasificar_estados()
 
@@ -196,6 +183,9 @@ class ClasificadorImagenes:
         elif estado == Estados.DEFECTUOSOS.value:
             self.seleccion = self.defectuosas
         elif estado == Estados.TODOS.value:
+            self.seleccion = self.todas
+
+        elif estado == None:
             self.seleccion = self.todas
 
         return self.seleccion

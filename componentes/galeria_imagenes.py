@@ -148,16 +148,14 @@ class Galeria(ft.Row):
 
 
     def leer_imagenes(self, rutas_imagen: list[str], ancho=256, alto=256, redondeo=0,  cuadricula=True):
-        # """Este metodo carga imagenes de tipo ft.Image creadas externamente"""
-        # Crea los contenedores vacios para la galeria y les carga las imagenes
+        """Crea los contenedores vacios para la galeria y les carga las imagenes"""
         self.wrap = cuadricula # version galería (si es 'False' las imagenes van en linea)
         self.numero = len(rutas_imagen)
         self.controls = leer_imagenes( rutas_imagen, ancho, alto, redondeo) 
 
 
     def cargar_imagenes(self, imagenes: list[ContImag],  cuadricula=True):
-        # """Este metodo carga imagenes de tipo ft.Image creadas externamente"""
-        # Crea los contenedores vacios para la galeria y les carga las imagenes
+        """Este metodo carga imagenes de tipo ft.Image creadas externamente"""
         self.wrap = cuadricula # version galería (si es 'False' las imagenes van en linea)
         self.numero = len(imagenes)
         self.controls = imagenes 
