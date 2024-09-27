@@ -16,16 +16,16 @@ class Percentil(Enum):
 class Estados(Enum):
     "Eumeracion de estados de las imagenes"
     TODOS = "todas"
-    GUARDADOS = "guardadas"
-    MODIFICADOS = "modificadas"
-    NO_ALTERADOS = "no alteradas" 
-    DEFECTUOSOS = "defectuosas"
+    GUARDADO = "guardada"
+    MODIFICADO = "modificada"
+    NO_ALTERADO = "no alterada" 
+    DEFECTUOSO = "defectuosa"
 
 
 tupla_estados = (
     Estados.TODOS.value,
-    Estados.GUARDADOS.value,
-    Estados.MODIFICADOS.value,
-    Estados.NO_ALTERADOS.value,
-    Estados.DEFECTUOSOS.value,
+    Estados.GUARDADO.value,
+    Estados.MODIFICADO.value,
+    Estados.NO_ALTERADO.value,
+    Estados.DEFECTUOSO.value,
 )
