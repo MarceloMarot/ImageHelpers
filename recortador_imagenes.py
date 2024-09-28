@@ -24,7 +24,7 @@ from vistas.recortador.columna_selector import texto_imagen, texto_zoom
 from vistas.recortador.columna_selector import selector_recorte, barra_escala
 
 from constantes.rutas import DIRECTORIO_RECORTES, PREFIJO_DIRECTORIO_MINIATURAS
-
+from componentes.contenedores import ContenedorImagen
 
 
 def nada( e ):
@@ -38,13 +38,13 @@ clave_actual = None
 
 imagenes_galeria = []
 
-class ContenedorRecortes( ContenedorEstados):
-    def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0):
-        ContenedorEstados.__init__(self,ruta, ancho, alto, redondeo)
+class ContenedorRecortes( ContenedorImagen):
+    def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0,):
+        ContenedorImagen.__init__(self,ruta, ancho, alto, redondeo)
         # flags para el coloreo de bordes
-        # self.modificada = False
-        # self.guardada = False
-        # self.defectuosa = False
+        self.modificada = False
+        self.guardada = False
+        self.defectuosa = False
         # datos de la ventana emergente
         self.clave = clave 
         self.ruta_origen = ruta
@@ -66,7 +66,7 @@ class ContenedorRecortes( ContenedorEstados):
             extension = pathlib.Path(ruta).suffix   # respeta formato entrada 
             # extension = ".jpg"
             )
-        # self.tooltip = "Click izquierdo para seleccionar esta imagen."
+        self.tooltip = "Click izquierdo para seleccionar esta imagen."
 
 
     def ruta_recorte(self, ruta_directorio: str):
@@ -111,9 +111,9 @@ class ContenedorRecortes( ContenedorEstados):
 
 
 
-class GaleriaRecortes( GaleriaEstados):
-    def __init__(self, estilos: dict):
-        super().__init__(estilos)
+class GaleriaRecortes( Galeria):
+    def __init__(self):
+        super().__init__()
 
 
     def ruta_recortes(self, ruta_directorio: str):
@@ -154,7 +154,7 @@ def pagina_galeria(pagina: ft.Page):
 
 
 
-    galeria = GaleriaRecortes(estilos_galeria)
+    galeria = GaleriaRecortes()
     
     boton_guardar = ft.FloatingActionButton(
         icon=ft.icons.SAVE, bgcolor=ft.colors.YELLOW_600, tooltip="Guarda todos los recortes marcados"
