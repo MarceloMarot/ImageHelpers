@@ -130,7 +130,27 @@ class GaleriaEtiquetado( Galeria):
 
 
     def actualizar_estilos(self):
-        actualizar_estilo_estado( self.imagenes, self.estilos)    
+        actualizar_estilo_estado_OLD( self.imagenes, self.estilos)    
+
+from componentes.contenedor_etiquetado import ContenedorEtiquetado
+
+
+from estilos.estilos_contenedores import  Estilos
+
+
+
+def actualizar_estilo_estado_OLD( contenedores: list[ContenedorEtiquetado], estilos : dict ):
+    """Cambia colores y espesor de bordes de imagen según los flags de estado internos."""
+    for contenedor in contenedores:
+        if contenedor.defectuosa :     
+            estilo = estilos[Estilos.ERRONEO.value]     
+        elif contenedor.modificada :
+            estilo = estilos[Estilos.MODIFICADO.value]
+        elif contenedor.guardada :
+            estilo = estilos[Estilos.GUARDADO.value]
+        else: 
+            estilo = estilos[Estilos.DEFAULT.value]
+        contenedor.estilo( estilo )
 
 
 
@@ -179,7 +199,7 @@ def pagina_galeria(pagina: ft.Page):
 
 
 
-   galeria = GaleriaRecortes(estilos_galeria)
+    galeria = GaleriaRecortes(estilos_galeria)
     
     boton_guardar = ft.FloatingActionButton(
         icon=ft.icons.SAVE, bgcolor=ft.colors.YELLOW_600, tooltip="Guarda todos los recortes marcados"
@@ -352,7 +372,7 @@ def pagina_galeria(pagina: ft.Page):
         galeria.actualizar_estilos()
 
         # reestablecimiento de bordes para todas las imagenes de galeria
-        actualizar_estilo_estado(
+        actualizar_estilo_estado_OLD(
             imagenes_galeria, 
             estilos_galeria
             )
