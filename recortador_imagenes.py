@@ -111,9 +111,34 @@ class ContenedorRecortes( ContenedorImagen):
 
 
 
-class GaleriaRecortes( Galeria):
-    def __init__(self):
+
+
+#  RESCATADA DE VIEJA IMPLEMENTACION
+class GaleriaEtiquetado( Galeria):
+    def __init__(self, estilos: dict):
         super().__init__()
+        self.estilos = estilos
+
+
+    def cargar_imagenes(self, 
+        imagenes: list[ContImag ], 
+        cuadricula=True):
+        """Lee objetos de imagen Flet del tipo Contenedor_Imagen previamente creados."""
+        super().cargar_imagenes(imagenes, cuadricula)
+        self.imagenes = imagenes
+        self.actualizar_estilos( )  
+
+
+    def actualizar_estilos(self):
+        actualizar_estilo_estado( self.imagenes, self.estilos)    
+
+
+
+
+
+class GaleriaRecortes( GaleriaEtiquetado):
+    def __init__(self, estilos: dict):
+        super().__init__(estilos)
 
 
     def ruta_recortes(self, ruta_directorio: str):
@@ -154,7 +179,7 @@ def pagina_galeria(pagina: ft.Page):
 
 
 
-    galeria = GaleriaRecortes()
+   galeria = GaleriaRecortes(estilos_galeria)
     
     boton_guardar = ft.FloatingActionButton(
         icon=ft.icons.SAVE, bgcolor=ft.colors.YELLOW_600, tooltip="Guarda todos los recortes marcados"
