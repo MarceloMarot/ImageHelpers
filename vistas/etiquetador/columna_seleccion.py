@@ -5,7 +5,7 @@ import flet as ft
 from componentes.galeria_imagenes import  ContenedorImagen
 from estilos.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
 
-from componentes.galeria_estados import Contenedor_Etiquetado
+from componentes.contenedor_etiquetado import ContenedorEtiquetado
 
 from vistas.etiquetador.clasificador import clasificador_imagenes
 
@@ -71,7 +71,7 @@ columna_seleccion = ft.Column(
 
 
 
-def imagen_seleccion(imagen: Contenedor_Etiquetado):
+def imagen_seleccion(imagen: ContenedorEtiquetado):
     """Actualiza imagen y estilo de bordes del selector de imagen"""
     contenedor_seleccion.ruta_imagen = imagen.ruta
 

@@ -4,7 +4,7 @@ import pathlib
 import  time
 
 # from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
-from componentes.galeria_imagenes import ContImag, Galeria, ContenedorImagen, imagen_clave, imagen_nombre, indice_clave
+from componentes.galeria_imagenes import ContImag, Galeria, imagen_clave, imagen_nombre, indice_clave
 from componentes.dialogo_alerta import DialogoAlerta
 from sistema_archivos.buscar_extension import buscar_imagenes
 from estilos.estilos_contenedores import estilos_galeria, estilos_seleccion
@@ -13,7 +13,8 @@ from componentes.selector_recortes import DataRecorte
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 from sistema_archivos.imagen_editable import ImagenEditable, crear_directorio_RAM
 
-from componentes.galeria_etiquetado import GaleriaEtiquetado, actualizar_estilo_estado
+from componentes.contenedor_estados import ContenedorEstados
+from componentes.galeria_estados import GaleriaEstados, actualizar_estilo_estado
 
 from vistas.recortador.menu_recortador import ayuda_emergente
 from vistas.recortador.dialogos import dialogo_directorio_origen, dialogo_directorio_destino
@@ -37,13 +38,13 @@ clave_actual = None
 
 imagenes_galeria = []
 
-class ContenedorRecortes( ContenedorImagen):
-    def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0,):
-        ContenedorImagen.__init__(self,ruta, ancho, alto, redondeo)
+class ContenedorRecortes( ContenedorEstados):
+    def __init__(self, ruta, clave: str, ancho=768, alto=768, redondeo=0):
+        ContenedorEstados.__init__(self,ruta, ancho, alto, redondeo)
         # flags para el coloreo de bordes
-        self.modificada = False
-        self.guardada = False
-        self.defectuosa = False
+        # self.modificada = False
+        # self.guardada = False
+        # self.defectuosa = False
         # datos de la ventana emergente
         self.clave = clave 
         self.ruta_origen = ruta
@@ -65,7 +66,7 @@ class ContenedorRecortes( ContenedorImagen):
             extension = pathlib.Path(ruta).suffix   # respeta formato entrada 
             # extension = ".jpg"
             )
-        self.tooltip = "Click izquierdo para seleccionar esta imagen."
+        # self.tooltip = "Click izquierdo para seleccionar esta imagen."
 
 
     def ruta_recorte(self, ruta_directorio: str):
@@ -110,7 +111,7 @@ class ContenedorRecortes( ContenedorImagen):
 
 
 
-class GaleriaRecortes( GaleriaEtiquetado):
+class GaleriaRecortes( GaleriaEstados):
     def __init__(self, estilos: dict):
         super().__init__(estilos)
 

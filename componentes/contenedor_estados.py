@@ -22,7 +22,7 @@ class ContenedorEstados(ABC, ContenedorImagen):
         estilos: dict[str, EstiloContenedor] = estilos_galeria,
         ):
         ContenedorImagen.__init__(self,ruta, ancho, alto, redondeo)
-        # self.ruta = ruta            # CUIDADO: la imagen interna TAMBIEN tiene un parametro 'ruta'
+        self.ruta_origen = ruta            # CUIDADO: la imagen interna TAMBIEN tiene un parametro 'ruta'
         self.__modificada = False
         self.__guardada = False
         self.__defectuosa = False
@@ -58,7 +58,7 @@ class ContenedorEstados(ABC, ContenedorImagen):
 
     def leer_dimensiones(self):
         """Este método lee altura, base y numero de canales de la imagen"""
-        dim = dimensiones_imagen(self.ruta)  
+        dim = dimensiones_imagen(self.ruta_origen)  
         self.__dimensiones = dim if dim!=None else None 
         return self.__dimensiones
 

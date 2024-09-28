@@ -1,32 +1,22 @@
 from manejo_texto.procesar_etiquetas import Etiquetas
-from componentes.galeria_imagenes import Galeria, ContenedorImagen, ContImag
+
 from estilos.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
 
 from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from constantes.constantes import Tab, Percentil, Estados
 
-from componentes.galeria_estados import Contenedor_Etiquetado,  actualizar_estilo_estado
+from componentes.galeria_imagenes import Galeria, ContenedorImagen, ContImag
+from componentes.contenedor_etiquetado import ContenedorEtiquetado
+from componentes.galeria_estados import actualizar_estilo_estado
 
 
-def leer_imagenes_etiquetadas(rutas_imagen: list[str], ancho=1024, alto=1024, redondeo=0, nro_inicial=0):
-    """Esta funcion crea lee imagenes desde archivo y crea una lista de objetos ft.Image.
-    También asigna una clave ('key') a cada una.
-    """
-    contenedores = [] 
-
-    for i in range(nro_inicial, nro_inicial + len(rutas_imagen)):
-        contenedor = Contenedor_Etiquetado(rutas_imagen[i], ancho, alto, redondeo)
-        contenedor.clave = f"imag_{i}"
-        contenedores.append(contenedor)
-
-    return contenedores
 
 
 def filtrar_dimensiones(
-    lista_imagenes: list[Contenedor_Etiquetado], 
+    lista_imagenes: list[ContenedorEtiquetado], 
     dimensiones: tuple[int, int, int] | None = None
-    )->list[Contenedor_Etiquetado]:
+    )->list[ContenedorEtiquetado]:
     """Devuelve solamente los contenedores de imagen con el ancho y altura correctos.
     Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
     """
@@ -44,9 +34,9 @@ def filtrar_dimensiones(
 
 
 def filtrar_etiquetas(
-    lista_imagenes: list[Contenedor_Etiquetado], 
+    lista_imagenes: list[ContenedorEtiquetado], 
     etiquetas: list[str]  = [],
-    )->list[Contenedor_Etiquetado]:
+    )->list[ContenedorEtiquetado]:
     """
     Devuelve las imagenes que tengan al menos una etiqueta de entrada. 
     Si no hay etiquetas de entrada se devuelve toda la lista de entrada.
@@ -67,11 +57,11 @@ def filtrar_etiquetas(
 
     
 def filtrar_estados(
-    lista_imagenes: list[Contenedor_Etiquetado], 
+    lista_imagenes: list[ContenedorEtiquetado], 
     estado: str | None ,
-    )->list[Contenedor_Etiquetado]:
+    )->list[ContenedorEtiquetado]:
     """Devuelve solamente los contenedores con el estado de etiquetado pedido."""
-    imagen : Contenedor_Etiquetado
+    imagen : ContenedorEtiquetado
     imagenes_filtradas = []
     # imagenes guardadas (sin cambios)
     if estado == Estados.GUARDADO.value:
@@ -101,7 +91,7 @@ def filtrar_estados(
 # Clases
 
 
-class ClasificadorImagenes:
+class ClasificadorEstados:
     """Clase pensada para gestionar las listas de imágenes de forma centralizada y ordenada."""
     def __init__(self):
         self.todas          : list = []
@@ -149,7 +139,7 @@ class ClasificadorImagenes:
 
 
     def filtrar_dimensiones(self,     
-        # lista_imagenes: list[Contenedor_Etiquetado], 
+        # lista_imagenes: list[ContenedorEtiquetado], 
         dimensiones: tuple[int, int, int] | None = None):
         """Devuelve solamente los contenedores de imagen con el ancho y altura correctos.
         Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
@@ -191,7 +181,3 @@ class ClasificadorImagenes:
         return self.seleccion
 
 
-
-# Componentes globales
-
-# clasificador_imagenes = ClasificadorImagenes()

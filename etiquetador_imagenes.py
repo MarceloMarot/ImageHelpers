@@ -19,10 +19,10 @@ from estilos.estilos_contenedores import estilos_seleccion, estilos_galeria, Est
 
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
 
-from componentes.galeria_estados import Contenedor_Etiquetado, actualizar_estilo_estado
-from componentes.galeria_estados import GaleriaEstados
+from componentes.contenedor_etiquetado import ContenedorEtiquetado, leer_imagenes_etiquetadas
+from componentes.galeria_estados import GaleriaEstados, actualizar_estilo_estado
 
-from componentes.clasificador import filtrar_dimensiones, filtrar_etiquetas, leer_imagenes_etiquetadas
+from componentes.clasificador_estados import filtrar_dimensiones, filtrar_etiquetas
 
 from componentes.dialogo_alerta import DialogoAlerta
 
@@ -429,7 +429,7 @@ def main(pagina: ft.Page):
         if len(lista_imagenes.seleccion) == 0 : 
             ventana_emergente(pagina,f"Galería vacía - sin cambios")
             return
-        imagen: Contenedor_Etiquetado
+        imagen: ContenedorEtiquetado
         i = 0
         for imagen in lista_imagenes.seleccion:  #
             guardado = imagen.guardar_archivo()
@@ -644,7 +644,7 @@ def main(pagina: ft.Page):
                 etiquetador_imagen.guardar_etiquetas("")
             
             if cambiar_imagen:
-                imagen: Contenedor_Etiquetado
+                imagen: ContenedorEtiquetado
                 # actualizacion de parametros
                 imagen = lista_imagenes.seleccion[indice]
                 lista_imagenes.clave_actual= imagen.clave 
