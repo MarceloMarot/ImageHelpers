@@ -14,11 +14,21 @@ def nada( e ):
 class EtiquetadorBotones(ft.Column):
     def __init__(self):
         """Inicializa un componente etiquuetador, agregando a los botones de etiquetas los botones de guardado, descarte de cambios, etc """
-        self.__filas_botones = FilasBotonesEtiquetas()   # componente interno --> composicion
+        # banderines de control y de maquetado
         self.__altura_filas = 40
         self.__habilitado = False
         self.__dataset_seteado = False
         self.__salida_seteada = False
+        self.__filas_botones = FilasBotonesEtiquetas()   # componente interno --> composicion
+        # campos de entrada de texto
+        self.__entrada_texto = ft.TextField(
+            label="Agregar nuevos tags al etiquetador - pulsar 'ENTER' para confirmar",
+            # on_change=,
+            # on_submit=,
+            height=60,
+            width=500,
+            )
+        # botones de comando
         self.__boton_guardar = ft.ElevatedButton(
             text="guardar cambios",
             width = 200,
@@ -72,7 +82,22 @@ class EtiquetadorBotones(ft.Column):
             height = self.__altura_filas,
             width = 600,
             )  
-        self.controls=[self.__filas_botones, self.__divisor, self.__f1, self.__f2]
+        self.__fila_texto = ft.Row(
+            controls= [ self.__entrada_texto],
+            wrap = True,
+            alignment = ft.MainAxisAlignment.SPACE_EVENLY,
+            vertical_alignment = ft.CrossAxisAlignment.CENTER,
+            spacing = 50,
+            height = self.__entrada_texto.height + 10,
+            width = 600,
+            )  
+        self.controls=[
+            self.__filas_botones,
+            # self.__fila_texto, 
+            self.__divisor, 
+            self.__f1, 
+            self.__f2,
+            ]
         self.click_botones = nada
         self.alignment = ft.MainAxisAlignment.START
 

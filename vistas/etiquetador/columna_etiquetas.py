@@ -1,6 +1,7 @@
 import flet as ft
 import re
 from componentes.etiquetador_botones import FilasBotonesEtiquetas
+from componentes.botones import BotonBiestable
 
 from vistas.etiquetador.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
 from manejo_texto.procesar_etiquetas import Etiquetas
@@ -8,6 +9,8 @@ from manejo_texto.procesar_etiquetas import Etiquetas
 from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
 from vistas.etiquetador.clasificador import clasificador_imagenes
+
+
 
 
 lista_imagenes = clasificador_imagenes
@@ -60,15 +63,13 @@ filas_filtrado.lista_colores_pasivo=[
     ]
 
 
-boton_reordenar_tags = ft.ElevatedButton(
-    text = f"Orden alfabético",
-    bgcolor = ft.colors.GREEN_800,
-    color = ft.colors.WHITE,
-    icon = ft.icons.SORT_ROUNDED
-    # tooltip="Reinicia la selección de etiquetas encontradas."
+boton_reordenar_tags = BotonBiestable(
+    texto_false="Orden por percentiles",
+    color_false=ft.colors.GREEN_ACCENT_700,
+    color_true=ft.colors.GREEN_800,
+    texto_true="Orden alfabético",
+    color_texto=ft.colors.WHITE,
     )
-
-boton_reordenar_tags.valor = True
 
 
 boton_guardar_dataset = ft.ElevatedButton(
@@ -173,7 +174,8 @@ def estadisticas()->dict:
     tags_grupo = []
 
 
-    if boton_reordenar_tags.valor == True:
+    # if boton_reordenar_tags.valor == True:
+    if boton_reordenar_tags.estado == True:
         
         # ordenamiento por orden alfabetico, un grupo por letra
 
@@ -231,6 +233,10 @@ def estadisticas()->dict:
     # columna_etiquetas.update()
 
     return conteo_etiquetas
+
+
+
+
 
 
 # Demo

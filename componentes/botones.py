@@ -11,25 +11,30 @@ def nada( e ):
 class BotonBiestable(ft.ElevatedButton):
 # class BotonBiestable(ft.CupertinoButton):
     # def __init__(self, texto: str, color_false=ft.colors.BLUE_50, color_true=ft.colors.BLUE_50 ):
-    def __init__(self, texto: str, color_false=ft.colors.BLUE_50, color_true=ft.colors.RED_800 ):
+    def __init__(self, 
+        texto_false: str, 
+        color_false = ft.colors.BLUE_50, 
+        color_true  = ft.colors.RED_800,
+        texto_true: str|None = None,
+        color_texto = None,
+        ):
         self.__valor = False
         self.color_true  = color_true
         self.color_false = color_false
+        self.texto_false = texto_false.strip()
+        self.texto_true  = texto_true.strip() if (texto_true is not None ) else self.texto_false
+        self.color_texto = color_texto
         super().__init__(
-            text = texto,
-            # key=texto,          # asignacion automatica
-            key=texto.split("(")[0].strip(), # (acomoda la clave a ciertas entradas )
+            text = texto_false,
+            key=texto_false.split("(")[0].strip(), # (acomoda la clave a ciertas entradas )
             bgcolor= self.color_false,
             on_click=self.click,
-
-            # border_radius=ft.border_radius.all(15),
-            # height=40,
-            # padding=5,
-            # width=150,
-
             )
         # manejador opcional para el click 
         self.click_boton = nada
+        # eleccion de color de texto
+        if self.color_texto !=None:
+            self.color = color_texto 
 
 
     # implementacion del biestable
@@ -52,10 +57,16 @@ class BotonBiestable(ft.ElevatedButton):
             self.__valor = True
             self.bgcolor = self.color_true
             self.color = ft.colors.WHITE 
+            self.text  = self.texto_true
+            if self.color_texto != None:
+                self.color = self.color_texto 
         else:
             self.__valor = False
             self.bgcolor = self.color_false
             self.color   = ft.colors.BLUE_800
+            self.text  = self.texto_false
+            if self.color_texto != None:
+                self.color = self.color_texto 
         self.update()
 
     @property

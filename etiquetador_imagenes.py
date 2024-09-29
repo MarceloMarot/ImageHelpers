@@ -687,23 +687,6 @@ def main(pagina: ft.Page):
     def cambiar_orden_tags(e: ft.ControlEvent|None = None):
         """Reordena los botones de filtrado correspondientes a cada etiqueta detectada. """
 
-        # Cambio de orden en caso de pulsarse el boton pertinente
-        if e != None:
-
-            if boton_reordenar_tags.valor == True:
-
-                boton_reordenar_tags.valor = False
-                boton_reordenar_tags.text = f"Orden por percentiles"
-                boton_reordenar_tags.bgcolor = ft.colors.GREEN_ACCENT_700
-                boton_reordenar_tags.update()
-
-            else:
-
-                boton_reordenar_tags.valor = True
-                boton_reordenar_tags.text = f"Orden alfabético"
-                boton_reordenar_tags.bgcolor = ft.colors.GREEN_800
-                boton_reordenar_tags.update()
-
         estadisticas()
         filas_filtrado.evento_click(filtrar_todas_etiquetas)
         columna_etiquetas.update()
@@ -752,7 +735,8 @@ def main(pagina: ft.Page):
     # boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes   
     boton_reset_tags.on_click = reset_tags_filtros
     
-    boton_reordenar_tags.on_click = cambiar_orden_tags
+    boton_reordenar_tags.click_boton = cambiar_orden_tags
+    boton_reordenar_tags.estado = True
 
     # inicializacion opciones
     # boton_filtrar_dimensiones.estado = False
