@@ -126,10 +126,6 @@ class Etiquetas:
                 del self.datos[tag]
 
 
-
-
-
-
 #FUNCIONES
 
 def etiquetas2texto(lista_renglones: list) -> str:
@@ -172,7 +168,7 @@ def lectura_archivo(entrada: str = "") -> list:
 def separar_etiquetas(renglones_entrada: list[str], repetidas=True):
     """
     Funcion que separa etiquetas en base a comas y puntos aparte. 
-    Descarta etiquetas repetidas.
+    Descarta etiquetas repetidas si así se especifica.
     Asigna numero de grupo a los tags en base al primer renglon de aparicion
     """
     # diccionario auxiliar para contener los datos
@@ -207,6 +203,7 @@ def separar_etiquetas(renglones_entrada: list[str], repetidas=True):
                 nuevo_tag = False
     # Retorno de una clase con las etiquetas y el numero de renglón (grupo)
     return dicc_etiquetas
+
 
 
 if __name__ == "__main__":

@@ -140,8 +140,8 @@ def main(pagina: ft.Page):
         # texto = e.control.value
         texto = entrada_tags_buscar.value
         # descarte de entradas vacias
-        if len(texto) == 0:
-            return
+        # if len(texto) == 0:
+        #     return
 
         # actualizacion de las etiquetas encontradas
         estadisticas()

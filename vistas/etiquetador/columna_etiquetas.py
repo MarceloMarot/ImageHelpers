@@ -10,8 +10,7 @@ from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
 from vistas.etiquetador.clasificador import clasificador_imagenes
 
-
-
+from constantes.colores import LISTA_COLORES_ACTIVO, LISTA_COLORES_PASIVO
 
 lista_imagenes = clasificador_imagenes
 
@@ -46,21 +45,11 @@ filas_filtrado = FilasBotonesEtiquetas()
 # filas_filtrado.altura = pagina.height - 200
 # filas_filtrado.altura = pagina.height - 330     #FIX
 
-filas_filtrado.lista_colores_activo=[
-    ft.colors.BLUE_800,
-    ft.colors.GREEN_800,
-    ft.colors.YELLOW_800,
-    ft.colors.ORANGE_800,
-    ft.colors.RED_800,
-    ]
 
-filas_filtrado.lista_colores_pasivo=[
-    ft.colors.BLUE_100,
-    ft.colors.GREEN_100,
-    ft.colors.YELLOW_100,
-    ft.colors.ORANGE_100,
-    ft.colors.RED_100,
-    ]
+
+filas_filtrado.lista_colores_activo = LISTA_COLORES_ACTIVO
+
+filas_filtrado.lista_colores_pasivo = LISTA_COLORES_PASIVO
 
 
 boton_reordenar_tags = BotonBiestable(
@@ -133,97 +122,113 @@ columna_etiquetas = ft.Column(
     )
 
 
+
+def contar_etiquetas_repetidas( etiquetados:Etiquetas, secuencia:str, inversa=False, conteo_salida=True )->list:
+    """
+    Devuelve una lista con todas las etiquetas detectadas  en la lista de entrada.
+    La lista se ordena en base al nímero de repeticiones de cada etiqueta.
+    Puede indicarse el número de repeticiones a la salida de manera opcional. 
+    """
+    # busqueda y conteo de etiquetas
+    conteo_etiquetas = dict()
+
+    for etiquetado in etiquetados:  
+        for tag in etiquetado.tags:
+            retorno = re.search(secuencia, tag, re.I) 
+            if retorno !=None:
+                conteo_etiquetas[tag] = 1 if tag not in conteo_etiquetas else conteo_etiquetas[tag]+1
+
+
+    # etiquetas ordenadas de más repetidas a menos usadas
+    conteo_etiquetas = dict(sorted(conteo_etiquetas.items(), key=lambda item:item[1], reverse=inversa))
+    lista_tags = list(conteo_etiquetas.keys()) 
+
+    if conteo_salida==False:
+        return lista_tags
+
+    else:
+        # etiquetas con numero de repeticiones agregado
+        return list(map(lambda tag: f"{tag}  ({conteo_etiquetas[tag]})",  lista_tags))
+
+
+def etiquetas_orden_alfabetico(lista_tags: list, inverso=False)->Etiquetas:
+    """
+    Se ordenan todos los tags de entrada ordenados en orden alfabético.
+    No se distinguen letras mayúsculas de minúsculas.
+    El resultado se devuelve en un objeto de tipo 'Etiquetas'.
+    """
+    etiquetas = Etiquetas()
+    letras = []
+    # se hace una lista ordenada con el primer caracter de todas las etiquetas
+    set_letras = set()
+    for tag in lista_tags:
+        set_letras.add(tag[0].lower())
+    letras = list(set_letras)
+    letras.sort(reverse=inverso)
+
+    # se reparten las etiquetas en grupos en abse al primer caracter detectado 
+    for tag in lista_tags:
+        n = letras.index(tag[0].lower())    
+        etiquetas.agregar_tags([tag], n)
+
+    return etiquetas
+
+
+
+def etiquetas_orden_percentiles(lista_tags: list, inverso=False)->Etiquetas:
+    """
+    Se ordenan todos los tags de entrada ordenados en base a percentiles del 20%.
+    El resultado se devuelve en un objeto de tipo 'Etiquetas'.
+    (La lista de entrada debe estar ordenada).
+    """
+    etiquetas = Etiquetas()
+    tags_grupo = []
+    nro_tags = len(lista_tags) 
+
+    # número de tags para cada percentil
+    umbral_1 = int(nro_tags * Percentil.UMBRAL_1.value)
+    umbral_2 = int(nro_tags * Percentil.UMBRAL_2.value)
+    umbral_3 = int(nro_tags * Percentil.UMBRAL_3.value)
+    umbral_4 = int(nro_tags * Percentil.UMBRAL_4.value)
+    umbral_5 = int(nro_tags * Percentil.UMBRAL_5.value)
+
+    # reparto entre percentiles
+    etiquetas.agregar_tags(lista_tags[       0:umbral_1])
+    etiquetas.agregar_tags(lista_tags[umbral_1:umbral_2])
+    etiquetas.agregar_tags(lista_tags[umbral_2:umbral_3])
+    etiquetas.agregar_tags(lista_tags[umbral_3:umbral_4])
+    etiquetas.agregar_tags(lista_tags[umbral_4:umbral_5])
+
+    return etiquetas
+
+
 def estadisticas()->dict:
     """Detecta todas las etiquetas usadas en las imagenes y cuenta cuantas repeticiones tiene cada una.
     Crea tambien los botones de filtrado correspondientes a cada una."""
 
-    conteo_etiquetas = dict()
 
     # lectura de patron de busqueda
     secuencia = entrada_tags_buscar.value
     # descarte de espacios en blanco
     secuencia = secuencia.strip()
 
-    # busqueda y conteo de etiquetas
-    for imagen in lista_imagenes.seleccion:  
-        for tag in imagen.tags:
-            retorno = re.search(secuencia, tag, re.I)
-            if retorno !=None:
-                conteo_etiquetas[tag] = 1 if tag not in conteo_etiquetas else conteo_etiquetas[tag]+1
+    imagenes = lista_imagenes.seleccion
 
+    lista_tags = contar_etiquetas_repetidas(imagenes, secuencia)
 
-    # etiquetas ordenadas de más repetidas a menos usadas
-    conteo_etiquetas = dict(sorted(conteo_etiquetas.items(), key=lambda item:item[1], reverse=True))
-
-    nro_tags = len(conteo_etiquetas.keys()) 
-    lista_tags = list(conteo_etiquetas.keys()) 
-
+    nro_tags = len(lista_tags)
     texto_contador_tags.value = f"Etiquetas encontadas: {nro_tags}"
-
     boton_reset_tags.text = f"Deseleccionar tags"
-    # boton_reset_tags.text = f"Deseleccionar etiquetas ({nro_tags} en total)"
-
-    # etiquetas con numero de repeticiones agregado
-    tags_contadas = []
-    for tag in lista_tags:
-        tags_contadas.append(f"{tag}  ({conteo_etiquetas[tag]})")
-
-    # objeto auxiliar vacio para almacenar etiquetas    
-    etiquetas_marcadas = Etiquetas()
-
-    tags_grupo = []
 
 
     # if boton_reordenar_tags.valor == True:
     if boton_reordenar_tags.estado == True:
-        
-        # ordenamiento por orden alfabetico, un grupo por letra
-
-        letras = []
-        set_letras = set()
-        for tag in tags_contadas:
-            set_letras.add(tag[0])
-
-        letras = list(set_letras)
-        letras.sort()
-
-        for tag in tags_contadas:
-            n = letras.index(tag[0])
-            etiquetas_marcadas.agregar_tags([tag], n)
-
+        # reparto en grupos y coloreo de botones en base al orden alfabetico
+        etiquetas_marcadas = etiquetas_orden_alfabetico(lista_tags)
 
     else:
-
         # reparto en grupos y coloreo de botones en base a percentiles del 20%
-        umbral_1 = int(nro_tags * Percentil.UMBRAL_1.value)
-        umbral_2 = int(nro_tags * Percentil.UMBRAL_2.value)
-        umbral_3 = int(nro_tags * Percentil.UMBRAL_3.value)
-        umbral_4 = int(nro_tags * Percentil.UMBRAL_4.value)
-        umbral_5 = int(nro_tags * Percentil.UMBRAL_5.value)
-
-        for i in range(0, umbral_1):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
-
-        tags_grupo = []
-        for i in range(umbral_1, umbral_2):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
-
-        tags_grupo = []
-        for i in range(umbral_2, umbral_3):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
-
-        tags_grupo = []
-        for i in range(umbral_3, umbral_4):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
-
-        tags_grupo = []
-        for i in range(umbral_4, umbral_5):
-            tags_grupo.append(tags_contadas[i])
-        etiquetas_marcadas.agregar_tags(tags_grupo)
+        etiquetas_marcadas = etiquetas_orden_percentiles(lista_tags, True)
 
 
     filas_filtrado.leer_dataset(etiquetas_marcadas, False)
@@ -232,9 +237,7 @@ def estadisticas()->dict:
 
     # columna_etiquetas.update()
 
-    return conteo_etiquetas
-
-
+    # return conteo_etiquetas
 
 
 
