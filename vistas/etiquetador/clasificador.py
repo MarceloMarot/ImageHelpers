@@ -1,4 +1,5 @@
-from componentes.clasificador_estados import ClasificadorEstados
+from componentes.clasificador_etiquetas import ClasificadorEtiquetas
 
 
-clasificador_imagenes = ClasificadorEstados()
+
+clasificador_imagenes = ClasificadorEtiquetas()

@@ -1,15 +1,14 @@
-from manejo_texto.procesar_etiquetas import Etiquetas
 
-from estilos.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
+# from estilos.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
 
-from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
+# from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from constantes.constantes import Tab, Percentil, Estados
 
 from componentes.galeria_imagenes import Galeria, ContenedorImagen, ContImag
-from componentes.contenedor_etiquetado import ContenedorEtiquetado
+# from componentes.contenedor_etiquetado import ContenedorEtiquetado
 from componentes.contenedor_estados import ContenedorEstados
-from componentes.galeria_estados import actualizar_estilo_estado
+# from componentes.galeria_estados import actualizar_estilo_estado
 
 
 # Clases
@@ -18,12 +17,12 @@ from componentes.galeria_estados import actualizar_estilo_estado
 class ClasificadorEstados:
     """Clase pensada para gestionar las listas de imágenes de forma centralizada y ordenada."""
     def __init__(self):
-        self.todas          : list = []
-        self.seleccion      : list = []
-        self.guardadas      : list = []
-        self.modificadas    : list = []
-        self.no_alteradas   : list = []
-        self.defectuosas    : list = []
+        self.todas          : list = [ContenedorEstados]
+        self.seleccion      : list = [ContenedorEstados]
+        self.guardadas      : list = [ContenedorEstados]
+        self.modificadas    : list = [ContenedorEstados]
+        self.no_alteradas   : list = [ContenedorEstados]
+        self.defectuosas    : list = [ContenedorEstados]
 
         # clave de la imagen actualmente seleccionada
         self.clave_actual: str= ""
@@ -31,6 +30,7 @@ class ClasificadorEstados:
         self.ruta_dataset : str = ""
         # self.ruta_descarte : str = "descartados"
 
+        self.estado: str|None = None
         self.dimensiones_elegidas :tuple[int, int, int]|None = None
 
 
@@ -62,6 +62,7 @@ class ClasificadorEstados:
 
     def filtrar_dimensiones(self,     
         # lista_imagenes: list[ContenedorEtiquetado], 
+        lista_imagenes: list[ContenedorEstados], 
         dimensiones: tuple[int, int, int] | None = None):
         """Devuelve solamente los contenedores de imagen con el ancho y altura correctos.
         Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
@@ -80,9 +81,16 @@ class ClasificadorEstados:
         self.defectuosas  = self.filtrar_estados(Estados.DEFECTUOSO .value)
 
 
-    def seleccionar_estado(self, estado=None)->list:
+    def seleccionar_estado(self, estado:None|str=None)->list:
         """Selecciona las imágenes de una de las categorías internas. Actualiza las listas antes de asignar"""
-        self.clasificar_estados()
+        self.clasificar_estados()           # FIX
+
+        if estado == None:
+            # guardado de estado elegido
+            estado = self.estado 
+        else:
+            # lectura desde estado previo
+            self.estado  = estado
 
         if estado == Estados.MODIFICADO.value:
             self.seleccion = self.modificadas
@@ -108,7 +116,8 @@ class ClasificadorEstados:
 def filtrar_dimensiones(
     lista_imagenes: list[ContenedorEstados], 
     dimensiones: tuple[int, int, int] | None = None
-    )->list[ContenedorEtiquetado]:
+    # )->list[ContenedorEtiquetado]:
+    )->list[ContenedorEstados]:
     """Devuelve solamente los contenedores de imagen con el ancho y altura correctos.
     Si las dimensiones de entrada son 'None' devuelve todos los conteedores de entrada. 
     """
@@ -125,35 +134,14 @@ def filtrar_dimensiones(
         return lista_imagenes
 
 
-def filtrar_etiquetas(
-    lista_imagenes: list[ContenedorEtiquetado], 
-    etiquetas: list[str]  = [],
-    )->list[ContenedorEtiquetado]:
-    """
-    Devuelve las imagenes que tengan al menos una etiqueta de entrada. 
-    Si no hay etiquetas de entrada se devuelve toda la lista de entrada.
-    """
-    imagenes_filtradas = []
-    if etiquetas == []:
-        # imagenes con dimensiones correctas
-        return lista_imagenes
-    else:
-        for etiqueta in etiquetas:
-            for imagen in lista_imagenes:
-                # se previene repetir imagenes
-                if imagen not in imagenes_filtradas:
-                    if etiqueta in imagen.tags:
-                        imagenes_filtradas.append(imagen)
-
-        return imagenes_filtradas
-
     
 def filtrar_estados(
     lista_imagenes: list[ContenedorEstados], 
     estado: str | None ,
     )->list[ContenedorEstados]:
     """Devuelve solamente los contenedores con el estado de etiquetado pedido."""
-    imagen : ContenedorEtiquetado
+    # imagen : ContenedorEtiquetado
+    imagen : ContenedorEstados
     imagenes_filtradas = []
     # imagenes guardadas (sin cambios)
     if estado == Estados.GUARDADO.value:

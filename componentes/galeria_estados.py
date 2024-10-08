@@ -32,6 +32,7 @@ class GaleriaEstados(Galeria):
 
 
     def estilo_estados(self):
+        """Actualiza el estilo de cada imagen en base a sus flags internos de estado."""
         actualizar_estilo_estado( self.imagenes, self.estilos)    
 
 
