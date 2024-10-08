@@ -11,43 +11,35 @@ from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
 
 from sistema_archivos.buscar_extension import buscar_imagenes, listar_directorios
 
-from componentes.galeria_imagenes import Galeria, Contenedor, ContenedorImagen, imagen_clave,indice_clave, ContImag
-
-from componentes.filas_botones import FilasBotonesEtiquetas
+from constantes.constantes import Tab, Percentil, Estados, tupla_estados
 
 from estilos.estilos_contenedores import estilos_seleccion, estilos_galeria, Estilos
 
+from componentes.galeria_imagenes import Galeria, Contenedor, ContenedorImagen, imagen_clave,indice_clave, ContImag
+from componentes.filas_botones import FilasBotonesEtiquetas
 from componentes.lista_desplegable import crear_lista_desplegable,opciones_lista_desplegable, convertir_dimensiones_opencv, extraer_numeros, tupla_resoluciones
-
 from componentes.contenedor_etiquetado import ContenedorEtiquetado, leer_imagenes_etiquetadas
 from componentes.galeria_estados import GaleriaEstados, actualizar_estilo_estado
-
 from componentes.clasificador_estados import filtrar_dimensiones, filtrar_etiquetas
-
 from componentes.dialogo_alerta import DialogoAlerta
 
 from vistas.etiquetador.dialogos import dialogo_dataset, dialogo_directorio, dialogo_guardado_tags
-
 from vistas.etiquetador.columna_etiquetas import entrada_tags_agregar,entrada_tags_quitar
 from vistas.etiquetador.columna_etiquetas import entrada_tags_buscar
 from vistas.etiquetador.columna_etiquetas import filas_filtrado, columna_etiquetas, texto_contador_tags
 from vistas.etiquetador.columna_etiquetas import boton_reset_tags, boton_guardar_dataset, boton_reordenar_tags
 from vistas.etiquetador.columna_etiquetas import estadisticas
-
 from vistas.etiquetador.columna_seleccion import texto_imagen, texto_ruta_data,texto_ruta_titulo,texto_tags_data,texto_tags_titulo
 from vistas.etiquetador.columna_seleccion import columna_seleccion, contenedor_seleccion
 from vistas.etiquetador.columna_seleccion import imagen_seleccion
-
 from vistas.etiquetador.clasificador import clasificador_imagenes
-
 from vistas.etiquetador.menu_etiquetador import boton_carpeta, boton_dataset, tooltip_carpeta, ayuda_emergente
 # from vistas.etiquetador.menu_etiquetador import boton_filtrar_dimensiones
 from vistas.etiquetador.menu_etiquetador import fila_controles, lista_dimensiones_desplegable, lista_estados_desplegable
 from vistas.etiquetador.menu_etiquetador import actualizar_lista_dimensiones
-
 from vistas.etiquetador.columna_etiquetador import etiquetador_imagen, crear_botones_etiquetador
 
-from constantes.constantes import Tab, Percentil, Estados, tupla_estados
+
 
 lista_imagenes = clasificador_imagenes
 
@@ -170,7 +162,7 @@ def main(pagina: ft.Page):
             # actualizacion bordes galeria
             imagen.verificar_imagen(lista_imagenes.dimensiones_elegidas)
             imagen.verificar_guardado()
-            imagen.actualizar_estilo_estado()
+            imagen.estilo_estado()
 
         # actualizacion grafica de todos los componentes
         actualizar_componentes() 
@@ -202,7 +194,7 @@ def main(pagina: ft.Page):
             # actualizacion bordes galeria
             imagen.verificar_imagen(lista_imagenes.dimensiones_elegidas)
             imagen.verificar_guardado()
-            imagen.actualizar_estilo_estado()
+            imagen.estilo_estado()
 
         # actualizacion grafica de todos los componentes
         actualizar_componentes() 
@@ -258,7 +250,7 @@ def main(pagina: ft.Page):
                 # actualizacion bordes galeria
                 imagen_seleccionada.verificar_imagen(lista_imagenes.dimensiones_elegidas)
                 imagen_seleccionada.verificar_guardado()
-                imagen_seleccionada.actualizar_estilo_estado()
+                imagen_seleccionada.estilo_estado()
 
             # si dicha clave no se encuentra entonces se elige la primera calve de la lista actual
             else:
@@ -342,12 +334,7 @@ def main(pagina: ft.Page):
 
     def cargar_galeria_componentes(  e: ft.ControlEvent | None = None ):
         """Muestra las imagenes encontradas y las asigna a los componentes de seleccion y etiquetado. Si no hay imágenes que mostra oculta y/o inhabilita componentes."""
-        
-
-        # booleano = boton_filtrar_dimensiones.estado
-        # print("cargar_galeria_componentes")
-        # print(f"Boton filtrar dimensiones: {booleano}")
-
+    
         # si se encuentran imagenes se visibilizan y configuran los controles
         filtrar_dimensiones_estados()   
         # agregado de todas las etiquetas al editor
@@ -362,6 +349,7 @@ def main(pagina: ft.Page):
 
         # actualizar galeria
         actualizar_estilo_estado( lista_imagenes.seleccion, estilos_galeria )
+
         # actualizacion grafica
         actualizar_componentes()
 
@@ -398,13 +386,6 @@ def main(pagina: ft.Page):
         dimensiones_elegidas = convertir_dimensiones_opencv(str(opcion))
 
         lista_imagenes.dimensiones_elegidas = dimensiones_elegidas
-
-        # print("filtrar_dimensiones_estados")
-        # booleano = boton_filtrar_dimensiones.estado
-        # print(f"Boton filtrar dimensiones: {booleano}")
-        # Filtrado en base a las dimensiones de imagen
-        # dimensiones = dimensiones_elegidas if boton_filtrar_dimensiones.estado else None
-        # lista_imagenes.seleccion = filtrar_dimensiones(lista_imagenes.todas, dimensiones)
 
         # Filtrado en base a los estados de las imagenes
         estado = lista_estados_desplegable.value
@@ -485,7 +466,6 @@ def main(pagina: ft.Page):
             j = len(lista_imagenes.modificadas) 
             # si no hay modificaciones realizadas se cierra el programa
             if j==0:
-                # cerrar_programa(e)
                 pagina.window_destroy()
             # en caso contrario se lanza la alerta de cierre
             else:
@@ -545,10 +525,8 @@ def main(pagina: ft.Page):
 
         else:
             # ocultamiento de componentes graficos
-            # columna_etiquetas.visible = False   # FIX
             columna_etiquetas.visible = True
             columna_etiquetas.update()
-            # columna_seleccion.visible = False   # FIX
             columna_seleccion.visible = True
             columna_seleccion.update()
             etiquetador_imagen.habilitado = False
@@ -560,43 +538,33 @@ def main(pagina: ft.Page):
     
         global imagenes_tags
 
-        if True:
-            # lectura de tags seleccionados
-            set_etiquetas = set()
-            tags_conteo = filas_filtrado.leer_botones()
-            for tag in tags_conteo:
-                # extraccion del numero de repeticiones
-                texto = tag.split("(")[0].strip()
-                set_etiquetas.add(texto)
+        # lectura de tags seleccionados
+        set_etiquetas = set()
+        tags_conteo = filas_filtrado.leer_botones()
+        # print(len(tags_conteo))
+        for tag in tags_conteo:
+            # extraccion del numero de repeticiones
+            texto = tag.split("(")[0].strip()
+            set_etiquetas.add(texto)
 
-            # inicializacion previa al filtrado
-            lista_imagenes.seleccion = imagenes_tags
+        # filtrado - si no hay etiquetas de entrada devuelve todo
+        lista_imagenes.seleccion = filtrar_etiquetas(imagenes_tags, list(set_etiquetas))
 
+        # foco en la galeria
+        pestanias.selected_index = Tab.TAB_GALERIA.value
+        pestanias.update()
 
-            # filtrado - si no hay etiquetas de entrada devuelve todo
-            lista_imagenes.seleccion = filtrar_etiquetas(lista_imagenes.seleccion, list(set_etiquetas))
+        # reporte por snackbar (CORREGIR: es informativo pero molesto)  
+        nro_etiquetadas   = len(imagenes_tags)
+        nro_seleccionadas = len(lista_imagenes.seleccion)
+        nro_botones = len(filas_filtrado.botones_etiquetas)
+        nro_tags    = len(set_etiquetas)
+        renglon2 = f"{nro_tags} de {nro_botones} etiquetas seleccionadas;"
+        renglon3 = f"{nro_seleccionadas}  de {nro_etiquetadas} imagenes seleccionadas."
+        ventana_emergente(pagina, 
+            # f"{renglon1}\n{renglon2}\n{renglon3}")
+            f"{renglon2}\n{renglon3}")
 
-
-            imagenes_galeria = lista_imagenes.seleccion 
-
-
-            # foco en la galeria
-            pestanias.selected_index = Tab.TAB_GALERIA.value
-            pestanias.update()
-
-            # reporte por snackbar (CORREGIR: es informativo pero molesto)   FIX
-            renglon1 = f"Filtrado por etiquetas habilitado"
-            renglon2 = f" - {len(set_etiquetas)} de {len(tags_conteo)} etiquetas seleccionadas;"
-            renglon3 = f" - {len(imagenes_galeria)}  de {len(imagenes_tags)} imagenes seleccionadas."
-            ventana_emergente(pagina, 
-                f"{renglon1}\n{renglon2}\n{renglon3}")
-            columna_etiquetas.visible = True
-            columna_etiquetas.update()
-        else:
-            ventana_emergente(pagina, f"Filtrado por etiquetas deshabilitado.")
-            # columna_etiquetas.visible = False
-            columna_etiquetas.visible = True
-            columna_etiquetas.update()
 
         # actualizacion grafica
         actualizar_componentes() # incluye prevencion de errores por clave inexistente
@@ -728,19 +696,15 @@ def main(pagina: ft.Page):
     # prevencion decierre directo de aplicacion
     pagina.window_prevent_close = True
     pagina.on_window_event = confirmar_cierre_programa
-    # pagina.on_window_event = dialogo_cierre_programa.abrir_alerta
 
     lista_dimensiones_desplegable.on_change = cargar_galeria_componentes    
     lista_estados_desplegable.on_change = cargar_galeria_componentes     
-    # boton_filtrar_dimensiones.click_boton = cargar_galeria_componentes   
     boton_reset_tags.on_click = reset_tags_filtros
     
     boton_reordenar_tags.click_boton = cambiar_orden_tags
     boton_reordenar_tags.estado = True
 
     # inicializacion opciones
-    # boton_filtrar_dimensiones.estado = False
-
     # propiedad de pagina: handler del teclado elegido
     pagina.on_keyboard_event = desplazamiento_teclado
 

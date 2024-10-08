@@ -52,9 +52,6 @@ class ContenedorEstados(ABC, ContenedorImagen):
             estilo = self.estilos[Estilos.DEFAULT.value]
         self.estilo( estilo )
 
-    #  REPETIDO
-    def actualizar_estilo_estado(self):
-        self.estilo_estado()
 
     def leer_dimensiones(self):
         """Este método lee altura, base y numero de canales de la imagen"""

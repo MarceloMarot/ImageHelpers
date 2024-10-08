@@ -23,15 +23,6 @@ class ContenedorEtiquetado( Etiquetas, ContenedorEstados):
  
     # Implementacion de metodos requeridos
     def verificar_guardado(self):
-        self.verificar_guardado_tags()
-
-
-    def buscar_etiqueta(self, etiqueta: str):
-        """Este método busca la etiqueta en la imagen y si la encuentra devuelve 'True'."""
-        return True if etiqueta in self.tags else False
-            
-
-    def verificar_guardado_tags(self ):
         """Comprueba si las etiquetas actuales son las mismas que las guardadas en archivo de texto"""
         # verificacion guardado
         tags_archivo  = self.tags_archivo 
@@ -41,13 +32,18 @@ class ContenedorEtiquetado( Etiquetas, ContenedorEstados):
         self.__modificada = True if set(tags_imagen) != set(tags_archivo) else False 
 
 
+    def buscar_etiqueta(self, etiqueta: str):
+        """Este método busca la etiqueta en la imagen y si la encuentra devuelve 'True'."""
+        return True if etiqueta in self.tags else False
+            
+
     def guardar_archivo(self)->bool:
         """
         Escribe/rescribe el archivo de etiquetas si éstas no coinciden con las guardadas en la estructura. 
         Si 'tags' es 'None' se usan las etiquetas almacenadas en el objeto imagen.
         """
         guardado_exitoso = False
-        self.verificar_guardado_tags()
+        self.verificar_guardado()
         if self.modificada:
             guardado_exitoso = self.guardar(self.tags)
             self.__guardada = guardado_exitoso

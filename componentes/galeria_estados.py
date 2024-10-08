@@ -1,14 +1,5 @@
 
 from componentes.galeria_imagenes import Galeria, ContenedorImagen, EstiloContenedor, ContImag
-# from estilos.estilos_contenedores import  estilos_seleccion, estilos_galeria, Estilos
-
-# from manejo_imagenes.verificar_dimensiones import dimensiones_imagen
-
-# from constantes.constantes import Tab, Percentil, Estados
-
-# from sistema_archivos.rutas import ruta_relativa_usuario
-
-
 from componentes.contenedor_estados import ContenedorEstados
 
 
@@ -35,19 +26,13 @@ class GaleriaEstados(Galeria):
         """Lee objetos de imagen Flet del tipo ContenedorImagen previamente creados."""
         super().cargar_imagenes(imagenes, cuadricula)
         self.imagenes = imagenes
-        self.actualizar_estilos( )  
+        # self.actualizar_estilos( )  
+        self.estilo_estados( )  
 
 
 
     def estilo_estados(self):
         actualizar_estilo_estado( self.imagenes, self.estilos)    
-
-
-
-    # metodo obsoleto
-    def actualizar_estilos(self):
-        actualizar_estilo_estado( self.imagenes, self.estilos)    
-
 
 
 
